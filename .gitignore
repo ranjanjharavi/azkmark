@@ -1,0 +1,18 @@
+# OS artifacts
+.DS_Store
+.AppleDouble
+Thumbs.db
+
+# Editor & IDE state
+.idea/
+.vscode/*
+
+# Logs
+npm-debug.log*
+*.log
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
