@@ -1,0 +1,88 @@
+:root {
+  color-scheme: light;
+  font-family: "Avenir Next", Avenir, "Trebuchet MS", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  --shelf: #f7f5ee;
+  --page: #fffdf7;
+  --ink: #28352b;
+  --secondary: #596555;
+  --tertiary: #67705f;
+  --rule: rgba(61, 78, 54, 0.15);
+  --accent: #315d3e;
+  --accent-hover: #23472d;
+  --accent-soft: #e8eee1;
+  --control: #f0f0e6;
+  --control-rule: #d5d9c9;
+  --danger: #a23e30;
+  --danger-soft: #f8e9e3;
+}
+
+body {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 24px;
+  color: var(--ink);
+  background: var(--shelf);
+}
+
+body[data-page="popup"] {
+  width: 320px;
+}
+
+body[data-page="library"] {
+  max-width: 72ch;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0 0 16px;
+  color: var(--ink);
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0 0 16px;
+  color: var(--secondary);
+}
+
+button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--page);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  border-color: var(--control-rule);
+  background: var(--control);
+  color: var(--secondary);
+  cursor: wait;
+}
+
+#feedback {
+  margin: 16px 0 0;
+  color: var(--danger);
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
