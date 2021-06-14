@@ -11,13 +11,22 @@
     <main>
       <h1>azkmark</h1>
       <p id="page-status" role="status">Reading the current page…</p>
-      <section id="page-details" aria-label="Current page" hidden>
-        <h2 id="page-title"></h2>
-        <a id="page-url" target="_blank" rel="noopener noreferrer"></a>
-        <img id="page-image" alt="" referrerpolicy="no-referrer" hidden />
-        <p id="preview-status" role="status">Checking for a thumbnail…</p>
-      </section>
-      <button id="open-library" type="button">Open library</button>
+      <form id="save-form" novalidate>
+        <section id="page-details" aria-label="Current page" hidden>
+          <label for="page-title">Title</label>
+          <textarea id="page-title" name="title" rows="2" required aria-describedby="title-error"></textarea>
+          <p id="title-error" role="alert" hidden>Enter a title</p>
+          <a id="page-url" target="_blank" rel="noopener noreferrer"></a>
+          <img id="page-image" alt="" referrerpolicy="no-referrer" hidden />
+          <p id="preview-status" role="status">Checking for a thumbnail…</p>
+        </section>
+        <div class="popup-actions">
+          <button id="save" type="submit" disabled>Save</button>
+          <button id="open-library" type="button">Open library</button>
+        </div>
+      </form>
+      <p id="save-status" role="status" aria-atomic="true"></p>
+      <p id="save-error" role="alert" hidden></p>
       <p id="feedback" role="alert" hidden></p>
     </main>
   </body>
