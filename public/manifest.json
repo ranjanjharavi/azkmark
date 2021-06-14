@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Personal bookmark manager",
   "minimum_chrome_version": "88",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "incognito": "not_allowed",
   "action": {
     "default_title": "Add bookmark",

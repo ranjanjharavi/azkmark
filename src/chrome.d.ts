@@ -27,6 +27,17 @@ declare namespace chrome {
     ): void;
   }
 
+  namespace storage {
+    namespace local {
+      function get(
+        keys: string | null,
+        callback: (items: Record<string, unknown>) => void
+      ): void;
+
+      function set(items: Record<string, unknown>, callback: () => void): void;
+    }
+  }
+
   namespace scripting {
     interface InjectionResult {
       frameId: number;
@@ -41,4 +52,12 @@ declare namespace chrome {
       callback: (results: InjectionResult[]) => void
     ): void;
   }
+}
+
+declare interface LockManager {
+  request<T>(name: string, callback: () => T | PromiseLike<T>): Promise<T>;
+}
+
+declare interface Navigator {
+  readonly locks: LockManager;
 }
