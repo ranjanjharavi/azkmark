@@ -25,6 +25,17 @@ function removeDirectory(directory) {
 removeDirectory(outputDirectory);
 fs.mkdirSync(outputDirectory, { recursive: true });
 
-["manifest.json", "popup.html", "library.html", "styles.css"].forEach((name) => {
-  fs.copyFileSync(path.join(publicDirectory, name), path.join(outputDirectory, name));
+[
+  "manifest.json",
+  "popup.html",
+  "library.html",
+  "styles/tokens.css",
+  "styles/shared.css",
+  "styles/popup.css",
+  "styles/library.css",
+].forEach((name) => {
+  const source = path.join(publicDirectory, name);
+  const destination = path.join(outputDirectory, name);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.copyFileSync(source, destination);
 });

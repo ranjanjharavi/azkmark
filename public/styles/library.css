@@ -1,0 +1,201 @@
+body[data-page="library"] {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.library-main {
+  box-sizing: border-box;
+  max-width: 1080px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.library-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.library-header h1 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: 500 var(--font-size-heading)/1.2 var(--display-font);
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+#library-status {
+  flex: none;
+  max-width: 40%;
+  margin: 0;
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+#bookmarks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bookmark-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--page);
+}
+
+.bookmark-card:focus-within {
+  border-color: var(--accent);
+}
+
+.bookmark-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 104px;
+  grid-template-rows: minmax(24px, auto) minmax(48px, auto);
+  column-gap: 16px;
+  min-width: 0;
+  padding: 16px 16px 8px;
+  color: var(--ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.bookmark-link--text-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.bookmark-link:hover {
+  background: var(--control);
+}
+
+.bookmark-link:focus-visible {
+  outline-offset: -3px;
+}
+
+.bookmark-link h2 {
+  grid-column: 1;
+  grid-row: 2;
+  margin: 8px 0 0;
+  font: 600 var(--font-size-title)/1.3 var(--display-font);
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+
+.bookmark-meta {
+  display: flex;
+  align-items: center;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  min-width: 0;
+}
+
+.bookmark-domain {
+  min-width: 0;
+  color: var(--tertiary);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+.bookmark-preview {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  grid-column: 2;
+  grid-row: 1 / 3;
+  height: 76px;
+  overflow: hidden;
+  border-radius: var(--radius-small);
+  background: var(--control);
+}
+
+.bookmark-image,
+.preview-loading {
+  grid-area: 1 / 1;
+}
+
+.bookmark-image {
+  display: block;
+  width: 100%;
+  height: 76px;
+  object-fit: cover;
+  visibility: hidden;
+}
+
+.bookmark-image.loaded {
+  visibility: visible;
+}
+
+.preview-loading {
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+  padding: 8px;
+  color: var(--tertiary);
+  font-size: var(--font-size-small);
+  text-align: center;
+}
+
+#library-empty,
+#library-error {
+  margin-top: 24px;
+  padding: 32px 24px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--page);
+  text-align: center;
+}
+
+#library-empty h2 {
+  margin: 0 0 8px;
+  font: 600 var(--font-size-subheading)/1.3 var(--display-font);
+}
+
+#library-empty p {
+  max-width: 40ch;
+  margin: 0 auto;
+  color: var(--secondary);
+}
+
+#read-error {
+  margin: 0 0 16px;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 860px) {
+  .library-main {
+    padding: 24px;
+  }
+
+  #bookmarks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .library-main {
+    padding: 16px;
+  }
+
+  .library-header {
+    gap: 12px;
+  }
+
+  .library-header h1 {
+    font-size: var(--font-size-heading-compact);
+  }
+}

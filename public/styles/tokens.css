@@ -1,0 +1,32 @@
+:root {
+  color-scheme: light;
+  --shelf: #f7f5ee;
+  --page: #fffdf7;
+  --ink: #28352b;
+  --secondary: #596555;
+  --tertiary: #67705f;
+  --rule: rgba(61, 78, 54, 0.15);
+  --accent: #315d3e;
+  --accent-hover: #23472d;
+  --accent-soft: #e8eee1;
+  --on-accent: #fffdf7;
+  --control: #f0f0e6;
+  --control-rule: #d5d9c9;
+  --danger: #a23e30;
+  --danger-soft: #f8e9e3;
+  --body-font: "Avenir Next", Avenir, "Trebuchet MS", sans-serif;
+  --display-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  --font-size-small: 12px;
+  --font-size-body: 14px;
+  --font-size-lead: 16px;
+  --font-size-title: 18px;
+  --font-size-subheading: 22px;
+  --font-size-brand: 24px;
+  --font-size-heading-compact: 28px;
+  --font-size-heading: 36px;
+  --control-height: 44px;
+  --radius-small: 4px;
+  --radius-control: 6px;
+  --radius-card: 8px;
+  font: var(--font-size-body)/1.5 var(--body-font);
+}
