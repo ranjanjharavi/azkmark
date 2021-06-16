@@ -3,14 +3,28 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Library — azkmark</title>
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="color-scheme" content="light" />
+    <title>All bookmarks — azkmark</title>
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/shared.css" />
+    <link rel="stylesheet" href="styles/library.css" />
+    <script type="module" src="library.js"></script>
   </head>
   <body data-page="library">
-    <main>
-      <h1>Bookmark library</h1>
-      <p>Full-page extension shell.</p>
-      <p>Saving, previews, domain filters, and search.</p>
+    <main class="library-main">
+      <header class="library-header">
+        <h1 id="library-heading" tabindex="-1">All bookmarks</h1>
+        <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
+      </header>
+      <section id="library-empty" aria-labelledby="empty-title" hidden>
+        <h2 id="empty-title">No bookmarks yet</h2>
+        <p>Save a page from the azkmark toolbar popup to start the library.</p>
+      </section>
+      <div id="library-error" hidden>
+        <p id="read-error" role="alert"></p>
+        <button id="retry" type="button">Try again</button>
+      </div>
+      <ul id="bookmarks" aria-label="Saved bookmarks" aria-busy="true" hidden></ul>
     </main>
   </body>
 </html>

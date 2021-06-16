@@ -100,6 +100,18 @@ export async function readBookmarks(): Promise<Bookmark[]> {
   return bookmarks;
 }
 
+export function watchBookmarks(onChange: () => void): void {
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "local") {
+      return;
+    }
+
+    if (Object.keys(changes).some((key) => key.startsWith(BOOKMARK_KEY_PREFIX))) {
+      onChange();
+    }
+  });
+}
+
 export async function saveBookmark(bookmark: Bookmark): Promise<SaveBookmarkResult> {
   if (!isBookmark(bookmark)) {
     throw new TypeError("Invalid bookmark record.");

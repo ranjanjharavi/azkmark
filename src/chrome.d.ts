@@ -28,6 +28,17 @@ declare namespace chrome {
   }
 
   namespace storage {
+    interface StorageChange {
+      oldValue?: unknown;
+      newValue?: unknown;
+    }
+
+    const onChanged: {
+      addListener(
+        callback: (changes: Record<string, StorageChange>, areaName: string) => void
+      ): void;
+    };
+
     namespace local {
       function get(
         keys: string | null,
