@@ -24,6 +24,10 @@ body[data-page="library"] {
   flex: 1;
   min-width: 0;
   margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   font: 500 var(--font-size-heading)/1.2 var(--display-font);
   letter-spacing: -0.03em;
   overflow-wrap: anywhere;
@@ -37,6 +41,66 @@ body[data-page="library"] {
   font-size: var(--font-size-small);
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+.library-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  align-items: end;
+  gap: 16px;
+  margin: 0 0 24px;
+}
+
+.library-field {
+  min-width: 0;
+}
+
+.library-field label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+  font-weight: 500;
+}
+
+.library-controls input,
+.library-controls select {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 8px 12px;
+  border: 1px solid var(--control-rule);
+  border-radius: var(--radius-control);
+  background: var(--control);
+  color: var(--ink);
+  font: 16px/1.4 var(--body-font);
+}
+
+.library-controls input:hover,
+.library-controls select:hover {
+  border-color: var(--tertiary);
+}
+
+.library-controls input::placeholder {
+  color: var(--tertiary);
+  opacity: 1;
+}
+
+#reset-filters {
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  margin-top: 16px;
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  font-weight: 500;
+}
+
+#reset-filters:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--control);
+  color: var(--accent-hover);
 }
 
 #bookmarks {
@@ -150,6 +214,7 @@ body[data-page="library"] {
 }
 
 #library-empty,
+#no-matches,
 #library-error {
   margin-top: 24px;
   padding: 32px 24px;
@@ -159,12 +224,14 @@ body[data-page="library"] {
   text-align: center;
 }
 
-#library-empty h2 {
+#library-empty h2,
+#no-matches h2 {
   margin: 0 0 8px;
   font: 600 var(--font-size-subheading)/1.3 var(--display-font);
 }
 
-#library-empty p {
+#library-empty p,
+#no-matches p {
   max-width: 40ch;
   margin: 0 auto;
   color: var(--secondary);
@@ -192,6 +259,11 @@ body[data-page="library"] {
   }
 
   .library-header {
+    gap: 12px;
+  }
+
+  .library-controls {
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
 

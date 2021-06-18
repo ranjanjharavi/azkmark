@@ -58,7 +58,7 @@ declare namespace chrome {
     function executeScript(
       injection: {
         target: { tabId: number; frameIds?: number[] };
-        func: () => unknown;
+        files: string[];
       },
       callback: (results: InjectionResult[]) => void
     ): void;

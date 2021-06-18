@@ -10,30 +10,6 @@ interface ThumbnailMetadata {
   imageUrls: string[];
 }
 
-// Chrome serializes this function into the page. Keep it self-contained.
-export function readThumbnailMetadata(): ThumbnailMetadata {
-  const canonicalUrl = document.querySelector('meta[property="og:url"]')?.getAttribute("content")
-    || document.querySelector('link[rel="canonical"]')?.getAttribute("href")
-    || null;
-
-  const selectors = [
-    'meta[property="og:image:secure_url"]',
-    'meta[property="og:image"]',
-    'meta[name="twitter:image"]',
-    'meta[property="twitter:image"]',
-    'meta[name="twitter:image:src"]',
-  ];
-
-  return {
-    pageUrl: location.href,
-    baseUrl: document.baseURI,
-    canonicalUrl,
-    imageUrls: selectors
-      .map((selector) => document.querySelector(selector)?.getAttribute("content")?.trim() || "")
-      .filter(Boolean),
-  };
-}
-
 function canonicalMatchesPage(current: URL, canonical: URL): boolean {
   const videoId = youtubeVideoId(current);
   if (videoId) {
@@ -122,7 +98,7 @@ export function captureThumbnail(page: CurrentPage, callback: ThumbnailCallback)
     chrome.scripting.executeScript(
       {
         target: { tabId: page.tabId, frameIds: [0] },
-        func: readThumbnailMetadata,
+        files: ["thumbnail-capture.js"],
       },
       (results) => {
         if (chrome.runtime.lastError) {

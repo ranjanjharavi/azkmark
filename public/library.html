@@ -16,9 +16,27 @@
         <h1 id="library-heading" tabindex="-1">All bookmarks</h1>
         <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
       </header>
+      <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
+        <div class="library-field">
+          <label for="search">Search bookmarks</label>
+          <input id="search" name="query" type="search" placeholder="Title or URL" autocomplete="off" spellcheck="false" disabled />
+        </div>
+        <div class="library-field">
+          <label for="domain">Domain</label>
+          <select id="domain" name="domain" disabled>
+            <option value="all">All bookmarks (0)</option>
+            <option value="general">General (0)</option>
+          </select>
+        </div>
+      </form>
       <section id="library-empty" aria-labelledby="empty-title" hidden>
         <h2 id="empty-title">No bookmarks yet</h2>
         <p>Save a page from the azkmark toolbar popup to start the library.</p>
+      </section>
+      <section id="no-matches" aria-labelledby="no-matches-title" hidden>
+        <h2 id="no-matches-title">No bookmarks match</h2>
+        <p>Try another title or URL, or choose a different domain.</p>
+        <button id="reset-filters" type="button" disabled>Show all bookmarks</button>
       </section>
       <div id="library-error" hidden>
         <p id="read-error" role="alert"></p>

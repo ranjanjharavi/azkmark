@@ -69,11 +69,19 @@ function bookmarkKey(url: string): string {
 }
 
 function storedBookmark(key: string, value: unknown): Bookmark {
+  // Read the current fields without rewriting the data or invoking property getters.
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    const fields = Object.getOwnPropertyDescriptors(value);
+    delete fields.tags;
+    delete fields.viewed;
+    value = Object.create(Object.getPrototypeOf(value), fields);
+  }
+
   if (!isBookmark(value) || key !== BOOKMARK_KEY_PREFIX + value.url) {
     throw new InvalidStoredBookmarkError();
   }
 
-  return value;
+  return createBookmark(value, value.savedAt);
 }
 
 async function readStoredBookmark(key: string): Promise<Bookmark | undefined> {

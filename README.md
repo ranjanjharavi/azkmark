@@ -1,6 +1,6 @@
 # Azkmark
 
-Personal bookmark manager
+Save links locally, then find them by title, URL, or automatically grouped domain.
 
 ## Build
 
