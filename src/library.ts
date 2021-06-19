@@ -4,6 +4,8 @@ import { filterBookmarks } from "./bookmarks/search.js";
 import type { BookmarkSelection } from "./bookmarks/search.js";
 import { readBookmarks, watchBookmarks } from "./bookmarks/storage.js";
 import { bookmarkCard } from "./library/bookmark-card.js";
+import { initializeManagement } from "./library/management.js";
+import type { ManagementAction, ManagementMode } from "./library/management.js";
 
 const libraryHeading = document.querySelector<HTMLHeadingElement>("#library-heading");
 const libraryStatus = document.querySelector<HTMLParagraphElement>("#library-status");
@@ -13,6 +15,7 @@ const domainSelect = document.querySelector<HTMLSelectElement>("#domain");
 const emptyState = document.querySelector<HTMLElement>("#library-empty");
 const noMatches = document.querySelector<HTMLElement>("#no-matches");
 const resetFilters = document.querySelector<HTMLButtonElement>("#reset-filters");
+const managementFeedback = document.querySelector<HTMLParagraphElement>("#management-feedback");
 const libraryError = document.querySelector<HTMLDivElement>("#library-error");
 const readError = document.querySelector<HTMLParagraphElement>("#read-error");
 const retryButton = document.querySelector<HTMLButtonElement>("#retry");
@@ -27,6 +30,7 @@ if (
   || !emptyState
   || !noMatches
   || !resetFilters
+  || !managementFeedback
   || !libraryError
   || !readError
   || !retryButton
@@ -43,6 +47,7 @@ const domainSelectElement = domainSelect;
 const emptyStateElement = emptyState;
 const noMatchesElement = noMatches;
 const resetFiltersButton = resetFilters;
+const managementFeedbackElement = managementFeedback;
 const libraryErrorElement = libraryError;
 const readErrorElement = readError;
 const retryButtonElement = retryButton;
@@ -53,6 +58,7 @@ type FocusTarget = "list" | "search" | "domain" | "reset" | "retry" | "other";
 interface FocusSnapshot {
   target: FocusTarget;
   bookmarkUrl?: string;
+  bookmarkAction?: ManagementMode;
 }
 
 let library: Bookmark[] | undefined;
@@ -85,6 +91,16 @@ function captureFocus(): FocusSnapshot {
         bookmarkUrl: activeElement.getAttribute("data-bookmark-url") || undefined,
       };
     }
+    if (activeElement instanceof HTMLButtonElement) {
+      const mode = activeElement.getAttribute("data-action");
+      if (mode === "edit" || mode === "delete") {
+        return {
+          target: "list",
+          bookmarkUrl: activeElement.getAttribute("data-bookmark-url") || undefined,
+          bookmarkAction: mode,
+        };
+      }
+    }
     return { target: "list" };
   }
 
@@ -98,6 +114,20 @@ function focusHeading(): void {
 function restoreFocus(focus: FocusSnapshot): void {
   const total = library?.length ?? 0;
   if (focus.target === "list") {
+    if (focus.bookmarkUrl && focus.bookmarkAction) {
+      const actions = bookmarksListElement.querySelectorAll<HTMLButtonElement>(".bookmark-action");
+      for (let index = 0; index < actions.length; index++) {
+        const button = actions[index];
+        if (
+          button.getAttribute("data-bookmark-url") === focus.bookmarkUrl
+          && button.getAttribute("data-action") === focus.bookmarkAction
+        ) {
+          button.focus({ preventScroll: true });
+          return;
+        }
+      }
+    }
+
     if (focus.bookmarkUrl) {
       const links = bookmarksListElement.querySelectorAll<HTMLAnchorElement>(".bookmark-link");
       for (let index = 0; index < links.length; index++) {
@@ -136,6 +166,38 @@ function restoreFocus(focus: FocusSnapshot): void {
   } else if (focus.target === "domain") {
     domainSelectElement.focus({ preventScroll: true });
   }
+}
+
+function restoreManagementFocus(action: ManagementAction): void {
+  const buttons = bookmarksListElement.querySelectorAll<HTMLButtonElement>(".bookmark-action");
+  for (let index = 0; index < buttons.length; index++) {
+    const button = buttons[index];
+    if (
+      button.getAttribute("data-bookmark-url") === action.url
+      && button.getAttribute("data-action") === action.mode
+    ) {
+      button.focus({ preventScroll: true });
+      return;
+    }
+  }
+
+  if (!library) {
+    retryButtonElement.focus({ preventScroll: true });
+    return;
+  }
+  if (library.length === 0) {
+    focusHeading();
+    return;
+  }
+
+  const links = bookmarksListElement.querySelectorAll<HTMLAnchorElement>(".bookmark-link");
+  if (links.length === 0) {
+    searchInputElement.focus({ preventScroll: true });
+    return;
+  }
+
+  const nearbyIndex = Math.min(action.index, links.length - 1);
+  links[nearbyIndex].focus({ preventScroll: true });
 }
 
 function updateDomainOptions(bookmarks: readonly Bookmark[]): string {
@@ -237,6 +299,7 @@ async function refreshBookmarks(): Promise<void> {
     const focus = captureFocus();
     library = bookmarks;
     const notice = updateDomainOptions(bookmarks);
+    management.updateTarget();
     searchInputElement.disabled = false;
     domainSelectElement.disabled = false;
     resetFiltersButton.disabled = false;
@@ -251,7 +314,7 @@ async function refreshBookmarks(): Promise<void> {
     console.error("Could not read saved bookmarks.", error);
     library = undefined;
     libraryStatusElement.textContent = "Couldn't load your bookmarks.";
-    readErrorElement.textContent = "Couldn't load your bookmarks. Your saved data wasn't changed. Try again.";
+    readErrorElement.textContent = "Couldn't load your bookmarks. Try again.";
     libraryErrorElement.hidden = false;
     emptyStateElement.hidden = true;
     noMatchesElement.hidden = true;
@@ -271,6 +334,23 @@ async function refreshBookmarks(): Promise<void> {
     }
   }
 }
+
+const management = initializeManagement({
+  getBookmarks: () => library,
+  
+  refresh: refreshBookmarks,
+  restoreFocus: restoreManagementFocus,
+
+  showFeedback: (message) => {
+    managementFeedbackElement.textContent = message;
+    managementFeedbackElement.hidden = false;
+  },
+  
+  clearFeedback: () => {
+    managementFeedbackElement.textContent = "";
+    managementFeedbackElement.hidden = true;
+  },
+});
 
 searchInputElement.addEventListener("input", () => {
   render();
@@ -300,6 +380,34 @@ resetFiltersButton.addEventListener("click", () => {
   searchInputElement.focus({ preventScroll: true });
 });
 
+bookmarksListElement.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const button = target.closest<HTMLButtonElement>("button.bookmark-action[data-action]");
+  if (!button || button.disabled || !bookmarksListElement.contains(button)) {
+    return;
+  }
+
+  const url = button.getAttribute("data-bookmark-url");
+  const mode = button.getAttribute("data-action");
+  if (!url || (mode !== "edit" && mode !== "delete")) {
+    return;
+  }
+
+  let cardIndex = 0;
+  for (let index = 0; index < bookmarksListElement.children.length; index++) {
+    if (bookmarksListElement.children[index].contains(button)) {
+      cardIndex = index;
+      break;
+    }
+  }
+
+  management.open(url, mode, cardIndex);
+});
+
 retryButtonElement.addEventListener("click", () => {
   void refreshBookmarks();
 });
@@ -307,4 +415,5 @@ retryButtonElement.addEventListener("click", () => {
 watchBookmarks(() => {
   void refreshBookmarks();
 });
+
 void refreshBookmarks();

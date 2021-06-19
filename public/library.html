@@ -29,6 +29,7 @@
           </select>
         </div>
       </form>
+      <p id="management-feedback" role="status" aria-atomic="true" hidden></p>
       <section id="library-empty" aria-labelledby="empty-title" hidden>
         <h2 id="empty-title">No bookmarks yet</h2>
         <p>Save a page from the azkmark toolbar popup to start the library.</p>
@@ -44,5 +45,24 @@
       </div>
       <ul id="bookmarks" aria-label="Saved bookmarks" aria-busy="true" hidden></ul>
     </main>
+    <dialog id="bookmark-dialog" aria-labelledby="management-heading">
+      <h2 id="management-heading">Edit bookmark title</h2>
+      <p id="management-target" hidden></p>
+      <p id="management-url"></p>
+      <form id="management-form" novalidate>
+        <div id="management-edit" hidden>
+          <label for="bookmark-title">Title</label>
+          <textarea id="bookmark-title" rows="3" required aria-describedby="management-title-error"></textarea>
+          <p id="management-title-error" role="alert" hidden>Enter a title before saving.</p>
+        </div>
+        <p id="management-delete" hidden>This permanently deletes this bookmark from your azkmark library. It can't be undone.</p>
+        <p id="management-error" role="alert" hidden></p>
+        <p id="management-status" role="status" aria-atomic="true"></p>
+        <div class="management-actions">
+          <button id="management-cancel" type="button">Cancel</button>
+          <button id="management-submit" type="submit">Save title</button>
+        </div>
+      </form>
+    </dialog>
   </body>
 </html>

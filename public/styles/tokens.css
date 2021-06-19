@@ -13,6 +13,7 @@
   --control: #f0f0e6;
   --control-rule: #d5d9c9;
   --danger: #a23e30;
+  --danger-hover: #842b21;
   --danger-soft: #f8e9e3;
   --body-font: "Avenir Next", Avenir, "Trebuchet MS", sans-serif;
   --display-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
@@ -21,6 +22,7 @@
   --font-size-lead: 16px;
   --font-size-title: 18px;
   --font-size-subheading: 22px;
+  --font-size-dialog: 26px;
   --font-size-brand: 24px;
   --font-size-heading-compact: 28px;
   --font-size-heading: 36px;
@@ -28,5 +30,6 @@
   --radius-small: 4px;
   --radius-control: 6px;
   --radius-card: 8px;
+  --radius-dialog: 12px;
   font: var(--font-size-body)/1.5 var(--body-font);
 }

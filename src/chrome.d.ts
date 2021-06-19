@@ -46,6 +46,8 @@ declare namespace chrome {
       ): void;
 
       function set(items: Record<string, unknown>, callback: () => void): void;
+
+      function remove(keys: string | string[], callback: () => void): void;
     }
   }
 

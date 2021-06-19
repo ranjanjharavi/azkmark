@@ -9,6 +9,14 @@ export interface SaveBookmarkResult {
   bookmark: Bookmark;
 }
 
+export type UpdateBookmarkTitleResult =
+  | { status: "updated"; bookmark: Bookmark }
+  | { status: "not-found" };
+
+export type DeleteBookmarkResult =
+  | { status: "deleted" }
+  | { status: "not-found" };
+
 export class InvalidStoredBookmarkError extends TypeError {
   constructor() {
     super("Invalid stored bookmark.");
@@ -49,6 +57,20 @@ function readStorage(keys: string | null): Promise<Record<string, unknown>> {
 function writeStorage(items: Record<string, unknown>): Promise<void> {
   return new Promise((resolve, reject) => {
     chrome.storage.local.set(items, () => {
+      const error = chrome.runtime.lastError;
+      if (error) {
+        reject(storageError(error.message));
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
+function removeStorage(key: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.remove(key, () => {
       const error = chrome.runtime.lastError;
       if (error) {
         reject(storageError(error.message));
@@ -117,6 +139,41 @@ export function watchBookmarks(onChange: () => void): void {
     if (Object.keys(changes).some((key) => key.startsWith(BOOKMARK_KEY_PREFIX))) {
       onChange();
     }
+  });
+}
+
+export async function updateBookmarkTitle(
+  url: string,
+  title: string,
+): Promise<UpdateBookmarkTitleResult> {
+  const key = bookmarkKey(url);
+  if (typeof title !== "string" || !title.trim()) {
+    throw new TypeError("Enter a bookmark title.");
+  }
+
+  const nextTitle = title.trim();
+  return navigator.locks.request(key, async (): Promise<UpdateBookmarkTitleResult> => {
+    const existing = await readStoredBookmark(key);
+    if (!existing) {
+      return { status: "not-found" };
+    }
+
+    const updated = createBookmark({ ...existing, title: nextTitle }, existing.savedAt);
+    await writeStorage({ [key]: updated });
+    return { status: "updated", bookmark: updated };
+  });
+}
+
+export async function deleteBookmark(url: string): Promise<DeleteBookmarkResult> {
+  const key = bookmarkKey(url);
+  return navigator.locks.request(key, async (): Promise<DeleteBookmarkResult> => {
+    const existing = await readStoredBookmark(key);
+    if (!existing) {
+      return { status: "not-found" };
+    }
+
+    await removeStorage(key);
+    return { status: "deleted" };
   });
 }
 

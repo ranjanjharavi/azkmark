@@ -60,6 +60,28 @@ export function bookmarkCard(bookmark: Bookmark): HTMLLIElement {
     link.appendChild(preview);
   }
 
+  const actions = document.createElement("div");
+  actions.className = "bookmark-actions";
+
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.className = "bookmark-action";
+  editButton.textContent = "Edit title";
+  editButton.setAttribute("data-action", "edit");
+  editButton.setAttribute("data-bookmark-url", bookmark.url);
+  editButton.setAttribute("aria-label", `Edit title: ${bookmark.title}`);
+
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "bookmark-action";
+  deleteButton.textContent = "Delete";
+  deleteButton.setAttribute("data-action", "delete");
+  deleteButton.setAttribute("data-bookmark-url", bookmark.url);
+  deleteButton.setAttribute("aria-label", `Delete bookmark: ${bookmark.title}`);
+
+  actions.appendChild(editButton);
+  actions.appendChild(deleteButton);
   card.appendChild(link);
+  card.appendChild(actions);
   return card;
 }

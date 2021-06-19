@@ -55,7 +55,8 @@ body[data-page="library"] {
   min-width: 0;
 }
 
-.library-field label {
+.library-field label,
+#management-edit label {
   display: block;
   margin-bottom: 4px;
   color: var(--secondary);
@@ -123,6 +124,36 @@ body[data-page="library"] {
 
 .bookmark-card:focus-within {
   border-color: var(--accent);
+}
+
+.bookmark-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 4px 8px;
+  border-top: 1px solid var(--rule);
+}
+
+.bookmark-action {
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  padding: 8px 12px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+  font-weight: 500;
+}
+
+.bookmark-action:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+.bookmark-action[data-action="delete"]:hover:not(:disabled) {
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .bookmark-link {
@@ -243,6 +274,132 @@ body[data-page="library"] {
   overflow-wrap: anywhere;
 }
 
+#management-feedback {
+  margin: 0 0 16px;
+  color: var(--accent);
+  font-size: var(--font-size-small);
+}
+
+#bookmark-dialog {
+  box-sizing: border-box;
+  width: calc(100% - 32px);
+  max-width: 440px;
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: 28px;
+  overflow: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-dialog);
+  background: var(--page);
+  color: var(--ink);
+}
+
+#bookmark-dialog::backdrop {
+  background: rgba(40, 53, 43, 0.48);
+}
+
+#management-heading {
+  margin: 0 0 16px;
+  font: 600 var(--font-size-dialog)/1.2 var(--display-font);
+  overflow-wrap: anywhere;
+}
+
+#management-target {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font: 600 var(--font-size-title)/1.3 var(--display-font);
+  overflow-wrap: anywhere;
+}
+
+#management-url {
+  margin: 0 0 20px;
+  color: var(--tertiary);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+#bookmark-title {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid var(--control-rule);
+  border-radius: var(--radius-small);
+  background: var(--control);
+  color: var(--ink);
+  caret-color: var(--accent);
+  font: 16px/1.45 var(--body-font);
+  resize: vertical;
+  overflow-wrap: anywhere;
+}
+
+#bookmark-title[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+#management-title-error {
+  margin: 4px 0 0;
+  color: var(--danger);
+  font-size: var(--font-size-small);
+}
+
+#management-delete {
+  margin: 0 0 16px;
+  color: var(--secondary);
+}
+
+#management-error {
+  margin: 12px 0 0;
+  color: var(--danger);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+#management-status {
+  min-height: 1.5em;
+  margin: 8px 0 0;
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+}
+
+.management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.management-actions button {
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  flex: 1 1 120px;
+}
+
+#management-cancel {
+  border-color: var(--control-rule);
+  background: var(--control);
+  color: var(--secondary);
+}
+
+#management-cancel:hover:not(:disabled) {
+  border-color: var(--tertiary);
+  background: var(--page);
+  color: var(--ink);
+}
+
+#management-submit.destructive {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--on-accent);
+}
+
+#management-submit.destructive:hover:not(:disabled) {
+  border-color: var(--danger-hover);
+  background: var(--danger-hover);
+}
+
 @media (max-width: 860px) {
   .library-main {
     padding: 24px;
@@ -269,5 +426,9 @@ body[data-page="library"] {
 
   .library-header h1 {
     font-size: var(--font-size-heading-compact);
+  }
+
+  #bookmark-dialog {
+    padding: 20px;
   }
 }
