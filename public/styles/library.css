@@ -17,7 +17,7 @@ body[data-page="library"] {
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .library-header h1 {
@@ -41,6 +41,80 @@ body[data-page="library"] {
   font-size: var(--font-size-small);
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+.backup-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+#backup-help-toggle {
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  border-color: transparent;
+  background: transparent;
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+  font-weight: 500;
+}
+
+#backup-help-toggle:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--control);
+  color: var(--ink);
+}
+
+#backup-help-toggle[aria-expanded="true"] {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+#export-backup {
+  box-sizing: border-box;
+  min-height: var(--control-height);
+}
+
+.backup-panel {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--page);
+}
+
+.backup-panel p {
+  margin: 0 0 8px;
+  color: var(--secondary);
+  font-size: var(--font-size-body);
+  overflow-wrap: anywhere;
+}
+
+.backup-panel p:last-child {
+  margin-bottom: 0;
+}
+
+#export-status {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: var(--font-size-small);
+}
+
+#export-status:empty {
+  display: none;
+}
+
+#export-error {
+  margin: 0 0 16px;
+  color: var(--danger);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
 }
 
 .library-controls {

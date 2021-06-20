@@ -16,6 +16,16 @@
         <h1 id="library-heading" tabindex="-1">All bookmarks</h1>
         <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
       </header>
+      <div class="backup-tools">
+        <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
+        <button id="export-backup" type="button">Export backup</button>
+      </div>
+      <div id="backup-panel" class="backup-panel" hidden>
+        <p>Exports include the whole library, regardless of the current search or domain filter.</p>
+        <p>Backup files contain saved URLs, titles, and dates, which may be private. Thumbnail URLs are references, not image files.</p>
+      </div>
+      <p id="export-status" role="status" aria-atomic="true"></p>
+      <p id="export-error" role="alert" hidden></p>
       <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
         <div class="library-field">
           <label for="search">Search bookmarks</label>

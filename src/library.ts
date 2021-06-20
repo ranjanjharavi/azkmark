@@ -4,6 +4,7 @@ import { filterBookmarks } from "./bookmarks/search.js";
 import type { BookmarkSelection } from "./bookmarks/search.js";
 import { readBookmarks, watchBookmarks } from "./bookmarks/storage.js";
 import { bookmarkCard } from "./library/bookmark-card.js";
+import { initializeExport } from "./library/export.js";
 import { initializeManagement } from "./library/management.js";
 import type { ManagementAction, ManagementMode } from "./library/management.js";
 
@@ -337,7 +338,7 @@ async function refreshBookmarks(): Promise<void> {
 
 const management = initializeManagement({
   getBookmarks: () => library,
-  
+
   refresh: refreshBookmarks,
   restoreFocus: restoreManagementFocus,
 
@@ -351,6 +352,8 @@ const management = initializeManagement({
     managementFeedbackElement.hidden = true;
   },
 });
+
+initializeExport();
 
 searchInputElement.addEventListener("input", () => {
   render();
