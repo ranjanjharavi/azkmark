@@ -91,7 +91,7 @@ label {
 }
 
 #open-library {
-  min-height: 40px;
+  min-height: var(--control-height);
   border-color: transparent;
   background: transparent;
   color: var(--secondary);
