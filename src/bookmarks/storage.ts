@@ -1,5 +1,6 @@
 import { createBookmark, isBookmark } from "./model.js";
 import type { Bookmark } from "./model.js";
+import { mergeBookmarks } from "./backup.js";
 import { parseWebUrl } from "../urls.js";
 
 const BOOKMARK_KEY_PREFIX = "azkmark:bookmark:";
@@ -16,6 +17,10 @@ export type UpdateBookmarkTitleResult =
 export type DeleteBookmarkResult =
   | { status: "deleted" }
   | { status: "not-found" };
+
+export type ImportBookmarksResult =
+  | { status: "imported"; added: number; skipped: number }
+  | { status: "failed"; added: number; skipped: number; error: unknown };
 
 export class InvalidStoredBookmarkError extends TypeError {
   constructor() {
@@ -195,4 +200,32 @@ export async function saveBookmark(bookmark: Bookmark): Promise<SaveBookmarkResu
     await writeStorage({ [key]: record });
     return { status: "saved", bookmark: record };
   });
+}
+
+export async function importBookmarkRecords(
+  bookmarks: readonly Bookmark[],
+): Promise<ImportBookmarksResult> {
+  // Validate and de-duplicate the complete input before the first storage call.
+  const incoming = mergeBookmarks([], bookmarks);
+  let added = 0;
+  let skipped = incoming.skipped;
+
+  try {
+    // Fail closed if any existing managed record is corrupt before importing.
+    await readBookmarks();
+
+    for (let index = 0; index < incoming.bookmarks.length; index++) {
+      const result = await saveBookmark(incoming.bookmarks[index]);
+      if (result.status === "saved") {
+        added++;
+      } else {
+        skipped++;
+      }
+    }
+
+    return { status: "imported", added, skipped };
+  } catch (error) {
+    // Per-record locks keep unrelated saves safe; later imports can retry partial progress.
+    return { status: "failed", added, skipped, error };
+  }
 }

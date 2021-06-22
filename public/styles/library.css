@@ -100,17 +100,56 @@ body[data-page="library"] {
   margin-bottom: 0;
 }
 
-#export-status {
+#import-form {
+  margin-top: 12px;
+}
+
+.backup-import-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.backup-import-controls .library-field {
+  flex: 1 1 260px;
+}
+
+#backup-file {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 8px;
+  border: 1px solid var(--control-rule);
+  border-radius: var(--radius-control);
+  background: var(--control);
+  color: var(--ink);
+  font: var(--font-size-body)/1.4 var(--body-font);
+}
+
+#backup-file:hover:not(:disabled) {
+  border-color: var(--tertiary);
+}
+
+#backup-file[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+#export-status,
+#import-status {
   margin: 0 0 8px;
   color: var(--accent);
   font-size: var(--font-size-small);
 }
 
-#export-status:empty {
+#export-status:empty,
+#import-status:empty {
   display: none;
 }
 
-#export-error {
+#export-error,
+#import-error {
   margin: 0 0 16px;
   color: var(--danger);
   font-size: var(--font-size-small);

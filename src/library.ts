@@ -5,6 +5,7 @@ import type { BookmarkSelection } from "./bookmarks/search.js";
 import { readBookmarks, watchBookmarks } from "./bookmarks/storage.js";
 import { bookmarkCard } from "./library/bookmark-card.js";
 import { initializeExport } from "./library/export.js";
+import { initializeImport } from "./library/import.js";
 import { initializeManagement } from "./library/management.js";
 import type { ManagementAction, ManagementMode } from "./library/management.js";
 
@@ -354,6 +355,7 @@ const management = initializeManagement({
 });
 
 initializeExport();
+initializeImport({ refresh: refreshBookmarks });
 
 searchInputElement.addEventListener("input", () => {
   render();

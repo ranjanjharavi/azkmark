@@ -23,9 +23,21 @@
       <div id="backup-panel" class="backup-panel" hidden>
         <p>Exports include the whole library, regardless of the current search or domain filter.</p>
         <p>Backup files contain saved URLs, titles, and dates, which may be private. Thumbnail URLs are references, not image files.</p>
+        <p id="import-help">Choose an azkmark JSON backup to merge. Existing bookmarks keep their saved details.</p>
+        <form id="import-form" novalidate>
+          <div class="backup-import-controls">
+            <div class="library-field">
+              <label for="backup-file">Backup file</label>
+              <input id="backup-file" name="backup-file" type="file" accept=".json,application/json" required aria-describedby="import-help import-error" />
+            </div>
+            <button id="import-backup" type="submit" disabled>Import backup</button>
+          </div>
+        </form>
       </div>
       <p id="export-status" role="status" aria-atomic="true"></p>
       <p id="export-error" role="alert" hidden></p>
+      <p id="import-status" role="status" aria-atomic="true"></p>
+      <p id="import-error" role="alert" hidden></p>
       <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
         <div class="library-field">
           <label for="search">Search bookmarks</label>
