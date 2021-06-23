@@ -39,7 +39,7 @@
       <p id="import-status" role="status" aria-atomic="true"></p>
       <p id="import-error" role="alert" hidden></p>
       <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
-        <div class="library-field">
+        <div class="library-field search-field">
           <label for="search">Search bookmarks</label>
           <input id="search" name="query" type="search" placeholder="Title or URL" autocomplete="off" spellcheck="false" disabled />
         </div>
@@ -50,6 +50,15 @@
             <option value="general">General (0)</option>
           </select>
         </div>
+        <div class="library-field date-field">
+          <label for="saved-date">Saved date</label>
+          <select id="saved-date" name="saved-date" autocomplete="off" disabled>
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="7-days">Last 7 days</option>
+            <option value="30-days">Last 30 days</option>
+          </select>
+        </div>
       </form>
       <p id="management-feedback" role="status" aria-atomic="true" hidden></p>
       <section id="library-empty" aria-labelledby="empty-title" hidden>
@@ -58,7 +67,7 @@
       </section>
       <section id="no-matches" aria-labelledby="no-matches-title" hidden>
         <h2 id="no-matches-title">No bookmarks match</h2>
-        <p>Try another title or URL, or choose a different domain.</p>
+        <p>Try another title or URL, or choose a different domain or saved-date range.</p>
         <button id="reset-filters" type="button" disabled>Show all bookmarks</button>
       </section>
       <div id="library-error" hidden>

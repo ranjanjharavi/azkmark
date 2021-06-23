@@ -1,7 +1,7 @@
 import { groupBookmarks } from "./bookmarks/domains.js";
 import type { Bookmark } from "./bookmarks/model.js";
 import { filterBookmarks } from "./bookmarks/search.js";
-import type { BookmarkSelection } from "./bookmarks/search.js";
+import type { BookmarkSelection, SavedDateSelection } from "./bookmarks/search.js";
 import { readBookmarks, watchBookmarks } from "./bookmarks/storage.js";
 import { bookmarkCard } from "./library/bookmark-card.js";
 import { initializeExport } from "./library/export.js";
@@ -14,6 +14,7 @@ const libraryStatus = document.querySelector<HTMLParagraphElement>("#library-sta
 const libraryControls = document.querySelector<HTMLFormElement>("#library-controls");
 const searchInput = document.querySelector<HTMLInputElement>("#search");
 const domainSelect = document.querySelector<HTMLSelectElement>("#domain");
+const savedDateSelect = document.querySelector<HTMLSelectElement>("#saved-date");
 const emptyState = document.querySelector<HTMLElement>("#library-empty");
 const noMatches = document.querySelector<HTMLElement>("#no-matches");
 const resetFilters = document.querySelector<HTMLButtonElement>("#reset-filters");
@@ -29,6 +30,7 @@ if (
   || !libraryControls
   || !searchInput
   || !domainSelect
+  || !savedDateSelect
   || !emptyState
   || !noMatches
   || !resetFilters
@@ -46,6 +48,7 @@ const libraryStatusElement = libraryStatus;
 const libraryControlsElement = libraryControls;
 const searchInputElement = searchInput;
 const domainSelectElement = domainSelect;
+const savedDateSelectElement = savedDateSelect;
 const emptyStateElement = emptyState;
 const noMatchesElement = noMatches;
 const resetFiltersButton = resetFilters;
@@ -55,7 +58,7 @@ const readErrorElement = readError;
 const retryButtonElement = retryButton;
 const bookmarksListElement = bookmarksList;
 
-type FocusTarget = "list" | "search" | "domain" | "reset" | "retry" | "other";
+type FocusTarget = "list" | "search" | "domain" | "saved-date" | "reset" | "retry" | "other";
 
 interface FocusSnapshot {
   target: FocusTarget;
@@ -79,6 +82,9 @@ function captureFocus(): FocusSnapshot {
   }
   if (activeElement === domainSelectElement) {
     return { target: "domain" };
+  }
+  if (activeElement === savedDateSelectElement) {
+    return { target: "saved-date" };
   }
   if (activeElement === resetFiltersButton) {
     return { target: "reset" };
@@ -146,6 +152,15 @@ function restoreFocus(focus: FocusSnapshot): void {
       firstLink.focus({ preventScroll: true });
     } else if (total > 0) {
       searchInputElement.focus({ preventScroll: true });
+    } else {
+      focusHeading();
+    }
+    return;
+  }
+
+  if (focus.target === "saved-date") {
+    if (total > 0) {
+      savedDateSelectElement.focus({ preventScroll: true });
     } else {
       focusHeading();
     }
@@ -243,9 +258,11 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
     return;
   }
 
+  const savedDate = savedDateSelectElement.value as SavedDateSelection;
   const matches = filterBookmarks(library, {
     query: searchInputElement.value,
     selection,
+    savedDate,
   });
 
   while (bookmarksListElement.firstChild) {
@@ -257,7 +274,9 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
 
   const isEmpty = library.length === 0;
   const hasNoMatches = !isEmpty && matches.length === 0;
-  const filtered = selection.kind !== "all" || searchInputElement.value.trim() !== "";
+  const filtered = selection.kind !== "all"
+    || searchInputElement.value.trim() !== ""
+    || savedDate !== "all";
   let heading: string;
   if (selection.kind === "all") {
     heading = "All bookmarks";
@@ -304,6 +323,7 @@ async function refreshBookmarks(): Promise<void> {
     management.updateTarget();
     searchInputElement.disabled = false;
     domainSelectElement.disabled = false;
+    savedDateSelectElement.disabled = false;
     resetFiltersButton.disabled = false;
     hasLoaded = true;
     render(notice, focus);
@@ -324,12 +344,14 @@ async function refreshBookmarks(): Promise<void> {
     bookmarksListElement.setAttribute("aria-busy", "false");
     searchInputElement.disabled = true;
     domainSelectElement.disabled = true;
+    savedDateSelectElement.disabled = true;
     resetFiltersButton.disabled = true;
 
     if (
       focus.target === "list"
       || focus.target === "search"
       || focus.target === "domain"
+      || focus.target === "saved-date"
       || focus.target === "reset"
     ) {
       retryButtonElement.focus({ preventScroll: true });
@@ -373,6 +395,10 @@ domainSelectElement.addEventListener("change", () => {
   render();
 });
 
+savedDateSelectElement.addEventListener("change", () => {
+  render();
+});
+
 libraryControlsElement.addEventListener("submit", (event) => {
   event.preventDefault();
 });
@@ -381,6 +407,7 @@ resetFiltersButton.addEventListener("click", () => {
   searchInputElement.value = "";
   selection = { kind: "all" };
   domainSelectElement.value = "all";
+  savedDateSelectElement.value = "all";
   render();
   searchInputElement.focus({ preventScroll: true });
 });
