@@ -2,7 +2,7 @@ import { createBookmark, isBookmark } from "./model.js";
 import type { Bookmark } from "./model.js";
 
 const BACKUP_FORMAT = "azkmark";
-const BACKUP_VERSION = 1;
+const BACKUP_VERSION = 2;
 
 function snapshotBookmarks(value: unknown): Bookmark[] {
   if (!Array.isArray(value)) {
@@ -71,11 +71,16 @@ export function parseBackup(json: string): Bookmark[] {
     throw new TypeError("Invalid bookmark backup.");
   }
 
-  if (envelope.version !== BACKUP_VERSION) {
+  if (envelope.version !== 1 && envelope.version !== BACKUP_VERSION) {
     throw new UnsupportedBackupVersionError();
   }
 
-  return snapshotBookmarks(envelope.bookmarks);
+  const bookmarks = snapshotBookmarks(envelope.bookmarks);
+  if (envelope.version === 1 && bookmarks.some((bookmark) => hasOwn(bookmark, "viewed"))) {
+    throw new TypeError("Invalid bookmark collection.");
+  }
+
+  return bookmarks;
 }
 
 export interface BookmarkMergeResult {
