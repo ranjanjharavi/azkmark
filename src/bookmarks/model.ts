@@ -5,13 +5,15 @@ export interface Bookmark {
   title: string;
   savedAt: number;
   thumbnailUrl?: string;
+  viewed?: boolean;
 }
 
 export type BookmarkDetails = Pick<Bookmark, "url" | "title"> & {
   thumbnailUrl?: string | undefined;
+  viewed?: boolean | undefined;
 };
 
-const BOOKMARK_FIELDS = new Set(["url", "title", "savedAt", "thumbnailUrl"]);
+const BOOKMARK_FIELDS = new Set(["url", "title", "savedAt", "thumbnailUrl", "viewed"]);
 
 function hasOwn(object: object, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(object, key);
@@ -56,6 +58,10 @@ export function isBookmark(value: unknown): value is Bookmark {
       return false;
     }
 
+    if (hasOwn(fields, "viewed") && typeof fields["viewed"].value !== "boolean") {
+      return false;
+    }
+
     if (!hasOwn(fields, "thumbnailUrl")) return true;
 
     const thumbnail = parseWebUrl(fields["thumbnailUrl"].value);
@@ -71,6 +77,7 @@ export function createBookmark(details: BookmarkDetails, savedAt = Date.now()): 
     title: details?.title,
     savedAt,
     ...(details?.thumbnailUrl === undefined ? {} : { thumbnailUrl: details.thumbnailUrl }),
+    ...(details?.viewed === undefined ? {} : { viewed: details.viewed }),
   };
 
   if (!isBookmark(record)) {

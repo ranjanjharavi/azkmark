@@ -14,6 +14,10 @@ export type UpdateBookmarkTitleResult =
   | { status: "updated"; bookmark: Bookmark }
   | { status: "not-found" };
 
+export type UpdateBookmarkViewedResult =
+  | { status: "updated"; bookmark: Bookmark }
+  | { status: "not-found" };
+
 export type DeleteBookmarkResult =
   | { status: "deleted" }
   | { status: "not-found" };
@@ -164,6 +168,31 @@ export async function updateBookmarkTitle(
     }
 
     const updated = createBookmark({ ...existing, title: nextTitle }, existing.savedAt);
+    await writeStorage({ [key]: updated });
+    return { status: "updated", bookmark: updated };
+  });
+}
+
+export async function updateBookmarkViewed(
+  url: string,
+  viewed: boolean,
+): Promise<UpdateBookmarkViewedResult> {
+  const key = bookmarkKey(url);
+  if (typeof viewed !== "boolean") {
+    throw new TypeError("Invalid bookmark view status.");
+  }
+
+  return navigator.locks.request(key, async (): Promise<UpdateBookmarkViewedResult> => {
+    const existing = await readStoredBookmark(key);
+    if (!existing) {
+      return { status: "not-found" };
+    }
+
+    if (Boolean(existing.viewed) === viewed) {
+      return { status: "updated", bookmark: existing };
+    }
+
+    const updated = createBookmark({ ...existing, viewed }, existing.savedAt);
     await writeStorage({ [key]: updated });
     return { status: "updated", bookmark: updated };
   });
