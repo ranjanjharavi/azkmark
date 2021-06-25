@@ -1,8 +1,18 @@
 import { groupBookmarks } from "./bookmarks/domains.js";
 import type { Bookmark } from "./bookmarks/model.js";
 import { filterBookmarks } from "./bookmarks/search.js";
-import type { BookmarkSelection, SavedDateSelection } from "./bookmarks/search.js";
-import { readBookmarks, watchBookmarks } from "./bookmarks/storage.js";
+import type {
+  BookmarkSelection,
+  SavedDateSelection,
+  ViewStatusSelection,
+} from "./bookmarks/search.js";
+import {
+  InvalidStoredBookmarkError,
+  readBookmarks,
+  StorageQuotaError,
+  updateBookmarkViewed,
+  watchBookmarks,
+} from "./bookmarks/storage.js";
 import { bookmarkCard } from "./library/bookmark-card.js";
 import { initializeExport } from "./library/export.js";
 import { initializeImport } from "./library/import.js";
@@ -15,10 +25,13 @@ const libraryControls = document.querySelector<HTMLFormElement>("#library-contro
 const searchInput = document.querySelector<HTMLInputElement>("#search");
 const domainSelect = document.querySelector<HTMLSelectElement>("#domain");
 const savedDateSelect = document.querySelector<HTMLSelectElement>("#saved-date");
+const viewStatusSelect = document.querySelector<HTMLSelectElement>("#view-status");
 const emptyState = document.querySelector<HTMLElement>("#library-empty");
 const noMatches = document.querySelector<HTMLElement>("#no-matches");
 const resetFilters = document.querySelector<HTMLButtonElement>("#reset-filters");
 const managementFeedback = document.querySelector<HTMLParagraphElement>("#management-feedback");
+const viewedFeedback = document.querySelector<HTMLParagraphElement>("#viewed-feedback");
+const viewedError = document.querySelector<HTMLParagraphElement>("#viewed-error");
 const libraryError = document.querySelector<HTMLDivElement>("#library-error");
 const readError = document.querySelector<HTMLParagraphElement>("#read-error");
 const retryButton = document.querySelector<HTMLButtonElement>("#retry");
@@ -31,10 +44,13 @@ if (
   || !searchInput
   || !domainSelect
   || !savedDateSelect
+  || !viewStatusSelect
   || !emptyState
   || !noMatches
   || !resetFilters
   || !managementFeedback
+  || !viewedFeedback
+  || !viewedError
   || !libraryError
   || !readError
   || !retryButton
@@ -49,25 +65,39 @@ const libraryControlsElement = libraryControls;
 const searchInputElement = searchInput;
 const domainSelectElement = domainSelect;
 const savedDateSelectElement = savedDateSelect;
+const viewStatusSelectElement = viewStatusSelect;
 const emptyStateElement = emptyState;
 const noMatchesElement = noMatches;
 const resetFiltersButton = resetFilters;
 const managementFeedbackElement = managementFeedback;
+const viewedFeedbackElement = viewedFeedback;
+const viewedErrorElement = viewedError;
 const libraryErrorElement = libraryError;
 const readErrorElement = readError;
 const retryButtonElement = retryButton;
 const bookmarksListElement = bookmarksList;
 
-type FocusTarget = "list" | "search" | "domain" | "saved-date" | "reset" | "retry" | "other";
+type FocusTarget =
+  | "list"
+  | "search"
+  | "domain"
+  | "saved-date"
+  | "view-status"
+  | "reset"
+  | "retry"
+  | "other";
+type BookmarkAction = ManagementMode | "viewed";
 
 interface FocusSnapshot {
   target: FocusTarget;
   bookmarkUrl?: string;
-  bookmarkAction?: ManagementMode;
+  bookmarkAction?: BookmarkAction;
 }
 
 let library: Bookmark[] | undefined;
 let selection: BookmarkSelection = { kind: "all" };
+let viewStatusSelection: ViewStatusSelection = "all";
+const pendingViewed = new Set<string>();
 let revision = 0;
 let hasLoaded = false;
 
@@ -86,6 +116,9 @@ function captureFocus(): FocusSnapshot {
   if (activeElement === savedDateSelectElement) {
     return { target: "saved-date" };
   }
+  if (activeElement === viewStatusSelectElement) {
+    return { target: "view-status" };
+  }
   if (activeElement === resetFiltersButton) {
     return { target: "reset" };
   }
@@ -101,7 +134,7 @@ function captureFocus(): FocusSnapshot {
     }
     if (activeElement instanceof HTMLButtonElement) {
       const mode = activeElement.getAttribute("data-action");
-      if (mode === "edit" || mode === "delete") {
+      if (mode === "viewed" || mode === "edit" || mode === "delete") {
         return {
           target: "list",
           bookmarkUrl: activeElement.getAttribute("data-bookmark-url") || undefined,
@@ -161,6 +194,15 @@ function restoreFocus(focus: FocusSnapshot): void {
   if (focus.target === "saved-date") {
     if (total > 0) {
       savedDateSelectElement.focus({ preventScroll: true });
+    } else {
+      focusHeading();
+    }
+    return;
+  }
+
+  if (focus.target === "view-status") {
+    if (total > 0) {
+      viewStatusSelectElement.focus({ preventScroll: true });
     } else {
       focusHeading();
     }
@@ -263,20 +305,22 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
     query: searchInputElement.value,
     selection,
     savedDate,
+    viewStatus: viewStatusSelection,
   });
 
   while (bookmarksListElement.firstChild) {
     bookmarksListElement.removeChild(bookmarksListElement.firstChild);
   }
   matches.forEach((bookmark) => {
-    bookmarksListElement.appendChild(bookmarkCard(bookmark));
+    bookmarksListElement.appendChild(bookmarkCard(bookmark, pendingViewed.has(bookmark.url)));
   });
 
   const isEmpty = library.length === 0;
   const hasNoMatches = !isEmpty && matches.length === 0;
   const filtered = selection.kind !== "all"
     || searchInputElement.value.trim() !== ""
-    || savedDate !== "all";
+    || savedDate !== "all"
+    || viewStatusSelection !== "all";
   let heading: string;
   if (selection.kind === "all") {
     heading = "All bookmarks";
@@ -324,6 +368,7 @@ async function refreshBookmarks(): Promise<void> {
     searchInputElement.disabled = false;
     domainSelectElement.disabled = false;
     savedDateSelectElement.disabled = false;
+    viewStatusSelectElement.disabled = false;
     resetFiltersButton.disabled = false;
     hasLoaded = true;
     render(notice, focus);
@@ -345,6 +390,7 @@ async function refreshBookmarks(): Promise<void> {
     searchInputElement.disabled = true;
     domainSelectElement.disabled = true;
     savedDateSelectElement.disabled = true;
+    viewStatusSelectElement.disabled = true;
     resetFiltersButton.disabled = true;
 
     if (
@@ -352,6 +398,7 @@ async function refreshBookmarks(): Promise<void> {
       || focus.target === "search"
       || focus.target === "domain"
       || focus.target === "saved-date"
+      || focus.target === "view-status"
       || focus.target === "reset"
     ) {
       retryButtonElement.focus({ preventScroll: true });
@@ -379,6 +426,59 @@ const management = initializeManagement({
 initializeExport();
 initializeImport({ refresh: refreshBookmarks });
 
+async function setBookmarkViewed(button: HTMLButtonElement, url: string): Promise<void> {
+  const targetStatus = button.getAttribute("data-viewed");
+  if ((targetStatus !== "true" && targetStatus !== "false") || pendingViewed.has(url)) {
+    return;
+  }
+
+  const focus = captureFocus();
+  const wasFocused = document.activeElement === button;
+  const viewed = targetStatus === "true";
+  pendingViewed.add(url);
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  viewedErrorElement.hidden = true;
+  viewedFeedbackElement.textContent = "Saving status…";
+
+  try {
+    const result = await updateBookmarkViewed(url, viewed);
+    await refreshBookmarks();
+    if (result.status === "not-found") {
+      viewedFeedbackElement.textContent = "";
+      viewedErrorElement.textContent = "This bookmark is no longer saved. The library has been refreshed.";
+      viewedErrorElement.hidden = false;
+    } else {
+      viewedFeedbackElement.textContent = `Marked “${result.bookmark.title}” as ${viewed ? "Viewed" : "To view"}.`;
+    }
+  } catch (cause) {
+    viewedFeedbackElement.textContent = "";
+    if (cause instanceof InvalidStoredBookmarkError) {
+      viewedErrorElement.textContent = "This bookmark's saved data is invalid. Its status hasn't been changed.";
+    } else if (cause instanceof StorageQuotaError) {
+      viewedErrorElement.textContent = "Storage is full. Export a backup, free some space, then use the status button to retry.";
+    } else {
+      viewedErrorElement.textContent = "Couldn't save status. No change was confirmed; use the status button to retry.";
+    }
+    viewedErrorElement.hidden = false;
+  } finally {
+    pendingViewed.delete(url);
+    const activeElement = document.activeElement;
+    const recoverActionFocus = wasFocused && (
+      activeElement === button
+      || activeElement === document.body
+      || activeElement === libraryHeadingElement
+      || (activeElement instanceof HTMLButtonElement
+        && activeElement.getAttribute("data-bookmark-url") === url
+        && activeElement.getAttribute("data-action") === "viewed")
+    );
+    render("", recoverActionFocus ? focus : captureFocus());
+    if (recoverActionFocus && !library) {
+      retryButtonElement.focus({ preventScroll: true });
+    }
+  }
+}
+
 searchInputElement.addEventListener("input", () => {
   render();
 });
@@ -395,6 +495,13 @@ domainSelectElement.addEventListener("change", () => {
   render();
 });
 
+viewStatusSelectElement.addEventListener("change", () => {
+  const value = viewStatusSelectElement.value;
+  viewStatusSelection = value === "to-view" || value === "viewed" ? value : "all";
+  viewStatusSelectElement.value = viewStatusSelection;
+  render();
+});
+
 savedDateSelectElement.addEventListener("change", () => {
   render();
 });
@@ -408,6 +515,8 @@ resetFiltersButton.addEventListener("click", () => {
   selection = { kind: "all" };
   domainSelectElement.value = "all";
   savedDateSelectElement.value = "all";
+  viewStatusSelection = "all";
+  viewStatusSelectElement.value = "all";
   render();
   searchInputElement.focus({ preventScroll: true });
 });
@@ -425,7 +534,7 @@ bookmarksListElement.addEventListener("click", (event) => {
 
   const url = button.getAttribute("data-bookmark-url");
   const mode = button.getAttribute("data-action");
-  if (!url || (mode !== "edit" && mode !== "delete")) {
+  if (!url) {
     return;
   }
 
@@ -437,7 +546,11 @@ bookmarksListElement.addEventListener("click", (event) => {
     }
   }
 
-  management.open(url, mode, cardIndex);
+  if (mode === "viewed") {
+    void setBookmarkViewed(button, url);
+  } else if (mode === "edit" || mode === "delete") {
+    management.open(url, mode, cardIndex);
+  }
 });
 
 retryButtonElement.addEventListener("click", () => {

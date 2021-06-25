@@ -104,7 +104,6 @@ function storedBookmark(key: string, value: unknown): Bookmark {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
     const fields = Object.getOwnPropertyDescriptors(value);
     delete fields.tags;
-    delete fields.viewed;
     value = Object.create(Object.getPrototypeOf(value), fields);
   }
 
