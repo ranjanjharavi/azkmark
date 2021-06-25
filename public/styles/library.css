@@ -158,7 +158,7 @@ body[data-page="library"] {
 
 .library-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 240px 200px;
+  grid-template-columns: minmax(0, 1fr) 204px 168px 152px;
   align-items: end;
   gap: 16px;
   margin: 0 0 24px;
@@ -241,27 +241,69 @@ body[data-page="library"] {
 
 .bookmark-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
   padding: 4px 8px;
   border-top: 1px solid var(--rule);
 }
 
 .bookmark-action {
   box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height);
   min-height: var(--control-height);
-  padding: 8px 12px;
+  padding: 0;
+  border-radius: var(--radius-small);
   border-color: transparent;
   background: transparent;
   color: var(--secondary);
-  font-size: var(--font-size-small);
-  font-weight: 500;
 }
 
 .bookmark-action:hover:not(:disabled) {
   border-color: transparent;
   background: var(--accent-soft);
   color: var(--accent-hover);
+}
+
+/* Chrome 88 needs the prefixed mask properties. Icons inherit button state colors. */
+.bookmark-action::before {
+  content: "";
+  flex: none;
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+  pointer-events: none;
+}
+
+.bookmark-action[data-action="viewed"] {
+  --icon: var(--icon-to-view);
+}
+
+.bookmark-action[data-action="viewed"][aria-pressed="true"] {
+  --icon: var(--icon-viewed);
+}
+
+.bookmark-action[data-action="edit"] {
+  --icon: var(--icon-edit);
+}
+
+.bookmark-action[data-action="delete"] {
+  --icon: var(--icon-delete);
+}
+
+.bookmark-action[data-action="viewed"][aria-pressed="true"]:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+.bookmark-action[aria-busy="true"] {
+  cursor: wait;
 }
 
 .bookmark-action[data-action="delete"]:hover:not(:disabled) {
@@ -305,6 +347,8 @@ body[data-page="library"] {
 .bookmark-meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   grid-column: 1;
   grid-row: 1;
   align-self: center;
@@ -313,6 +357,7 @@ body[data-page="library"] {
 
 .bookmark-domain {
   min-width: 0;
+  margin: 0;
   color: var(--tertiary);
   font-size: var(--font-size-small);
   overflow-wrap: anywhere;
@@ -387,10 +432,22 @@ body[data-page="library"] {
   overflow-wrap: anywhere;
 }
 
-#management-feedback {
+#management-feedback,
+#viewed-feedback {
   margin: 0 0 16px;
   color: var(--accent);
   font-size: var(--font-size-small);
+}
+
+#viewed-feedback:empty {
+  display: none;
+}
+
+#viewed-error {
+  margin: 0 0 16px;
+  color: var(--danger);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
 }
 
 #bookmark-dialog {
