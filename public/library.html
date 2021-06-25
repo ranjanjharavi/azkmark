@@ -59,15 +59,25 @@
             <option value="30-days">Last 30 days</option>
           </select>
         </div>
+        <div class="library-field status-field">
+          <label for="view-status">View status</label>
+          <select id="view-status" name="view-status" autocomplete="off" disabled>
+            <option value="all">All statuses</option>
+            <option value="to-view">To view</option>
+            <option value="viewed">Viewed</option>
+          </select>
+        </div>
       </form>
       <p id="management-feedback" role="status" aria-atomic="true" hidden></p>
+      <p id="viewed-feedback" role="status" aria-atomic="true"></p>
+      <p id="viewed-error" role="alert" hidden></p>
       <section id="library-empty" aria-labelledby="empty-title" hidden>
         <h2 id="empty-title">No bookmarks yet</h2>
         <p>Save a page from the azkmark toolbar popup to start the library.</p>
       </section>
       <section id="no-matches" aria-labelledby="no-matches-title" hidden>
         <h2 id="no-matches-title">No bookmarks match</h2>
-        <p>Try another title or URL, or choose a different domain or saved-date range.</p>
+        <p>Try another title or URL, or change the domain, saved-date range, or view status.</p>
         <button id="reset-filters" type="button" disabled>Show all bookmarks</button>
       </section>
       <div id="library-error" hidden>
