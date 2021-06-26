@@ -7,11 +7,13 @@ export type BookmarkSelection =
   | { kind: "domain"; domain: string };
 
 export type SavedDateSelection = "all" | "today" | "7-days" | "30-days";
+export type ViewStatusSelection = "all" | "to-view" | "viewed";
 
 export interface BookmarkFilterOptions {
   query?: string;
   selection?: BookmarkSelection;
   savedDate?: SavedDateSelection;
+  viewStatus?: ViewStatusSelection;
   now?: number;
 }
 
@@ -54,6 +56,7 @@ export function filterBookmarks(
     query = "",
     selection = { kind: "all" },
     savedDate = "all",
+    viewStatus = "all",
     now = Date.now(),
   }: BookmarkFilterOptions = {},
 ): Bookmark[] {
@@ -72,11 +75,13 @@ export function filterBookmarks(
     const matchesDate = !range || (
       bookmark.savedAt >= range.start && bookmark.savedAt < range.end
     );
+    const matchesViewStatus = viewStatus === "all"
+      || Boolean(bookmark.viewed) === (viewStatus === "viewed");
     const matchesQuery = !term
       || bookmark.title.toLowerCase().includes(term)
       || bookmark.url.toLowerCase().includes(term);
 
-    return matchesDate && matchesQuery;
+    return matchesDate && matchesViewStatus && matchesQuery;
   });
 
   matches.sort((left, right) => {
