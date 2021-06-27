@@ -1,4 +1,6 @@
 import { parseBackup, UnsupportedBackupVersionError } from "../bookmarks/backup.js";
+import { parseChromeBookmarks } from "../bookmarks/chrome-bookmarks.js";
+import type { Bookmark } from "../bookmarks/model.js";
 import {
   importBookmarkRecords,
   InvalidStoredBookmarkError,
@@ -33,7 +35,7 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
   let importing = false;
 
   function failureMessage(cause: unknown, added: number, skipped: number): string {
-    const counts = `${added} added, ${skipped} skipped.`;
+    const counts = `${added} added, ${skipped} duplicate URLs skipped.`;
     if (cause instanceof InvalidStoredBookmarkError) {
       return `Some saved data is invalid. ${counts} Repair the library, then retry this file.`;
     }
@@ -61,7 +63,7 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
 
     const file = fileInputElement.files?.[0];
     if (!file) {
-      errorElement.textContent = "Choose an azkmark JSON backup before importing.";
+      errorElement.textContent = "Choose an azkmark JSON backup or Chrome HTML export before importing.";
       errorElement.hidden = false;
       fileInputElement.setAttribute("aria-invalid", "true");
       fileInputElement.focus();
@@ -76,14 +78,23 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
     formElement.setAttribute("aria-busy", "true");
     fileInputElement.removeAttribute("aria-invalid");
     errorElement.hidden = true;
-    statusElement.textContent = "Reading backup…";
+    statusElement.textContent = "Reading file…";
 
     let readingFile = true;
     let focusFileAfter = false;
     try {
       const text = await file.text();
       readingFile = false;
-      const incoming = parseBackup(text);
+      // File names and MIME types are hints only; each parser validates the contents.
+      let incoming: Bookmark[];
+      let unsupportedNotice = "";
+      if (text.trimStart().startsWith("<")) {
+        const parsed = parseChromeBookmarks(text);
+        incoming = parsed.bookmarks;
+        unsupportedNotice = ` ${parsed.skipped} unsupported links skipped.`;
+      } else {
+        incoming = parseBackup(text);
+      }
       statusElement.textContent = "Importing bookmarks… Keep this tab open.";
 
       const result = await importBookmarkRecords(incoming);
@@ -94,20 +105,20 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
       }
 
       if (result.status === "imported") {
-        statusElement.textContent = `Import finished: ${result.added} added, ${result.skipped} skipped. Existing bookmarks were kept.`;
+        statusElement.textContent = `Import finished: ${result.added} added, ${result.skipped} duplicate URLs skipped.${unsupportedNotice} Existing bookmarks were kept.`;
       } else {
         statusElement.textContent = "";
-        errorElement.textContent = failureMessage(result.error, result.added, result.skipped);
+        errorElement.textContent = failureMessage(result.error, result.added, result.skipped) + unsupportedNotice;
         errorElement.hidden = false;
       }
     } catch (cause) {
       statusElement.textContent = "";
       if (readingFile) {
-        errorElement.textContent = "Couldn't read the selected file. Try again or choose another backup.";
+        errorElement.textContent = "Couldn't read the selected file. Try again or choose another file.";
       } else if (cause instanceof UnsupportedBackupVersionError) {
         errorElement.textContent = "This backup version isn't supported. Choose an azkmark version 1 or 2 backup.";
       } else {
-        errorElement.textContent = "This isn't a valid azkmark JSON backup. No bookmarks were changed.";
+        errorElement.textContent = "This isn't a valid azkmark JSON backup or Chrome HTML export. No bookmarks were changed.";
       }
       errorElement.hidden = false;
       fileInputElement.setAttribute("aria-invalid", "true");
