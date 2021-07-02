@@ -8,13 +8,31 @@ export type BookmarkSelection =
 
 export type SavedDateSelection = "all" | "today" | "7-days" | "30-days";
 export type ViewStatusSelection = "all" | "to-view" | "viewed";
+export type BookmarkSort = "newest" | "oldest" | "title-asc" | "title-desc";
 
 export interface BookmarkFilterOptions {
   query?: string;
   selection?: BookmarkSelection;
   savedDate?: SavedDateSelection;
   viewStatus?: ViewStatusSelection;
+  sort?: BookmarkSort;
   now?: number;
+}
+
+const compareTitles = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
+
+function compareBookmarks(left: Bookmark, right: Bookmark, sort: BookmarkSort): number {
+  if (sort === "title-asc" || sort === "title-desc") {
+    const titleOrder = compareTitles(left.title, right.title);
+    if (titleOrder !== 0) {
+      return sort === "title-asc" ? titleOrder : -titleOrder;
+    }
+  } else if (sort === "oldest") {
+    return left.savedAt - right.savedAt;
+  }
+
+  // Equal titles use newest saved first; complete ties retain input order.
+  return right.savedAt - left.savedAt;
 }
 
 function savedDateRange(
@@ -57,6 +75,7 @@ export function filterBookmarks(
     selection = { kind: "all" },
     savedDate = "all",
     viewStatus = "all",
+    sort = "newest",
     now = Date.now(),
   }: BookmarkFilterOptions = {},
 ): Bookmark[] {
@@ -84,12 +103,8 @@ export function filterBookmarks(
     return matchesDate && matchesViewStatus && matchesQuery;
   });
 
-  matches.sort((left, right) => {
-    if (left.savedAt === right.savedAt) {
-      return 0;
-    }
-    return left.savedAt > right.savedAt ? -1 : 1;
-  });
+  // Filtering creates a fresh array; Chrome 88 has stable Array.prototype.sort.
+  matches.sort((left, right) => compareBookmarks(left, right, sort));
 
   return matches;
 }
