@@ -158,10 +158,14 @@ body[data-page="library"] {
 
 .library-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 204px 168px 152px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: end;
   gap: 16px;
   margin: 0 0 24px;
+}
+
+.search-field {
+  grid-column: 1 / -1;
 }
 
 .library-field {
@@ -577,10 +581,6 @@ body[data-page="library"] {
 
   .library-controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .search-field {
-    grid-column: 1 / -1;
   }
 
   #bookmarks {
