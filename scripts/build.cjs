@@ -29,6 +29,7 @@ fs.mkdirSync(outputDirectory, { recursive: true });
   "manifest.json",
   "popup.html",
   "library.html",
+  "library-preferences.js",
   "styles/tokens.css",
   "styles/shared.css",
   "styles/popup.css",
