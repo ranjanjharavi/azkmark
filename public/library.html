@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles/tokens.css" />
     <link rel="stylesheet" href="styles/shared.css" />
     <link rel="stylesheet" href="styles/library.css" />
+    <script src="library-preferences.js"></script>
     <script type="module" src="library.js"></script>
   </head>
   <body data-page="library">
@@ -65,6 +66,15 @@
             <option value="all">All statuses</option>
             <option value="to-view">To view</option>
             <option value="viewed">Viewed</option>
+          </select>
+        </div>
+        <div class="library-field library-sort">
+          <label for="sort-by">Sort by</label>
+          <select id="sort-by" name="sort" autocomplete="off" aria-controls="bookmarks" disabled>
+            <option value="newest">Newest saved</option>
+            <option value="oldest">Oldest saved</option>
+            <option value="title-asc">Title A–Z</option>
+            <option value="title-desc">Title Z–A</option>
           </select>
         </div>
       </form>

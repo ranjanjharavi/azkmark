@@ -3,6 +3,7 @@ import type { Bookmark } from "./bookmarks/model.js";
 import { filterBookmarks } from "./bookmarks/search.js";
 import type {
   BookmarkSelection,
+  BookmarkSort,
   SavedDateSelection,
   ViewStatusSelection,
 } from "./bookmarks/search.js";
@@ -26,6 +27,7 @@ const searchInput = document.querySelector<HTMLInputElement>("#search");
 const domainSelect = document.querySelector<HTMLSelectElement>("#domain");
 const savedDateSelect = document.querySelector<HTMLSelectElement>("#saved-date");
 const viewStatusSelect = document.querySelector<HTMLSelectElement>("#view-status");
+const sortSelect = document.querySelector<HTMLSelectElement>("#sort-by");
 const emptyState = document.querySelector<HTMLElement>("#library-empty");
 const noMatches = document.querySelector<HTMLElement>("#no-matches");
 const resetFilters = document.querySelector<HTMLButtonElement>("#reset-filters");
@@ -45,6 +47,7 @@ if (
   || !domainSelect
   || !savedDateSelect
   || !viewStatusSelect
+  || !sortSelect
   || !emptyState
   || !noMatches
   || !resetFilters
@@ -66,6 +69,7 @@ const searchInputElement = searchInput;
 const domainSelectElement = domainSelect;
 const savedDateSelectElement = savedDateSelect;
 const viewStatusSelectElement = viewStatusSelect;
+const sortSelectElement = sortSelect;
 const emptyStateElement = emptyState;
 const noMatchesElement = noMatches;
 const resetFiltersButton = resetFilters;
@@ -83,6 +87,7 @@ type FocusTarget =
   | "domain"
   | "saved-date"
   | "view-status"
+  | "sort"
   | "reset"
   | "retry"
   | "other";
@@ -97,6 +102,7 @@ interface FocusSnapshot {
 let library: Bookmark[] | undefined;
 let selection: BookmarkSelection = { kind: "all" };
 let viewStatusSelection: ViewStatusSelection = "all";
+let sortOrder: BookmarkSort = "newest";
 const pendingViewed = new Set<string>();
 let revision = 0;
 let hasLoaded = false;
@@ -118,6 +124,9 @@ function captureFocus(): FocusSnapshot {
   }
   if (activeElement === viewStatusSelectElement) {
     return { target: "view-status" };
+  }
+  if (activeElement === sortSelectElement) {
+    return { target: "sort" };
   }
   if (activeElement === resetFiltersButton) {
     return { target: "reset" };
@@ -203,6 +212,15 @@ function restoreFocus(focus: FocusSnapshot): void {
   if (focus.target === "view-status") {
     if (total > 0) {
       viewStatusSelectElement.focus({ preventScroll: true });
+    } else {
+      focusHeading();
+    }
+    return;
+  }
+
+  if (focus.target === "sort") {
+    if (total > 0) {
+      sortSelectElement.focus({ preventScroll: true });
     } else {
       focusHeading();
     }
@@ -306,6 +324,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
     selection,
     savedDate,
     viewStatus: viewStatusSelection,
+    sort: sortOrder,
   });
 
   while (bookmarksListElement.firstChild) {
@@ -369,6 +388,7 @@ async function refreshBookmarks(): Promise<void> {
     domainSelectElement.disabled = false;
     savedDateSelectElement.disabled = false;
     viewStatusSelectElement.disabled = false;
+    sortSelectElement.disabled = false;
     resetFiltersButton.disabled = false;
     hasLoaded = true;
     render(notice, focus);
@@ -391,6 +411,7 @@ async function refreshBookmarks(): Promise<void> {
     domainSelectElement.disabled = true;
     savedDateSelectElement.disabled = true;
     viewStatusSelectElement.disabled = true;
+    sortSelectElement.disabled = true;
     resetFiltersButton.disabled = true;
 
     if (
@@ -399,6 +420,7 @@ async function refreshBookmarks(): Promise<void> {
       || focus.target === "domain"
       || focus.target === "saved-date"
       || focus.target === "view-status"
+      || focus.target === "sort"
       || focus.target === "reset"
     ) {
       retryButtonElement.focus({ preventScroll: true });
@@ -556,6 +578,18 @@ bookmarksListElement.addEventListener("click", (event) => {
 retryButtonElement.addEventListener("click", () => {
   void refreshBookmarks();
 });
+
+window.azkmarkLibraryPreference<BookmarkSort>({
+  key: "azkmark.library.sort",
+  fallback: "newest",
+  values: ["oldest", "title-asc", "title-desc"],
+  apply: (next) => {
+    if (sortOrder !== next) {
+      sortOrder = next;
+      render();
+    }
+  },
+})([sortSelectElement]);
 
 watchBookmarks(() => {
   void refreshBookmarks();
