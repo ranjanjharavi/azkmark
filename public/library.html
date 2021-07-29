@@ -40,11 +40,16 @@
       <p id="import-status" role="status" aria-atomic="true"></p>
       <p id="import-error" role="alert" hidden></p>
       <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
+        <div class="library-search-row">
         <div class="library-field search-field">
           <label for="search">Search bookmarks</label>
           <input id="search" name="query" type="search" placeholder="Title or URL" autocomplete="off" spellcheck="false" disabled />
         </div>
-        <div class="library-field">
+        <button id="toggle-filters" type="button" aria-expanded="true" aria-controls="library-filters" disabled>Filters</button>
+        </div>
+        <div class="library-toolbar">
+        <div id="library-filters" class="library-fields">
+        <div class="library-field domain-field">
           <label for="domain">Domain</label>
           <select id="domain" name="domain" disabled>
             <option value="all">All bookmarks (0)</option>
@@ -68,6 +73,8 @@
             <option value="viewed">Viewed</option>
           </select>
         </div>
+        </div>
+        <div class="library-display-controls">
         <div class="library-field library-sort">
           <label for="sort-by">Sort by</label>
           <select id="sort-by" name="sort" autocomplete="off" aria-controls="bookmarks" disabled>
@@ -76,6 +83,13 @@
             <option value="title-asc">Title A–Z</option>
             <option value="title-desc">Title Z–A</option>
           </select>
+        </div>
+        <fieldset id="library-view" class="library-view-control">
+          <legend>Bookmark view</legend>
+          <label class="view-option"><input id="view-cards" type="radio" name="library-view" value="cards" aria-controls="bookmarks" checked disabled /> Cards</label>
+          <label class="view-option"><input id="view-list" type="radio" name="library-view" value="list" aria-controls="bookmarks" disabled /> List</label>
+        </fieldset>
+        </div>
         </div>
       </form>
       <p id="management-feedback" role="status" aria-atomic="true" hidden></p>
@@ -94,7 +108,7 @@
         <p id="read-error" role="alert"></p>
         <button id="retry" type="button">Try again</button>
       </div>
-      <ul id="bookmarks" aria-label="Saved bookmarks" aria-busy="true" hidden></ul>
+      <ul id="bookmarks" data-view="cards" aria-label="Saved bookmarks" aria-busy="true" hidden></ul>
     </main>
     <dialog id="bookmark-dialog" aria-labelledby="management-heading">
       <h2 id="management-heading">Edit bookmark title</h2>
