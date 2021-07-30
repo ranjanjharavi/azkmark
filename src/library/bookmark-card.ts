@@ -1,12 +1,18 @@
 import type { Bookmark } from "../bookmarks/model.js";
 import { bookmarkDomain } from "../bookmarks/domains.js";
 
-export function bookmarkCard(bookmark: Bookmark, savingViewStatus = false): HTMLLIElement {
+export type BookmarkView = "cards" | "list";
+
+export function bookmarkCard(
+  bookmark: Bookmark,
+  view: BookmarkView = "cards",
+  savingViewStatus = false,
+): HTMLLIElement {
   const card = document.createElement("li");
   card.className = "bookmark-card";
 
   const link = document.createElement("a");
-  link.className = bookmark.thumbnailUrl
+  link.className = view === "cards" && bookmark.thumbnailUrl
     ? "bookmark-link"
     : "bookmark-link bookmark-link--text-only";
 
@@ -29,7 +35,7 @@ export function bookmarkCard(bookmark: Bookmark, savingViewStatus = false): HTML
   link.appendChild(title);
   link.appendChild(metadata);
 
-  if (bookmark.thumbnailUrl) {
+  if (view === "cards" && bookmark.thumbnailUrl) {
     const preview = document.createElement("div");
     preview.className = "bookmark-preview";
 

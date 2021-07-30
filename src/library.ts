@@ -15,6 +15,7 @@ import {
   watchBookmarks,
 } from "./bookmarks/storage.js";
 import { bookmarkCard } from "./library/bookmark-card.js";
+import type { BookmarkView } from "./library/bookmark-card.js";
 import { initializeExport } from "./library/export.js";
 import { initializeImport } from "./library/import.js";
 import { initializeManagement } from "./library/management.js";
@@ -28,6 +29,10 @@ const domainSelect = document.querySelector<HTMLSelectElement>("#domain");
 const savedDateSelect = document.querySelector<HTMLSelectElement>("#saved-date");
 const viewStatusSelect = document.querySelector<HTMLSelectElement>("#view-status");
 const sortSelect = document.querySelector<HTMLSelectElement>("#sort-by");
+const cardsRadio = document.querySelector<HTMLInputElement>("#view-cards");
+const listRadio = document.querySelector<HTMLInputElement>("#view-list");
+const toggleFilters = document.querySelector<HTMLButtonElement>("#toggle-filters");
+const filters = document.querySelector<HTMLDivElement>("#library-filters");
 const emptyState = document.querySelector<HTMLElement>("#library-empty");
 const noMatches = document.querySelector<HTMLElement>("#no-matches");
 const resetFilters = document.querySelector<HTMLButtonElement>("#reset-filters");
@@ -48,6 +53,10 @@ if (
   || !savedDateSelect
   || !viewStatusSelect
   || !sortSelect
+  || !cardsRadio
+  || !listRadio
+  || !toggleFilters
+  || !filters
   || !emptyState
   || !noMatches
   || !resetFilters
@@ -70,6 +79,10 @@ const domainSelectElement = domainSelect;
 const savedDateSelectElement = savedDateSelect;
 const viewStatusSelectElement = viewStatusSelect;
 const sortSelectElement = sortSelect;
+const cardsRadioElement = cardsRadio;
+const listRadioElement = listRadio;
+const toggleFiltersElement = toggleFilters;
+const filtersElement = filters;
 const emptyStateElement = emptyState;
 const noMatchesElement = noMatches;
 const resetFiltersButton = resetFilters;
@@ -88,6 +101,9 @@ type FocusTarget =
   | "saved-date"
   | "view-status"
   | "sort"
+  | "view-cards"
+  | "view-list"
+  | "filters"
   | "reset"
   | "retry"
   | "other";
@@ -103,6 +119,7 @@ let library: Bookmark[] | undefined;
 let selection: BookmarkSelection = { kind: "all" };
 let viewStatusSelection: ViewStatusSelection = "all";
 let sortOrder: BookmarkSort = "newest";
+let bookmarkView: BookmarkView = "cards";
 const pendingViewed = new Set<string>();
 let revision = 0;
 let hasLoaded = false;
@@ -127,6 +144,15 @@ function captureFocus(): FocusSnapshot {
   }
   if (activeElement === sortSelectElement) {
     return { target: "sort" };
+  }
+  if (activeElement === cardsRadioElement) {
+    return { target: "view-cards" };
+  }
+  if (activeElement === listRadioElement) {
+    return { target: "view-list" };
+  }
+  if (activeElement === toggleFiltersElement) {
+    return { target: "filters" };
   }
   if (activeElement === resetFiltersButton) {
     return { target: "reset" };
@@ -221,6 +247,20 @@ function restoreFocus(focus: FocusSnapshot): void {
   if (focus.target === "sort") {
     if (total > 0) {
       sortSelectElement.focus({ preventScroll: true });
+    } else {
+      focusHeading();
+    }
+    return;
+  }
+
+  const displayTarget = {
+    "view-cards": cardsRadioElement,
+    "view-list": listRadioElement,
+    filters: toggleFiltersElement,
+  };
+  if (focus.target === "view-cards" || focus.target === "view-list" || focus.target === "filters") {
+    if (total > 0) {
+      displayTarget[focus.target].focus({ preventScroll: true });
     } else {
       focusHeading();
     }
@@ -331,7 +371,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
     bookmarksListElement.removeChild(bookmarksListElement.firstChild);
   }
   matches.forEach((bookmark) => {
-    bookmarksListElement.appendChild(bookmarkCard(bookmark, pendingViewed.has(bookmark.url)));
+    bookmarksListElement.appendChild(bookmarkCard(bookmark, bookmarkView, pendingViewed.has(bookmark.url)));
   });
 
   const isEmpty = library.length === 0;
@@ -389,6 +429,9 @@ async function refreshBookmarks(): Promise<void> {
     savedDateSelectElement.disabled = false;
     viewStatusSelectElement.disabled = false;
     sortSelectElement.disabled = false;
+    cardsRadioElement.disabled = false;
+    listRadioElement.disabled = false;
+    toggleFiltersElement.disabled = false;
     resetFiltersButton.disabled = false;
     hasLoaded = true;
     render(notice, focus);
@@ -412,6 +455,9 @@ async function refreshBookmarks(): Promise<void> {
     savedDateSelectElement.disabled = true;
     viewStatusSelectElement.disabled = true;
     sortSelectElement.disabled = true;
+    cardsRadioElement.disabled = true;
+    listRadioElement.disabled = true;
+    toggleFiltersElement.disabled = true;
     resetFiltersButton.disabled = true;
 
     if (
@@ -421,6 +467,9 @@ async function refreshBookmarks(): Promise<void> {
       || focus.target === "saved-date"
       || focus.target === "view-status"
       || focus.target === "sort"
+      || focus.target === "view-cards"
+      || focus.target === "view-list"
+      || focus.target === "filters"
       || focus.target === "reset"
     ) {
       retryButtonElement.focus({ preventScroll: true });
@@ -590,6 +639,37 @@ window.azkmarkLibraryPreference<BookmarkSort>({
     }
   },
 })([sortSelectElement]);
+
+window.azkmarkLibraryPreference<BookmarkView>({
+  key: "azkmark.library.view",
+  fallback: "cards",
+  values: ["list"],
+  apply: (next) => {
+    if (bookmarkView !== next) {
+      bookmarkView = next;
+      bookmarksListElement.setAttribute("data-view", next);
+      render();
+    }
+  },
+})([cardsRadioElement, listRadioElement]);
+
+function setFiltersOpen(open: boolean): void {
+  if (!open && filtersElement.contains(document.activeElement)) {
+    toggleFiltersElement.focus({ preventScroll: true });
+  }
+  filtersElement.hidden = !open;
+  toggleFiltersElement.setAttribute("aria-expanded", String(open));
+}
+
+toggleFiltersElement.addEventListener("click", () => {
+  setFiltersOpen(filtersElement.hidden);
+});
+
+libraryControlsElement.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && filtersElement.contains(document.activeElement)) {
+    setFiltersOpen(false);
+  }
+});
 
 watchBookmarks(() => {
   void refreshBookmarks();
