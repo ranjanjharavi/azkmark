@@ -157,15 +157,89 @@ body[data-page="library"] {
 }
 
 .library-controls {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  align-items: end;
-  gap: 16px;
   margin: 0 0 24px;
 }
 
+.library-search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
 .search-field {
-  grid-column: 1 / -1;
+  flex: 1;
+}
+
+#toggle-filters {
+  background: var(--control);
+  border-color: var(--control-rule);
+  color: var(--secondary);
+}
+
+#toggle-filters[aria-expanded="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+.library-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.library-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex: 1 1 480px;
+  gap: 12px;
+  min-width: 0;
+}
+
+.library-display-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.library-sort {
+  width: 176px;
+  max-width: 100%;
+}
+
+.library-view-control {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.library-view-control legend {
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.view-option {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: var(--radius-control);
+  background: var(--control);
+  cursor: pointer;
+}
+
+.library-controls .library-view-control input {
+  width: auto;
+  min-height: 0;
+  margin: 0;
 }
 
 .library-field {
@@ -406,6 +480,79 @@ body[data-page="library"] {
   text-align: center;
 }
 
+/* List mode never creates thumbnail elements or image requests. */
+#bookmarks[data-view="list"] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--page);
+}
+
+#bookmarks[data-view="list"] .bookmark-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 8px 4px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  background: transparent;
+}
+
+#bookmarks[data-view="list"] .bookmark-card:last-child {
+  border-bottom: 0;
+}
+
+#bookmarks[data-view="list"] .bookmark-card:focus-within {
+  background: var(--control);
+}
+
+#bookmarks[data-view="list"] .bookmark-link {
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  row-gap: 4px;
+  min-height: 56px;
+  padding: 8px 0;
+}
+
+#bookmarks[data-view="list"] .bookmark-link h2 {
+  grid-row: 1;
+  margin: 0;
+  font-size: var(--font-size-lead);
+}
+
+#bookmarks[data-view="list"] .bookmark-meta {
+  grid-row: 2;
+}
+
+#bookmarks[data-view="list"] .bookmark-actions {
+  flex: none;
+  flex-wrap: nowrap;
+  padding: 0;
+  border: 0;
+}
+
+@media (max-width: 540px) {
+  .library-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .domain-field {
+    grid-column: 1 / -1;
+  }
+
+  #bookmarks[data-view="list"] .bookmark-card {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  #bookmarks[data-view="list"] .bookmark-link {
+    flex-basis: 100%;
+  }
+}
+
 #library-empty,
 #no-matches,
 #library-error {
@@ -579,10 +726,6 @@ body[data-page="library"] {
     padding: 24px;
   }
 
-  .library-controls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   #bookmarks {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -597,9 +740,8 @@ body[data-page="library"] {
     gap: 12px;
   }
 
-  .library-controls {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
+  .library-fields {
+    flex-basis: 100%;
   }
 
   .library-header h1 {
