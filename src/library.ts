@@ -411,7 +411,6 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
   }
 
   libraryHeadingElement.textContent = heading;
-  libraryHeadingElement.title = heading;
   let statusText = bookmarkCount(library.length);
   if (filtered) {
     statusText = `${matches.length} of ${library.length} bookmarks`;

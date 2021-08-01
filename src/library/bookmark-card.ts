@@ -1,5 +1,6 @@
 import type { Bookmark } from "../bookmarks/model.js";
 import { bookmarkDomain } from "../bookmarks/domains.js";
+import { bookmarkActions } from "./bookmark-actions.js";
 
 export type BookmarkView = "cards" | "list";
 
@@ -66,38 +67,7 @@ export function bookmarkCard(
     link.appendChild(preview);
   }
 
-  const actions = document.createElement("div");
-  actions.className = "bookmark-actions";
-
-  const viewStatusButton = document.createElement("button");
-  viewStatusButton.type = "button";
-  viewStatusButton.className = "bookmark-action";
-  viewStatusButton.setAttribute("data-action", "viewed");
-  viewStatusButton.setAttribute("data-bookmark-url", bookmark.url);
-  viewStatusButton.setAttribute("data-viewed", String(!bookmark.viewed));
-  viewStatusButton.setAttribute("aria-label", `${bookmark.viewed ? "Viewed. Mark to view" : "To view. Mark viewed"}: ${bookmark.title}`);
-  viewStatusButton.setAttribute("aria-pressed", String(Boolean(bookmark.viewed)));
-  viewStatusButton.setAttribute("aria-busy", String(savingViewStatus));
-  viewStatusButton.disabled = savingViewStatus;
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.className = "bookmark-action";
-  editButton.setAttribute("data-action", "edit");
-  editButton.setAttribute("data-bookmark-url", bookmark.url);
-  editButton.setAttribute("aria-label", `Edit title: ${bookmark.title}`);
-
-  const deleteButton = document.createElement("button");
-  deleteButton.type = "button";
-  deleteButton.className = "bookmark-action";
-  deleteButton.setAttribute("data-action", "delete");
-  deleteButton.setAttribute("data-bookmark-url", bookmark.url);
-  deleteButton.setAttribute("aria-label", `Delete bookmark: ${bookmark.title}`);
-
-  actions.appendChild(viewStatusButton);
-  actions.appendChild(editButton);
-  actions.appendChild(deleteButton);
   card.appendChild(link);
-  card.appendChild(actions);
+  card.appendChild(bookmarkActions(bookmark, savingViewStatus));
   return card;
 }
