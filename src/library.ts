@@ -33,6 +33,7 @@ const cardsRadio = document.querySelector<HTMLInputElement>("#view-cards");
 const listRadio = document.querySelector<HTMLInputElement>("#view-list");
 const toggleFilters = document.querySelector<HTMLButtonElement>("#toggle-filters");
 const filters = document.querySelector<HTMLDivElement>("#library-filters");
+const filterCount = document.querySelector<HTMLSpanElement>("#filter-count");
 const emptyState = document.querySelector<HTMLElement>("#library-empty");
 const noMatches = document.querySelector<HTMLElement>("#no-matches");
 const resetFilters = document.querySelector<HTMLButtonElement>("#reset-filters");
@@ -57,6 +58,7 @@ if (
   || !listRadio
   || !toggleFilters
   || !filters
+  || !filterCount
   || !emptyState
   || !noMatches
   || !resetFilters
@@ -83,6 +85,7 @@ const cardsRadioElement = cardsRadio;
 const listRadioElement = listRadio;
 const toggleFiltersElement = toggleFilters;
 const filtersElement = filters;
+const filterCountElement = filterCount;
 const emptyStateElement = emptyState;
 const noMatchesElement = noMatches;
 const resetFiltersButton = resetFilters;
@@ -353,6 +356,26 @@ function bookmarkCount(count: number): string {
   return `${count} ${count === 1 ? "bookmark" : "bookmarks"}`;
 }
 
+function updateFilterControls(savedDate: SavedDateSelection): number {
+  const states: readonly [HTMLSelectElement, boolean][] = [
+    [domainSelectElement, selection.kind !== "all"],
+    [savedDateSelectElement, savedDate !== "all"],
+    [viewStatusSelectElement, viewStatusSelection !== "all"],
+  ];
+  let active = 0;
+  states.forEach(([control, selected]) => {
+    control.setAttribute("data-active", String(selected));
+    if (selected) {
+      active++;
+    }
+  });
+  filterCountElement.textContent = String(active);
+  filterCountElement.hidden = active === 0;
+  toggleFiltersElement.setAttribute("aria-label", active ? `Filters, ${active} active` : "Filters");
+  toggleFiltersElement.setAttribute("data-active", String(active > 0));
+  return active;
+}
+
 function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
   if (!library) {
     return;
@@ -376,10 +399,8 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
 
   const isEmpty = library.length === 0;
   const hasNoMatches = !isEmpty && matches.length === 0;
-  const filtered = selection.kind !== "all"
-    || searchInputElement.value.trim() !== ""
-    || savedDate !== "all"
-    || viewStatusSelection !== "all";
+  const activeFilters = updateFilterControls(savedDate);
+  const filtered = activeFilters > 0 || searchInputElement.value.trim() !== "";
   let heading: string;
   if (selection.kind === "all") {
     heading = "All bookmarks";
@@ -666,7 +687,8 @@ toggleFiltersElement.addEventListener("click", () => {
 });
 
 libraryControlsElement.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && filtersElement.contains(document.activeElement)) {
+  if (event.key === "Escape" && !filtersElement.hidden && filtersElement.contains(document.activeElement)) {
+    event.preventDefault();
     setFiltersOpen(false);
   }
 });
