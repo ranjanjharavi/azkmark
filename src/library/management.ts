@@ -79,6 +79,7 @@ export function initializeManagement({
   const submitButtonElement = submitButton;
 
   let action: ManagementAction | undefined;
+  let originalTitle = "";
   let submitting = false;
   let targetMissing = false;
 
@@ -100,7 +101,8 @@ export function initializeManagement({
     targetTitleElement.textContent = bookmark.title;
     targetTitleElement.hidden = mode === "edit";
     targetUrlElement.textContent = bookmark.url;
-    titleInputElement.value = bookmark.title;
+    originalTitle = bookmark.title;
+    titleInputElement.value = originalTitle;
     titleInputElement.readOnly = false;
     titleInputElement.removeAttribute("aria-invalid");
     titleErrorElement.hidden = true;
@@ -172,7 +174,9 @@ export function initializeManagement({
     }
 
     const currentAction = action;
-    const title = titleInputElement.value.trim();
+    const draftTitle = titleInputElement.value;
+    const title = draftTitle.trim();
+    const titleChanged = draftTitle !== originalTitle;
     if (currentAction.mode === "edit" && !title) {
       titleErrorElement.hidden = false;
       titleInputElement.setAttribute("aria-invalid", "true");
@@ -189,13 +193,17 @@ export function initializeManagement({
     statusElement.textContent = currentAction.mode === "edit" ? "Saving title…" : "Deleting bookmark…";
 
     try {
+      let feedbackMessage: string;
       if (currentAction.mode === "edit") {
-        const result = await updateBookmarkTitle(currentAction.url, title);
+        const result = await updateBookmarkTitle(currentAction.url, titleChanged ? title : undefined);
         if (result.status === "not-found") {
           showMissingTarget();
           await refresh();
           return;
         }
+        feedbackMessage = result.status === "unchanged"
+          ? "No title changes made. Kept the latest saved title."
+          : "Bookmark title saved.";
       } else {
         const result = await deleteBookmark(currentAction.url);
         if (result.status === "not-found") {
@@ -203,14 +211,11 @@ export function initializeManagement({
           await refresh();
           return;
         }
+        feedbackMessage = "Bookmark deleted.";
       }
 
       await refresh();
-      if (currentAction.mode === "edit") {
-        showFeedback("Bookmark title saved.");
-      } else {
-        showFeedback("Bookmark deleted.");
-      }
+      showFeedback(feedbackMessage);
       dialogElement.close();
     } catch (cause) {
       errorElement.textContent = failureMessage(cause, currentAction.mode);
@@ -241,6 +246,7 @@ export function initializeManagement({
 
     const previousAction = action;
     action = undefined;
+    originalTitle = "";
     if (previousAction) {
       restoreFocus(previousAction);
     }

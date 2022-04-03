@@ -11,7 +11,7 @@ export interface SaveBookmarkResult {
 }
 
 export type UpdateBookmarkTitleResult =
-  | { status: "updated"; bookmark: Bookmark }
+  | { status: "updated" | "unchanged"; bookmark: Bookmark }
   | { status: "not-found" };
 
 export type UpdateBookmarkViewedResult =
@@ -152,18 +152,23 @@ export function watchBookmarks(onChange: () => void): void {
 
 export async function updateBookmarkTitle(
   url: string,
-  title: string,
+  title: string | undefined,
 ): Promise<UpdateBookmarkTitleResult> {
   const key = bookmarkKey(url);
-  if (typeof title !== "string" || !title.trim()) {
+  if (title !== undefined && (typeof title !== "string" || !title.trim())) {
     throw new TypeError("Enter a bookmark title.");
   }
 
-  const nextTitle = title.trim();
+  const nextTitle = title?.trim();
   return navigator.locks.request(key, async (): Promise<UpdateBookmarkTitleResult> => {
     const existing = await readStoredBookmark(key);
     if (!existing) {
       return { status: "not-found" };
+    }
+
+    // Untouched drafts keep the fresh locked title, never the editor's snapshot
+    if (nextTitle === undefined || nextTitle === existing.title) {
+      return { status: "unchanged", bookmark: existing };
     }
 
     const updated = createBookmark({ ...existing, title: nextTitle }, existing.savedAt);
