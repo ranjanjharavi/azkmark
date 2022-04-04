@@ -19,6 +19,7 @@ import type { BookmarkView } from "./library/bookmark-card.js";
 import { initializeExport } from "./library/export.js";
 import { initializeImport } from "./library/import.js";
 import { initializeManagement } from "./library/management.js";
+import { createRefreshScheduler } from "./library/refresh.js";
 import type { ManagementAction, ManagementMode } from "./library/management.js";
 
 const libraryHeading = document.querySelector<HTMLHeadingElement>("#library-heading");
@@ -429,7 +430,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
   restoreFocus(focus);
 }
 
-async function refreshBookmarks(): Promise<void> {
+async function readAndRenderBookmarks(): Promise<void> {
   const currentRevision = ++revision;
   bookmarksListElement.setAttribute("aria-busy", "true");
   libraryStatusElement.textContent = hasLoaded ? "Updating bookmarks…" : "Loading your bookmarks…";
@@ -496,6 +497,8 @@ async function refreshBookmarks(): Promise<void> {
     }
   }
 }
+
+const { refresh: refreshBookmarks, schedule: scheduleBookmarkRefresh } = createRefreshScheduler(readAndRenderBookmarks);
 
 const management = initializeManagement({
   getBookmarks: () => library,
@@ -692,8 +695,6 @@ libraryControlsElement.addEventListener("keydown", (event) => {
   }
 });
 
-watchBookmarks(() => {
-  void refreshBookmarks();
-});
+watchBookmarks(scheduleBookmarkRefresh);
 
 void refreshBookmarks();
