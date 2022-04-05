@@ -2,7 +2,7 @@
 
 Local bookmarks with search, previews, and manual viewed status.
 
-- **Find:** title/URL search, domain, saved date, and viewed status filters. Date presets: Today, Last 7 days, Last 30 days, or All time.
+- **Find:** title/URL search, domain, saved date, and viewed status filters. Date presets: Today, Last 7 days, Last 30 days, or All time. Active ranges refresh at local midnight or on tab return.
 - **Browse:** Cards with previews or an image free List. Sort by newest, oldest, or title A–Z/Z–A. View and sort persist across reloads/tabs when storage is available, filter reset preserves both.
 - **Manage:** open eye = Viewed, crossed out eye = To view. Pen edits titles, trash requires confirmation. Opening a link never changes its status.
 - **Filters:** disclosure preserves selections, the count excludes search/sort. Escape closes the group and returns focus.
