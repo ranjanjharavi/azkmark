@@ -35,7 +35,7 @@ function compareBookmarks(left: Bookmark, right: Bookmark, sort: BookmarkSort): 
   return right.savedAt - left.savedAt;
 }
 
-function savedDateRange(
+export function savedDateRange(
   selection: SavedDateSelection,
   now: number,
 ): { start: number; end: number } | undefined {

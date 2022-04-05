@@ -20,6 +20,7 @@ import { initializeExport } from "./library/export.js";
 import { initializeImport } from "./library/import.js";
 import { initializeManagement } from "./library/management.js";
 import { createRefreshScheduler } from "./library/refresh.js";
+import { initializeSavedDateRefresh } from "./library/saved-date-refresh.js";
 import type { ManagementAction, ManagementMode } from "./library/management.js";
 
 const libraryHeading = document.querySelector<HTMLHeadingElement>("#library-heading");
@@ -377,7 +378,7 @@ function updateFilterControls(savedDate: SavedDateSelection): number {
   return active;
 }
 
-function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
+function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.now()): void {
   if (!library) {
     return;
   }
@@ -389,6 +390,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
     savedDate,
     viewStatus: viewStatusSelection,
     sort: sortOrder,
+    now,
   });
 
   while (bookmarksListElement.firstChild) {
@@ -427,6 +429,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus()): void {
   bookmarksListElement.setAttribute("aria-busy", "false");
   libraryErrorElement.hidden = true;
 
+  savedDateRefresh.update(isEmpty ? "all" : savedDate, now);
   restoreFocus(focus);
 }
 
@@ -464,6 +467,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     const focus = captureFocus();
     console.error("Could not read saved bookmarks.", error);
     library = undefined;
+    savedDateRefresh.update("all");
     libraryStatusElement.textContent = "Couldn't load your bookmarks.";
     readErrorElement.textContent = "Couldn't load your bookmarks. Try again.";
     libraryErrorElement.hidden = false;
@@ -499,6 +503,17 @@ async function readAndRenderBookmarks(): Promise<void> {
 }
 
 const { refresh: refreshBookmarks, schedule: scheduleBookmarkRefresh } = createRefreshScheduler(readAndRenderBookmarks);
+
+const savedDateRefresh = initializeSavedDateRefresh((now) => {
+  const reading = bookmarksListElement.getAttribute("aria-busy") === "true";
+  const loadingStatus = libraryStatusElement.textContent;
+  render("", captureFocus(), now);
+  // A calendar-only render must not clear an in-flight storage read's feedback
+  if (reading) {
+    bookmarksListElement.setAttribute("aria-busy", "true");
+    libraryStatusElement.textContent = loadingStatus;
+  }
+});
 
 const management = initializeManagement({
   getBookmarks: () => library,
