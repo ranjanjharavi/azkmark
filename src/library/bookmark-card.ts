@@ -1,6 +1,7 @@
 import type { Bookmark } from "../bookmarks/model.js";
 import { bookmarkDomain } from "../bookmarks/domains.js";
 import { bookmarkActions } from "./bookmark-actions.js";
+import { bookmarkPreview } from "./bookmark-preview.js";
 
 export type BookmarkView = "cards" | "list";
 
@@ -37,34 +38,7 @@ export function bookmarkCard(
   link.appendChild(metadata);
 
   if (view === "cards" && bookmark.thumbnailUrl) {
-    const preview = document.createElement("div");
-    preview.className = "bookmark-preview";
-
-    const loading = document.createElement("p");
-    loading.className = "preview-loading";
-    loading.textContent = "Loading preview…";
-    loading.setAttribute("aria-hidden", "true");
-
-    const image = document.createElement("img");
-    image.className = "bookmark-image";
-    image.alt = "";
-    image.width = 640;
-    image.height = 360;
-    image.setAttribute("loading", "lazy");
-    image.setAttribute("decoding", "async");
-    image.referrerPolicy = "no-referrer";
-
-    image.addEventListener("load", () => {
-      image.classList.add("loaded");
-      loading.remove();
-    }, { once: true });
-    
-    image.addEventListener("error", () => preview.remove(), { once: true });
-    image.src = bookmark.thumbnailUrl;
-
-    preview.appendChild(image);
-    preview.appendChild(loading);
-    link.appendChild(preview);
+    link.appendChild(bookmarkPreview(bookmark.thumbnailUrl));
   }
 
   card.appendChild(link);

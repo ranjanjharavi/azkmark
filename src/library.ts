@@ -16,6 +16,7 @@ import {
 } from "./bookmarks/storage.js";
 import { bookmarkCard } from "./library/bookmark-card.js";
 import type { BookmarkView } from "./library/bookmark-card.js";
+import { initializeBookmarkPreviews } from "./library/bookmark-preview.js";
 import { initializeExport } from "./library/export.js";
 import { initializeImport } from "./library/import.js";
 import { initializeManagement } from "./library/management.js";
@@ -393,6 +394,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
     now,
   });
 
+  bookmarkPreviews.clear();
   while (bookmarksListElement.firstChild) {
     bookmarksListElement.removeChild(bookmarksListElement.firstChild);
   }
@@ -429,6 +431,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   bookmarksListElement.setAttribute("aria-busy", "false");
   libraryErrorElement.hidden = true;
 
+  bookmarkPreviews.observe();
   savedDateRefresh.update(isEmpty ? "all" : savedDate, now);
   restoreFocus(focus);
 }
@@ -467,6 +470,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     const focus = captureFocus();
     console.error("Could not read saved bookmarks.", error);
     library = undefined;
+    bookmarkPreviews.clear();
     savedDateRefresh.update("all");
     libraryStatusElement.textContent = "Couldn't load your bookmarks.";
     readErrorElement.textContent = "Couldn't load your bookmarks. Try again.";
@@ -502,6 +506,7 @@ async function readAndRenderBookmarks(): Promise<void> {
   }
 }
 
+const bookmarkPreviews = initializeBookmarkPreviews(bookmarksListElement);
 const { refresh: refreshBookmarks, schedule: scheduleBookmarkRefresh } = createRefreshScheduler(readAndRenderBookmarks);
 
 const savedDateRefresh = initializeSavedDateRefresh((now) => {
