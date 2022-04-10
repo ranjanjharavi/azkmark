@@ -66,11 +66,3 @@ declare namespace chrome {
     ): void;
   }
 }
-
-declare interface LockManager {
-  request<T>(name: string, callback: () => T | PromiseLike<T>): Promise<T>;
-}
-
-declare interface Navigator {
-  readonly locks: LockManager;
-}
