@@ -40,10 +40,6 @@ export class StorageQuotaError extends Error {
   }
 }
 
-function hasOwn(object: object, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(object, key);
-}
-
 function storageError(message?: string): Error {
   const description = message || "Chrome storage operation failed.";
   return /quota/i.test(description) ? new StorageQuotaError(description) : new Error(description);
@@ -116,7 +112,7 @@ function storedBookmark(key: string, value: unknown): Bookmark {
 
 async function readStoredBookmark(key: string): Promise<Bookmark | undefined> {
   const values = await readStorage(key);
-  if (!hasOwn(values, key)) {
+  if (!Object.hasOwn(values, key)) {
     return undefined;
   }
 

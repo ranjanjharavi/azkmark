@@ -15,10 +15,6 @@ export type BookmarkDetails = Pick<Bookmark, "url" | "title"> & {
 
 const BOOKMARK_FIELDS = new Set(["url", "title", "savedAt", "thumbnailUrl", "viewed"]);
 
-function hasOwn(object: object, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(object, key);
-}
-
 export function isBookmark(value: unknown): value is Bookmark {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return false;
@@ -37,12 +33,16 @@ export function isBookmark(value: unknown): value is Bookmark {
       }
 
       const field = fields[key];
-      if (!field.enumerable || !hasOwn(field, "value")) {
+      if (!field.enumerable || !Object.hasOwn(field, "value")) {
         return false;
       }
     }
 
-    if (!hasOwn(fields, "url") || !hasOwn(fields, "title") || !hasOwn(fields, "savedAt")) {
+    if (
+      !Object.hasOwn(fields, "url")
+      || !Object.hasOwn(fields, "title")
+      || !Object.hasOwn(fields, "savedAt")
+    ) {
       return false;
     }
 
@@ -58,11 +58,11 @@ export function isBookmark(value: unknown): value is Bookmark {
       return false;
     }
 
-    if (hasOwn(fields, "viewed") && typeof fields["viewed"].value !== "boolean") {
+    if (Object.hasOwn(fields, "viewed") && typeof fields["viewed"].value !== "boolean") {
       return false;
     }
 
-    if (!hasOwn(fields, "thumbnailUrl")) return true;
+    if (!Object.hasOwn(fields, "thumbnailUrl")) return true;
 
     const thumbnail = parseWebUrl(fields["thumbnailUrl"].value);
     return Boolean(thumbnail && !thumbnail.username && !thumbnail.password);

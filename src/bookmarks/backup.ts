@@ -39,10 +39,6 @@ export class UnsupportedBackupVersionError extends TypeError {
   }
 }
 
-function hasOwn(object: object, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(object, key);
-}
-
 export function parseBackup(json: string): Bookmark[] {
   if (typeof json !== "string") {
     throw new TypeError("Invalid bookmark backup.");
@@ -63,9 +59,9 @@ export function parseBackup(json: string): Bookmark[] {
   const keys = Object.keys(envelope);
   if (
     keys.length !== 3
-    || !hasOwn(envelope, "format")
-    || !hasOwn(envelope, "version")
-    || !hasOwn(envelope, "bookmarks")
+    || !Object.hasOwn(envelope, "format")
+    || !Object.hasOwn(envelope, "version")
+    || !Object.hasOwn(envelope, "bookmarks")
     || envelope.format !== BACKUP_FORMAT
   ) {
     throw new TypeError("Invalid bookmark backup.");
@@ -76,7 +72,7 @@ export function parseBackup(json: string): Bookmark[] {
   }
 
   const bookmarks = snapshotBookmarks(envelope.bookmarks);
-  if (envelope.version === 1 && bookmarks.some((bookmark) => hasOwn(bookmark, "viewed"))) {
+  if (envelope.version === 1 && bookmarks.some((bookmark) => Object.hasOwn(bookmark, "viewed"))) {
     throw new TypeError("Invalid bookmark collection.");
   }
 
