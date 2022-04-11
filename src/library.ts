@@ -332,22 +332,16 @@ function updateDomainOptions(bookmarks: readonly Bookmark[]): string {
     notice = "Domain group no longer available. Showing All bookmarks, search kept.";
   }
 
-  const options = [
-    new Option(`All bookmarks (${bookmarks.length})`, "all"),
-    new Option(`General (${groups.general.length})`, "general"),
-  ];
+  const options = document.createDocumentFragment();
+  options.appendChild(new Option(`All bookmarks (${bookmarks.length})`, "all"));
+  options.appendChild(new Option(`General (${groups.general.length})`, "general"));
   const domains = Array.from(groups.domains.keys()).sort();
   domains.forEach((domain) => {
     const members = groups.domains.get(domain) ?? [];
-    options.push(new Option(`${domain} (${members.length})`, `domain:${domain}`));
+    options.appendChild(new Option(`${domain} (${members.length})`, `domain:${domain}`));
   });
 
-  while (domainSelectElement.firstChild) {
-    domainSelectElement.removeChild(domainSelectElement.firstChild);
-  }
-  options.forEach((option) => {
-    domainSelectElement.appendChild(option);
-  });
+  domainSelectElement.replaceChildren(options);
   domainSelectElement.value = selection.kind === "domain"
     ? `domain:${selection.domain}`
     : selection.kind;
@@ -394,13 +388,12 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
     now,
   });
 
-  bookmarkPreviews.clear();
-  while (bookmarksListElement.firstChild) {
-    bookmarksListElement.removeChild(bookmarksListElement.firstChild);
-  }
+  const rows = document.createDocumentFragment();
   matches.forEach((bookmark) => {
-    bookmarksListElement.appendChild(bookmarkCard(bookmark, bookmarkView, pendingViewed.has(bookmark.url)));
+    rows.appendChild(bookmarkCard(bookmark, bookmarkView, pendingViewed.has(bookmark.url)));
   });
+  bookmarkPreviews.clear();
+  bookmarksListElement.replaceChildren(rows);
 
   const isEmpty = library.length === 0;
   const hasNoMatches = !isEmpty && matches.length === 0;
