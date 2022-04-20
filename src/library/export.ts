@@ -1,5 +1,5 @@
 import { serializeBackup } from "../bookmarks/backup.js";
-import { InvalidStoredBookmarkError, readBookmarks } from "../bookmarks/storage.js";
+import { InvalidStoredBookmarkError, readLibrary } from "../bookmarks/storage.js";
 
 export function initializeExport(): void {
   const button = document.querySelector<HTMLButtonElement>("#export-backup");
@@ -46,8 +46,8 @@ export function initializeExport(): void {
     let objectUrl: string | undefined;
     try {
       // Read the complete current library
-      const bookmarks = await readBookmarks();
-      const json = serializeBackup(bookmarks);
+      const { bookmarks, collections } = await readLibrary();
+      const json = serializeBackup(bookmarks, collections);
       const file = new Blob([json], { type: "application/json;charset=utf-8" });
       objectUrl = URL.createObjectURL(file);
 

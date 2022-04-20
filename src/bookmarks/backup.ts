@@ -1,10 +1,26 @@
 import { createBookmark, isBookmark } from "./model.js";
 import type { Bookmark } from "./model.js";
+import { snapshotCollections } from "./collections.js";
+import type { Collection } from "./collections.js";
 
 const BACKUP_FORMAT = "azkmark";
 const BACKUP_VERSION = 2;
+const COLLECTION_BACKUP_VERSION = 3;
 
-function snapshotBookmarks(value: unknown): Bookmark[] {
+type BackupVersion = 1 | 2 | 3;
+
+export interface LibraryData {
+  bookmarks: Bookmark[];
+  collections: Collection[];
+}
+
+interface BackupEnvelope {
+  version: BackupVersion;
+  bookmarks: unknown;
+  collections?: unknown;
+}
+
+export function snapshotBookmarks(value: unknown): Bookmark[] {
   if (!Array.isArray(value)) {
     throw new TypeError("Invalid bookmark collection.");
   }
@@ -22,13 +38,61 @@ function snapshotBookmarks(value: unknown): Bookmark[] {
   return records;
 }
 
-export function serializeBackup(bookmarks: readonly Bookmark[]): string {
+function snapshotBackupBookmarks(value: unknown, version: BackupVersion): Bookmark[] {
+  const bookmarks = snapshotBookmarks(value);
+
+  if (version !== COLLECTION_BACKUP_VERSION && bookmarks.some((bookmark) => (
+    Object.hasOwn(bookmark, "collectionId")
+    || (version === 1 && Object.hasOwn(bookmark, "viewed"))
+  ))) {
+    throw new TypeError("Invalid bookmark collection.");
+  }
+  
+  return bookmarks;
+}
+
+export function snapshotLibrary(
+  bookmarks: readonly Bookmark[],
+  collections: readonly Collection[],
+): LibraryData {
+  const records = snapshotBookmarks(bookmarks);
+  const definitions = snapshotCollections(collections);
+  const ids = new Set(definitions.map((collection) => collection.id));
+  
+  if (records.some((bookmark) => bookmark.collectionId !== undefined && !ids.has(bookmark.collectionId))) {
+    throw new TypeError("Unknown bookmark collection.");
+  }
+  
+  return { bookmarks: records, collections: definitions };
+}
+
+export function serializeBackup(
+  bookmarks: readonly Bookmark[],
+  collections: readonly Collection[] = [],
+): string {
+  if (snapshotCollections(collections).length > 0) {
+    throw new TypeError("Collection data requires a version 3 backup.");
+  }
+  
   const envelope = {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
-    bookmarks: snapshotBookmarks(bookmarks),
+    bookmarks: snapshotBackupBookmarks(bookmarks, BACKUP_VERSION),
   };
 
+  return `${JSON.stringify(envelope, null, 2)}\n`;
+}
+
+// Pure v3 support; the existing UI remains on v1/v2 until its integration chunk.
+export function serializeLibraryBackup(
+  bookmarks: readonly Bookmark[],
+  collections: readonly Collection[],
+): string {
+  const envelope = {
+    format: BACKUP_FORMAT,
+    version: COLLECTION_BACKUP_VERSION,
+    ...snapshotLibrary(bookmarks, collections),
+  };
   return `${JSON.stringify(envelope, null, 2)}\n`;
 }
 
@@ -39,7 +103,7 @@ export class UnsupportedBackupVersionError extends TypeError {
   }
 }
 
-export function parseBackup(json: string): Bookmark[] {
+function parseEnvelope(json: string): BackupEnvelope {
   if (typeof json !== "string") {
     throw new TypeError("Invalid bookmark backup.");
   }
@@ -56,27 +120,43 @@ export function parseBackup(json: string): Bookmark[] {
   }
 
   const envelope = value as Record<string, unknown>;
-  const keys = Object.keys(envelope);
+  const version = envelope.version;
+  const fields = version === COLLECTION_BACKUP_VERSION
+    ? ["format", "version", "bookmarks", "collections"]
+    : ["format", "version", "bookmarks"];
   if (
-    keys.length !== 3
-    || !Object.hasOwn(envelope, "format")
-    || !Object.hasOwn(envelope, "version")
-    || !Object.hasOwn(envelope, "bookmarks")
+    Object.keys(envelope).length !== fields.length
+    || fields.some((field) => !Object.hasOwn(envelope, field))
     || envelope.format !== BACKUP_FORMAT
   ) {
     throw new TypeError("Invalid bookmark backup.");
   }
 
-  if (envelope.version !== 1 && envelope.version !== BACKUP_VERSION) {
+  if (version !== 1 && version !== BACKUP_VERSION && version !== COLLECTION_BACKUP_VERSION) {
     throw new UnsupportedBackupVersionError();
   }
 
-  const bookmarks = snapshotBookmarks(envelope.bookmarks);
-  if (envelope.version === 1 && bookmarks.some((bookmark) => Object.hasOwn(bookmark, "viewed"))) {
-    throw new TypeError("Invalid bookmark collection.");
-  }
+  return { version, bookmarks: envelope.bookmarks, collections: envelope.collections };
+}
 
-  return bookmarks;
+export function parseBackup(json: string): Bookmark[] {
+  const envelope = parseEnvelope(json);
+
+  if (envelope.version === COLLECTION_BACKUP_VERSION) {
+    throw new UnsupportedBackupVersionError();
+  }
+  
+  return snapshotBackupBookmarks(envelope.bookmarks, envelope.version);
+}
+
+export function parseLibraryBackup(json: string): LibraryData {
+  const envelope = parseEnvelope(json);
+  const bookmarks = snapshotBackupBookmarks(envelope.bookmarks, envelope.version);
+
+  const collections = envelope.version === COLLECTION_BACKUP_VERSION
+    ? snapshotCollections(envelope.collections)
+    : [];
+  return snapshotLibrary(bookmarks, collections);
 }
 
 export interface BookmarkMergeResult {

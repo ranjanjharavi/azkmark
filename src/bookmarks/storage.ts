@@ -1,18 +1,35 @@
 import { createBookmark, isBookmark } from "./model.js";
 import type { Bookmark } from "./model.js";
-import { mergeBookmarks } from "./backup.js";
+import { mergeBookmarks, snapshotBookmarks, snapshotLibrary } from "./backup.js";
+import type { LibraryData } from "./backup.js";
+import {
+  collectionNameKey,
+  isCollectionId,
+  normalizeCollectionName,
+  snapshotCollections,
+} from "./collections.js";
+import type { Collection } from "./collections.js";
 import { parseWebUrl } from "../urls.js";
 
 const BOOKMARK_KEY_PREFIX = "azkmark:bookmark:";
+export const COLLECTIONS_KEY = "azkmark:collections";
 
 export interface SaveBookmarkResult {
   status: "saved" | "already-saved";
   bookmark: Bookmark;
 }
 
-export type UpdateBookmarkTitleResult =
+export type UpdateBookmarkResult =
   | { status: "updated" | "unchanged"; bookmark: Bookmark }
   | { status: "not-found" };
+
+export type UpdateBookmarkTitleResult = UpdateBookmarkResult;
+
+export interface BookmarkChanges {
+  title?: string | undefined;
+  // Undefined preserves the current assignment; null explicitly means Unsorted.
+  collectionId?: string | null | undefined;
+}
 
 export type UpdateBookmarkViewedResult =
   | { status: "updated"; bookmark: Bookmark }
@@ -25,6 +42,17 @@ export type DeleteBookmarkResult =
 export type ImportBookmarksResult =
   | { status: "imported"; added: number; skipped: number }
   | { status: "failed"; added: number; skipped: number; error: unknown };
+
+export type DeleteCollectionResult =
+  | { status: "deleted" | "not-found"; moved: number }
+  | { status: "failed"; moved: number; error: unknown };
+
+export class MissingCollectionError extends Error {
+  constructor() {
+    super("This collection is no longer available. Choose another collection or Unsorted.");
+    this.name = "MissingCollectionError";
+  }
+}
 
 export class InvalidStoredBookmarkError extends TypeError {
   constructor() {
@@ -116,22 +144,52 @@ async function readStoredBookmark(key: string): Promise<Bookmark | undefined> {
     return undefined;
   }
 
-  return storedBookmark(key, values[key]);
+  const bookmark = storedBookmark(key, values[key]);
+  if (bookmark.collectionId !== undefined) {
+    // Callers hold the URL lock, definition reads must not acquire another lock
+    const collections = await readCollections();
+
+    if (!collections.some((collection) => collection.id === bookmark.collectionId)) {
+      throw new InvalidStoredBookmarkError();
+    }
+  }
+
+  return bookmark;
+}
+
+function storedCollections(value: unknown): Collection[] {
+  try {
+    return snapshotCollections(value);
+  } catch {
+    throw new InvalidStoredBookmarkError();
+  }
+}
+
+export async function readCollections(): Promise<Collection[]> {
+  const values = await readStorage(COLLECTIONS_KEY);
+  return Object.hasOwn(values, COLLECTIONS_KEY) ? storedCollections(values[COLLECTIONS_KEY]) : [];
+}
+
+export async function readLibrary(): Promise<LibraryData> {
+  // Read definitions and members together, including valid partial collection moves.
+  const values = await readStorage(null);
+  const collections = Object.hasOwn(values, COLLECTIONS_KEY) ? storedCollections(values[COLLECTIONS_KEY]) : [];
+  const bookmarks: Bookmark[] = [];
+  for (const key of Object.keys(values)) {
+    if (key.startsWith(BOOKMARK_KEY_PREFIX)) {
+      bookmarks.push(storedBookmark(key, values[key]));
+    }
+  }
+
+  try {
+    return snapshotLibrary(bookmarks, collections);
+  } catch {
+    throw new InvalidStoredBookmarkError();
+  }
 }
 
 export async function readBookmarks(): Promise<Bookmark[]> {
-  const values = await readStorage(null);
-  const bookmarks: Bookmark[] = [];
-
-  for (const key of Object.keys(values)) {
-    if (!key.startsWith(BOOKMARK_KEY_PREFIX)) {
-      continue;
-    }
-
-    bookmarks.push(storedBookmark(key, values[key]));
-  }
-
-  return bookmarks;
+  return (await readLibrary()).bookmarks;
 }
 
 export function watchBookmarks(onChange: () => void): void {
@@ -140,37 +198,75 @@ export function watchBookmarks(onChange: () => void): void {
       return;
     }
 
-    if (Object.keys(changes).some((key) => key.startsWith(BOOKMARK_KEY_PREFIX))) {
+    if (Object.keys(changes).some((key) => key.startsWith(BOOKMARK_KEY_PREFIX) || key === COLLECTIONS_KEY)) {
       onChange();
     }
   });
 }
 
-export async function updateBookmarkTitle(
+async function requireCollection(id: string | undefined): Promise<void> {
+  if (id === undefined) {
+    return;
+  }
+
+  const collections = await readCollections();
+  if (!collections.some((collection) => collection.id === id)) {
+    throw new MissingCollectionError();
+  }
+}
+
+export async function updateBookmark(
   url: string,
-  title: string | undefined,
-): Promise<UpdateBookmarkTitleResult> {
+  { title, collectionId }: BookmarkChanges = {},
+): Promise<UpdateBookmarkResult> {
   const key = bookmarkKey(url);
   if (title !== undefined && (typeof title !== "string" || !title.trim())) {
     throw new TypeError("Enter a bookmark title.");
   }
+  if (collectionId !== undefined && collectionId !== null && !isCollectionId(collectionId)) {
+    throw new TypeError("Invalid collection ID.");
+  }
 
-  const nextTitle = title?.trim();
-  return navigator.locks.request(key, async (): Promise<UpdateBookmarkTitleResult> => {
+  const submittedTitle = title?.trim();
+  const edit = () => navigator.locks.request(key, async (): Promise<UpdateBookmarkResult> => {
     const existing = await readStoredBookmark(key);
     if (!existing) {
       return { status: "not-found" };
     }
 
-    // Untouched drafts keep the fresh locked title, never the editor's snapshot
-    if (nextTitle === undefined || nextTitle === existing.title) {
+    // Untouched fields come from the fresh locked record, never editor snapshots.
+    const nextTitle = submittedTitle ?? existing.title;
+    let nextCollectionId = existing.collectionId;
+    if (collectionId !== undefined) {
+      nextCollectionId = collectionId ?? undefined;
+    }
+
+    if (nextTitle === existing.title && nextCollectionId === existing.collectionId) {
       return { status: "unchanged", bookmark: existing };
     }
 
-    const updated = createBookmark({ ...existing, title: nextTitle }, existing.savedAt);
+    if (collectionId !== undefined) {
+      await requireCollection(nextCollectionId);
+    }
+
+    const updated = createBookmark({
+      ...existing,
+      title: nextTitle,
+      collectionId: nextCollectionId,
+    }, existing.savedAt);
     await writeStorage({ [key]: updated });
     return { status: "updated", bookmark: updated };
   });
+
+  // Membership writes always acquire the collection lock before the URL lock.
+  return collectionId === undefined ? edit() : navigator.locks.request(COLLECTIONS_KEY, edit);
+}
+
+export function updateBookmarkTitle(
+  url: string,
+  title: string | undefined,
+): Promise<UpdateBookmarkTitleResult> {
+  return updateBookmark(url, { title });
 }
 
 export async function updateBookmarkViewed(
@@ -218,14 +314,19 @@ export async function saveBookmark(bookmark: Bookmark): Promise<SaveBookmarkResu
 
   // Snapshot before waiting so caller changes cannot alter the key or record
   const record = createBookmark(bookmark, bookmark.savedAt);
-  const key = bookmarkKey(record.url);
+  const save = () => saveRecord(record);
+  return record.collectionId === undefined ? save() : navigator.locks.request(COLLECTIONS_KEY, save);
+}
 
+function saveRecord(record: Bookmark): Promise<SaveBookmarkResult> {
+  const key = bookmarkKey(record.url);
   return navigator.locks.request(key, async (): Promise<SaveBookmarkResult> => {
     const existing = await readStoredBookmark(key);
     if (existing) {
       return { status: "already-saved", bookmark: existing };
     }
 
+    await requireCollection(record.collectionId);
     await writeStorage({ [key]: record });
     return { status: "saved", bookmark: record };
   });
@@ -234,14 +335,18 @@ export async function saveBookmark(bookmark: Bookmark): Promise<SaveBookmarkResu
 export async function importBookmarkRecords(
   bookmarks: readonly Bookmark[],
 ): Promise<ImportBookmarksResult> {
-  // Validate and de-duplicate the complete input before the first storage call.
-  const incoming = mergeBookmarks([], bookmarks);
+  // Snapshot every candidate before waiting, losing duplicates need reference
+  // validation too, and caller mutations must not change this import's records
+  const candidates = snapshotBookmarks(bookmarks);
+  const incoming = mergeBookmarks([], candidates);
   let added = 0;
   let skipped = incoming.skipped;
 
   try {
-    // Fail closed if any existing managed record is corrupt before importing.
-    await readBookmarks();
+    // Validate every incoming reference before writing, even duplicate records.
+    // Each save rechecks its assignment under the collection lock as well
+    const { collections } = await readLibrary();
+    snapshotLibrary(candidates, collections);
 
     for (let index = 0; index < incoming.bookmarks.length; index++) {
       const result = await saveBookmark(incoming.bookmarks[index]);
@@ -257,4 +362,99 @@ export async function importBookmarkRecords(
     // Per-record locks keep unrelated saves safe; later imports can retry partial progress.
     return { status: "failed", added, skipped, error };
   }
+}
+
+export async function saveCollection(name: string, id?: string): Promise<Collection> {
+  if (typeof name !== "string") {
+    throw new TypeError("Enter a collection name of 1–100 characters.");
+  }
+
+  const normalized = normalizeCollectionName(name);
+  if (!normalized || normalized.length > 100) {
+    throw new TypeError("Enter a collection name of 1–100 characters.");
+  }
+
+  if (id !== undefined && !isCollectionId(id)) {
+    throw new TypeError("Invalid collection ID.");
+  }
+
+  return navigator.locks.request(COLLECTIONS_KEY, async (): Promise<Collection> => {
+    const collections = await readCollections();
+    const current = id === undefined ? undefined : collections.find((collection) => collection.id === id);
+    if (id !== undefined && !current) {
+      throw new MissingCollectionError();
+    }
+
+    const nameKey = collectionNameKey(normalized);
+    if (collections.some((collection) => collection.id !== id && collectionNameKey(collection.name) === nameKey)) {
+      throw new TypeError("A collection with this name already exists.");
+    }
+
+    if (current?.name === normalized) {
+      return current;
+    }
+
+    let collectionId = id ?? crypto.randomUUID();
+    if (id === undefined) {
+      while (collections.some((collection) => collection.id === collectionId)) {
+        collectionId = crypto.randomUUID();
+      }
+    }
+
+    const collection = { id: collectionId, name: normalized };
+    const next = collections.map((item) => item.id === collectionId ? collection : item);
+    if (!current) {
+      next.push(collection);
+    }
+
+    await writeStorage({ [COLLECTIONS_KEY]: next });
+    return collection;
+  });
+}
+
+export async function deleteCollection(id: string): Promise<DeleteCollectionResult> {
+  if (!isCollectionId(id)) {
+    throw new TypeError("Invalid collection ID.");
+  }
+
+  return navigator.locks.request(COLLECTIONS_KEY, async (): Promise<DeleteCollectionResult> => {
+    let moved = 0;
+    try {
+      const { bookmarks, collections } = await readLibrary();
+      if (!collections.some((collection) => collection.id === id)) {
+        return { status: "not-found", moved };
+      }
+
+      for (const bookmark of bookmarks) {
+        if (bookmark.collectionId !== id) {
+          continue;
+        }
+
+        const key = bookmarkKey(bookmark.url);
+        const changed = await navigator.locks.request(key, async (): Promise<boolean> => {
+          const current = await readStoredBookmark(key);
+
+          if (!current || current.collectionId !== id) {
+            return false;
+          }
+
+          const record = createBookmark({ ...current, collectionId: undefined }, current.savedAt);
+          await writeStorage({ [key]: record });
+          return true;
+        });
+
+        if (changed) {
+          moved++;
+        }
+      }
+
+      // Cross-key writes are not transactional. Keep the definition until all
+      // members are confirmed Unsorted, a failed move remains valid and retryable.
+      const remaining = collections.filter((collection) => collection.id !== id);
+      await writeStorage({ [COLLECTIONS_KEY]: remaining });
+      return { status: "deleted", moved };
+    } catch (error) {
+      return { status: "failed", moved, error };
+    }
+  });
 }
