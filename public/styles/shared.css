@@ -53,6 +53,29 @@ button:disabled {
   cursor: wait;
 }
 
+.collection-select,
+#collection-name {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 8px 12px;
+  border: 1px solid var(--control-rule);
+  border-radius: var(--radius-control);
+  background: var(--control);
+  color: var(--ink);
+  font: 16px/1.4 var(--body-font);
+}
+
+.collection-select:hover:not(:disabled),
+#collection-name:hover:not(:read-only) {
+  border-color: var(--tertiary);
+}
+
+#collection-name[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
 a {
   color: var(--accent);
   text-underline-offset: 0.15em;
