@@ -80,6 +80,17 @@ label {
   font-size: var(--font-size-small);
 }
 
+#save-to {
+  margin-bottom: 16px;
+}
+
+#save-to-error {
+  margin: 0 0 16px;
+  color: var(--danger);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
 .popup-actions {
   display: grid;
   grid-template-columns: 1fr;
