@@ -17,9 +17,21 @@
         <h1 id="library-heading" tabindex="-1">All bookmarks</h1>
         <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
       </header>
-      <div class="backup-tools">
-        <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
-        <button id="export-backup" type="button">Export backup</button>
+      <div class="library-actions">
+        <div class="collection-controls">
+          <div class="library-field">
+            <label for="collection">Collection</label>
+            <select id="collection" class="collection-select" autocomplete="off" aria-controls="bookmarks" disabled>
+              <option value="all">All bookmarks</option>
+              <option value="unsorted">Unsorted</option>
+            </select>
+          </div>
+          <button id="manage-collections" type="button" disabled>Manage collections</button>
+        </div>
+        <div class="backup-tools">
+          <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
+          <button id="export-backup" type="button">Export backup</button>
+        </div>
       </div>
       <div id="backup-panel" class="backup-panel" hidden>
         <p>Exports include the whole library, regardless of the current search or domain filter.</p>
@@ -99,9 +111,14 @@
         <h2 id="empty-title">No bookmarks yet</h2>
         <p>Save a page from the azkmark toolbar popup to start the library.</p>
       </section>
+      <section id="collection-empty" aria-labelledby="collection-empty-title" hidden>
+        <h2 id="collection-empty-title">No bookmarks in this collection</h2>
+        <p id="collection-empty-copy">Choose this collection when saving a page, or move a bookmark here using Edit bookmark.</p>
+        <button id="clear-collection" type="button">Show all bookmarks</button>
+      </section>
       <section id="no-matches" aria-labelledby="no-matches-title" hidden>
         <h2 id="no-matches-title">No bookmarks match</h2>
-        <p>Try another title or URL, or change the domain, saved-date range, or view status.</p>
+        <p>Try another title or URL, choose another collection, or change the domain, saved-date range, or view status.</p>
         <button id="reset-filters" type="button" disabled>Show all bookmarks</button>
       </section>
       <div id="library-error" hidden>
@@ -111,7 +128,7 @@
       <ul id="bookmarks" data-view="cards" aria-label="Saved bookmarks" aria-busy="true" hidden></ul>
     </main>
     <dialog id="bookmark-dialog" aria-labelledby="management-heading">
-      <h2 id="management-heading">Edit bookmark title</h2>
+      <h2 id="management-heading">Edit bookmark</h2>
       <p id="management-target" hidden></p>
       <p id="management-url"></p>
       <form id="management-form" novalidate>
@@ -119,13 +136,34 @@
           <label for="bookmark-title">Title</label>
           <textarea id="bookmark-title" rows="3" required aria-describedby="management-title-error"></textarea>
           <p id="management-title-error" role="alert" hidden>Enter a title before saving.</p>
+          <label for="bookmark-collection" class="collection-label">Collection</label>
+          <select id="bookmark-collection" class="collection-select" aria-describedby="management-error"><option value="">Unsorted</option></select>
         </div>
         <p id="management-delete" hidden>This permanently deletes this bookmark from your azkmark library. It can't be undone.</p>
         <p id="management-error" role="alert" hidden></p>
         <p id="management-status" role="status" aria-atomic="true"></p>
         <div class="management-actions">
           <button id="management-cancel" type="button">Cancel</button>
-          <button id="management-submit" type="submit">Save title</button>
+          <button id="management-submit" type="submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="collection-dialog" aria-labelledby="collection-heading">
+      <h2 id="collection-heading">Manage collections</h2>
+      <form id="collection-form" novalidate>
+        <div id="collection-edit">
+          <label for="collection-edit-id">Collection</label>
+          <select id="collection-edit-id" class="collection-select"><option value="">New collection</option></select>
+          <label for="collection-name" class="collection-label">Name</label>
+          <input id="collection-name" type="text" maxlength="100" required autocomplete="off" aria-describedby="collection-error" />
+        </div>
+        <p id="collection-confirm" hidden></p>
+        <p id="collection-error" role="alert" hidden></p>
+        <p id="collection-status" role="status" aria-atomic="true"></p>
+        <div class="management-actions">
+          <button id="collection-delete" type="button" hidden>Delete collection</button>
+          <button id="collection-cancel" type="button">Cancel</button>
+          <button id="collection-submit" type="submit">Create collection</button>
         </div>
       </form>
     </dialog>
