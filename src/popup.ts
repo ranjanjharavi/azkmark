@@ -1,9 +1,22 @@
 import { createBookmark } from "./bookmarks/model.js";
-import { StorageQuotaError, saveBookmark } from "./bookmarks/storage.js";
+import {
+  MissingCollectionError,
+  readCollections,
+  readLastCollection,
+  StorageQuotaError,
+  saveBookmark,
+  watchBookmarks,
+} from "./bookmarks/storage.js";
+import type { Collection } from "./bookmarks/collections.js";
+import { collectionOptions } from "./ui/collections.js";
+import { requireElement } from "./ui/dom.js";
+import { createRefreshScheduler } from "./library/refresh.js";
 import { captureThumbnail } from "./metadata.js";
 import { captureCurrentPage } from "./page-capture.js";
 import type { CurrentPage } from "./page-capture.js";
 
+const saveTo = requireElement<HTMLSelectElement>("#save-to");
+const collectionError = requireElement<HTMLParagraphElement>("#save-to-error");
 const openLibraryButton = document.querySelector<HTMLButtonElement>("#open-library");
 const feedback = document.querySelector<HTMLParagraphElement>("#feedback");
 const pageStatus = document.querySelector<HTMLParagraphElement>("#page-status");
@@ -55,6 +68,45 @@ let thumbnailReady: Promise<string | undefined> = Promise.resolve(undefined);
 let imageTimeout: number | undefined;
 let saving = false;
 let completed = false;
+let collectionsReady = false;
+let collectionsAvailable = false;
+let collections: Collection[] = [];
+
+function updateSaveControls(): void {
+  saveButtonElement.disabled = completed || saving || !currentPage || !collectionsReady;
+  saveTo.disabled = completed || saving || !collectionsAvailable;
+}
+
+async function readSaveCollections(): Promise<void> {
+  const initial = !collectionsReady;
+  try {
+    const [definitions, remembered] = await Promise.all([
+      readCollections(),
+      initial ? readLastCollection() : Promise.resolve(""),
+    ]);
+    collections = definitions;
+    let selected = saveTo.value;
+    if (initial) {
+      selected = collections.some(({ id }) => id === remembered) ? remembered : "";
+    }
+    
+    // A removed draft stays visible, rather than silently saving to Unsorted
+    collectionOptions(saveTo, collections, selected);
+    collectionsAvailable = true;
+    collectionError.hidden = true;
+  } catch {
+    collectionsAvailable = false;
+    collectionError.textContent = initial
+      ? "Couldn't load collections. Saving to Unsorted is still available; reopen the popup to retry."
+      : "Couldn't refresh collections. The current choice is kept; reopen the popup to retry.";
+    collectionError.hidden = false;
+  } finally {
+    collectionsReady = true;
+    updateSaveControls();
+  }
+}
+
+const collectionRefresh = createRefreshScheduler(readSaveCollections);
 
 function clearImageTimeout(): void {
   if (imageTimeout !== undefined) {
@@ -120,7 +172,7 @@ pageTitleElement.addEventListener("input", () => {
 
 saveFormElement.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!currentPage || saving || completed) {
+  if (!currentPage || !collectionsReady || saving || completed) {
     return;
   }
 
@@ -132,11 +184,19 @@ saveFormElement.addEventListener("submit", async (event) => {
     return;
   }
 
+  if (saveTo.selectedOptions[0]?.disabled) {
+    saveErrorElement.textContent = "This collection is no longer available. Choose another collection or Unsorted.";
+    saveErrorElement.hidden = false;
+    saveTo.focus();
+    return;
+  }
+
+  const collectionId = saveTo.value || undefined;
   const page = currentPage;
   const restoreSaveFocus = document.activeElement === saveButtonElement;
   const savedAt = Date.now();
   saving = true;
-  saveButtonElement.disabled = true;
+  updateSaveControls();
   saveButtonElement.textContent = "Saving…";
   pageTitleElement.readOnly = true;
   saveFormElement.setAttribute("aria-busy", "true");
@@ -147,25 +207,31 @@ saveFormElement.addEventListener("submit", async (event) => {
   try {
     // Wait only for bounded metadata capture, never for the image to load.
     const thumbnailUrl = await thumbnailReady;
-    const bookmark = createBookmark({ url: page.url, title, thumbnailUrl }, savedAt);
-    const result = await saveBookmark(bookmark);
+    const bookmark = createBookmark({ url: page.url, title, thumbnailUrl, collectionId }, savedAt);
+    const result = await saveBookmark(bookmark, true);
 
     completed = true;
     pageTitleElement.value = result.bookmark.title;
+    collectionOptions(saveTo, collections, result.bookmark.collectionId ?? "");
     saveButtonElement.textContent = "Saved";
     saveStatusElement.textContent = result.status === "saved"
       ? "Saved."
       : "Already saved. Kept its saved details.";
   } catch (error) {
     saveStatusElement.textContent = "";
-    saveErrorElement.textContent = error instanceof StorageQuotaError
-      ? "Storage is full. This page wasn't saved."
-      : "Couldn't save this page. Your changes are kept; try again.";
+    if (error instanceof MissingCollectionError) {
+      saveErrorElement.textContent = error.message;
+      await collectionRefresh.refresh();
+    } else if (error instanceof StorageQuotaError) {
+      saveErrorElement.textContent = "Storage is full. This page wasn't saved.";
+    } else {
+      saveErrorElement.textContent = "Couldn't save this page. Your changes are kept; try again.";
+    }
     saveErrorElement.hidden = false;
   } finally {
     saving = false;
     saveFormElement.setAttribute("aria-busy", "false");
-    saveButtonElement.disabled = completed || !currentPage;
+    updateSaveControls();
     pageTitleElement.readOnly = completed;
 
     if (!completed) {
@@ -192,7 +258,7 @@ function initializePagePreview(): void {
     pageUrlElement.href = result.page.url;
     pageDetailsElement.hidden = false;
     pageStatusElement.hidden = true;
-    saveButtonElement.disabled = false;
+    updateSaveControls();
 
     thumbnailReady = new Promise((resolve) => {
       captureThumbnail(result.page, resolve);
@@ -211,4 +277,10 @@ function initializePagePreview(): void {
   });
 }
 
+saveTo.addEventListener("change", () => {
+  saveErrorElement.hidden = true;
+});
+
+watchBookmarks(collectionRefresh.schedule);
+void collectionRefresh.refresh();
 initializePagePreview();
