@@ -1,5 +1,9 @@
 import { groupBookmarks } from "./bookmarks/domains.js";
 import type { Bookmark } from "./bookmarks/model.js";
+import type { Collection } from "./bookmarks/collections.js";
+import { collectionGroup } from "./ui/collections.js";
+import { requireElement } from "./ui/dom.js";
+import { initializeCollections } from "./library/collections.js";
 import { filterBookmarks } from "./bookmarks/search.js";
 import type {
   BookmarkSelection,
@@ -9,7 +13,7 @@ import type {
 } from "./bookmarks/search.js";
 import {
   InvalidStoredBookmarkError,
-  readBookmarks,
+  readLibrary,
   StorageQuotaError,
   updateBookmarkViewed,
   watchBookmarks,
@@ -24,6 +28,12 @@ import { createRefreshScheduler } from "./library/refresh.js";
 import { initializeSavedDateRefresh } from "./library/saved-date-refresh.js";
 import type { ManagementAction, ManagementMode } from "./library/management.js";
 
+const collectionSelect = requireElement<HTMLSelectElement>("#collection");
+const manageCollectionsButton = requireElement<HTMLButtonElement>("#manage-collections");
+const collectionEmpty = requireElement<HTMLElement>("#collection-empty");
+const collectionEmptyTitle = requireElement<HTMLHeadingElement>("#collection-empty-title");
+const collectionEmptyCopy = requireElement<HTMLParagraphElement>("#collection-empty-copy");
+const clearCollectionButton = requireElement<HTMLButtonElement>("#clear-collection");
 const libraryHeading = document.querySelector<HTMLHeadingElement>("#library-heading");
 const libraryStatus = document.querySelector<HTMLParagraphElement>("#library-status");
 const libraryControls = document.querySelector<HTMLFormElement>("#library-controls");
@@ -104,6 +114,8 @@ type FocusTarget =
   | "list"
   | "search"
   | "domain"
+  | "collection"
+  | "manage-collections"
   | "saved-date"
   | "view-status"
   | "sort"
@@ -122,6 +134,8 @@ interface FocusSnapshot {
 }
 
 let library: Bookmark[] | undefined;
+let collections: Collection[] = [];
+let collectionScope = "all";
 let selection: BookmarkSelection = { kind: "all" };
 let viewStatusSelection: ViewStatusSelection = "all";
 let sortOrder: BookmarkSort = "newest";
@@ -138,6 +152,15 @@ function captureFocus(): FocusSnapshot {
 
   if (activeElement === searchInputElement) {
     return { target: "search" };
+  }
+  if (activeElement === collectionSelect) {
+    return { target: "collection" };
+  }
+  if (activeElement === manageCollectionsButton) {
+    return { target: "manage-collections" };
+  }
+  if (activeElement === clearCollectionButton) {
+    return { target: "reset" };
   }
   if (activeElement === domainSelectElement) {
     return { target: "domain" };
@@ -195,6 +218,14 @@ function focusHeading(): void {
 
 function restoreFocus(focus: FocusSnapshot): void {
   const total = library?.length ?? 0;
+  if (focus.target === "collection") {
+    collectionSelect.focus({ preventScroll: true });
+    return;
+  }
+  if (focus.target === "manage-collections") {
+    manageCollectionsButton.focus({ preventScroll: true });
+    return;
+  }
   if (focus.target === "list") {
     if (focus.bookmarkUrl && focus.bookmarkAction) {
       const actions = bookmarksListElement.querySelectorAll<HTMLButtonElement>(".bookmark-action");
@@ -292,6 +323,11 @@ function restoreFocus(focus: FocusSnapshot): void {
 }
 
 function restoreManagementFocus(action: ManagementAction): void {
+  if (!library) {
+    retryButtonElement.focus({ preventScroll: true });
+    return;
+  }
+
   const buttons = bookmarksListElement.querySelectorAll<HTMLButtonElement>(".bookmark-action");
   for (let index = 0; index < buttons.length; index++) {
     const button = buttons[index];
@@ -304,10 +340,6 @@ function restoreManagementFocus(action: ManagementAction): void {
     }
   }
 
-  if (!library) {
-    retryButtonElement.focus({ preventScroll: true });
-    return;
-  }
   if (library.length === 0) {
     focusHeading();
     return;
@@ -329,7 +361,7 @@ function updateDomainOptions(bookmarks: readonly Bookmark[]): string {
 
   if (selection.kind === "domain" && !groups.domains.has(selection.domain)) {
     selection = { kind: "all" };
-    notice = "Domain group no longer available. Showing All bookmarks, search kept.";
+    notice = "Domain group no longer available. Showing all domains; other filters kept.";
   }
 
   const options = document.createDocumentFragment();
@@ -347,6 +379,35 @@ function updateDomainOptions(bookmarks: readonly Bookmark[]): string {
     : selection.kind;
 
   return notice;
+}
+
+function updateCollectionOptions(): string {
+  let notice = "";
+  const selectedId = collectionScope.slice("collection:".length);
+  if (collectionScope.startsWith("collection:") && !collections.some(({ id }) => id === selectedId)) {
+    collectionScope = "all";
+    notice = "Collection no longer available. Showing All bookmarks; filters kept.";
+  }
+  const options = document.createDocumentFragment();
+  options.appendChild(new Option("All bookmarks", "all"));
+  options.appendChild(new Option("Unsorted", "unsorted"));
+  const group = collectionGroup(collections, "collection:");
+  if (group) {
+    options.appendChild(group);
+  }
+  collectionSelect.replaceChildren(options);
+  collectionSelect.value = collectionScope;
+  return notice;
+}
+
+function inCollectionScope(bookmark: Bookmark): boolean {
+  if (collectionScope === "all") {
+    return true;
+  }
+  if (collectionScope === "unsorted") {
+    return bookmark.collectionId === undefined;
+  }
+  return bookmark.collectionId === collectionScope.slice("collection:".length);
 }
 
 function bookmarkCount(count: number): string {
@@ -386,7 +447,9 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
     viewStatus: viewStatusSelection,
     sort: sortOrder,
     now,
-  });
+  }).filter(inCollectionScope);
+  // Domain grouping must use the whole library, never the collection subset.
+  const scopeSize = library.filter(inCollectionScope).length;
 
   const rows = document.createDocumentFragment();
   matches.forEach((bookmark) => {
@@ -396,11 +459,17 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   bookmarksListElement.replaceChildren(rows);
 
   const isEmpty = library.length === 0;
-  const hasNoMatches = !isEmpty && matches.length === 0;
+  const scopeEmpty = collectionScope !== "all" && scopeSize === 0;
+  const hasNoMatches = scopeSize > 0 && matches.length === 0;
   const activeFilters = updateFilterControls(savedDate);
-  const filtered = activeFilters > 0 || searchInputElement.value.trim() !== "";
+  const filtered = collectionScope !== "all" || activeFilters > 0 || searchInputElement.value.trim() !== "";
   let heading: string;
-  if (selection.kind === "all") {
+  if (collectionScope === "unsorted") {
+    heading = "Unsorted";
+  } else if (collectionScope.startsWith("collection:")) {
+    const selectedId = collectionScope.slice("collection:".length);
+    heading = collections.find(({ id }) => id === selectedId)?.name ?? "All bookmarks";
+  } else if (selection.kind === "all") {
     heading = "All bookmarks";
   } else if (selection.kind === "general") {
     heading = "General";
@@ -418,7 +487,18 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   }
   libraryStatusElement.textContent = statusText;
   libraryControlsElement.hidden = isEmpty;
-  emptyStateElement.hidden = !isEmpty;
+  emptyStateElement.hidden = !isEmpty || collectionScope !== "all";
+  collectionEmpty.hidden = !scopeEmpty;
+  collectionEmptyTitle.textContent = collectionScope === "unsorted"
+    ? "No unsorted bookmarks"
+    : "No bookmarks in this collection";
+  let emptyCopy = "Choose this collection when saving a page, or move a bookmark here using Edit bookmark.";
+  if (collectionScope === "unsorted") {
+    emptyCopy = isEmpty
+      ? "Save a page without choosing a collection to add it to Unsorted."
+      : "All saved bookmarks are in collections.";
+  }
+  collectionEmptyCopy.textContent = emptyCopy;
   noMatchesElement.hidden = !hasNoMatches;
   bookmarksListElement.hidden = matches.length === 0;
   bookmarksListElement.setAttribute("aria-busy", "false");
@@ -435,15 +515,19 @@ async function readAndRenderBookmarks(): Promise<void> {
   libraryStatusElement.textContent = hasLoaded ? "Updating bookmarks…" : "Loading your bookmarks…";
 
   try {
-    const bookmarks = await readBookmarks();
+    const data = await readLibrary();
     if (currentRevision !== revision) {
       return;
     }
 
     const focus = captureFocus();
-    library = bookmarks;
-    const notice = updateDomainOptions(bookmarks);
+    library = data.bookmarks;
+    collections = data.collections;
+    const notices = [updateDomainOptions(library), updateCollectionOptions()].filter(Boolean);
     management.updateTarget();
+    collectionManagement.update();
+    collectionSelect.disabled = false;
+    manageCollectionsButton.disabled = false;
     searchInputElement.disabled = false;
     domainSelectElement.disabled = false;
     savedDateSelectElement.disabled = false;
@@ -454,7 +538,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     toggleFiltersElement.disabled = false;
     resetFiltersButton.disabled = false;
     hasLoaded = true;
-    render(notice, focus);
+    render(notices.join(" "), focus);
   } catch (error) {
     if (currentRevision !== revision) {
       return;
@@ -469,6 +553,9 @@ async function readAndRenderBookmarks(): Promise<void> {
     readErrorElement.textContent = "Couldn't load your bookmarks. Try again.";
     libraryErrorElement.hidden = false;
     emptyStateElement.hidden = true;
+    collectionEmpty.hidden = true;
+    collectionSelect.disabled = true;
+    manageCollectionsButton.disabled = true;
     noMatchesElement.hidden = true;
     bookmarksListElement.hidden = true;
     bookmarksListElement.setAttribute("aria-busy", "false");
@@ -486,6 +573,8 @@ async function readAndRenderBookmarks(): Promise<void> {
       focus.target === "list"
       || focus.target === "search"
       || focus.target === "domain"
+      || focus.target === "collection"
+      || focus.target === "manage-collections"
       || focus.target === "saved-date"
       || focus.target === "view-status"
       || focus.target === "sort"
@@ -513,21 +602,32 @@ const savedDateRefresh = initializeSavedDateRefresh((now) => {
   }
 });
 
+function showManagementFeedback(message: string): void {
+  managementFeedbackElement.textContent = message;
+  managementFeedbackElement.hidden = false;
+}
+
+function clearManagementFeedback(): void {
+  managementFeedbackElement.textContent = "";
+  managementFeedbackElement.hidden = true;
+}
+
+const collectionManagement = initializeCollections({
+  getCollections: () => library ? collections : undefined,
+  refresh: refreshBookmarks,
+  showFeedback: showManagementFeedback,
+  clearFeedback: clearManagementFeedback,
+});
+
 const management = initializeManagement({
   getBookmarks: () => library,
+  getCollections: () => collections,
 
   refresh: refreshBookmarks,
   restoreFocus: restoreManagementFocus,
 
-  showFeedback: (message) => {
-    managementFeedbackElement.textContent = message;
-    managementFeedbackElement.hidden = false;
-  },
-  
-  clearFeedback: () => {
-    managementFeedbackElement.textContent = "";
-    managementFeedbackElement.hidden = true;
-  },
+  showFeedback: showManagementFeedback,
+  clearFeedback: clearManagementFeedback,
 });
 
 initializeExport();
@@ -617,7 +717,14 @@ libraryControlsElement.addEventListener("submit", (event) => {
   event.preventDefault();
 });
 
-resetFiltersButton.addEventListener("click", () => {
+collectionSelect.addEventListener("change", () => {
+  collectionScope = collectionSelect.value;
+  render();
+});
+
+function resetSelections(): void {
+  collectionScope = "all";
+  collectionSelect.value = "all";
   searchInputElement.value = "";
   selection = { kind: "all" };
   domainSelectElement.value = "all";
@@ -625,8 +732,15 @@ resetFiltersButton.addEventListener("click", () => {
   viewStatusSelection = "all";
   viewStatusSelectElement.value = "all";
   render();
-  searchInputElement.focus({ preventScroll: true });
-});
+  if (library?.length) {
+    searchInputElement.focus({ preventScroll: true });
+  } else {
+    focusHeading();
+  }
+}
+
+resetFiltersButton.addEventListener("click", resetSelections);
+clearCollectionButton.addEventListener("click", resetSelections);
 
 bookmarksListElement.addEventListener("click", (event) => {
   const target = event.target;

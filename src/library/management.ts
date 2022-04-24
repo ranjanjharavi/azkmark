@@ -1,9 +1,12 @@
 import type { Bookmark } from "../bookmarks/model.js";
+import type { Collection } from "../bookmarks/collections.js";
+import { collectionOptions } from "../ui/collections.js";
 import {
   deleteBookmark,
   InvalidStoredBookmarkError,
   StorageQuotaError,
-  updateBookmarkTitle,
+  MissingCollectionError,
+  updateBookmark,
 } from "../bookmarks/storage.js";
 
 export type ManagementMode = "edit" | "delete";
@@ -16,6 +19,7 @@ export interface ManagementAction {
 
 interface ManagementCallbacks {
   getBookmarks: () => readonly Bookmark[] | undefined;
+  getCollections: () => readonly Collection[];
   refresh: () => Promise<void>;
   restoreFocus: (action: ManagementAction) => void;
   showFeedback: (message: string) => void;
@@ -24,6 +28,7 @@ interface ManagementCallbacks {
 
 export function initializeManagement({
   getBookmarks,
+  getCollections,
   refresh,
   restoreFocus,
   showFeedback,
@@ -40,6 +45,7 @@ export function initializeManagement({
   const editFields = document.querySelector<HTMLElement>("#management-edit");
   const titleInput = document.querySelector<HTMLTextAreaElement>("#bookmark-title");
   const titleError = document.querySelector<HTMLParagraphElement>("#management-title-error");
+  const collectionSelect = document.querySelector<HTMLSelectElement>("#bookmark-collection");
   const deleteCopy = document.querySelector<HTMLParagraphElement>("#management-delete");
   const error = document.querySelector<HTMLParagraphElement>("#management-error");
   const status = document.querySelector<HTMLParagraphElement>("#management-status");
@@ -55,6 +61,7 @@ export function initializeManagement({
     || !editFields
     || !titleInput
     || !titleError
+    || !collectionSelect
     || !deleteCopy
     || !error
     || !status
@@ -72,6 +79,7 @@ export function initializeManagement({
   const editFieldsElement = editFields;
   const titleInputElement = titleInput;
   const titleErrorElement = titleError;
+  const collectionSelectElement = collectionSelect;
   const deleteCopyElement = deleteCopy;
   const errorElement = error;
   const statusElement = status;
@@ -80,6 +88,7 @@ export function initializeManagement({
 
   let action: ManagementAction | undefined;
   let originalTitle = "";
+  let originalCollection = "";
   let submitting = false;
   let targetMissing = false;
 
@@ -97,12 +106,15 @@ export function initializeManagement({
     action = { url, mode, index };
     targetMissing = false;
     clearFeedback();
-    headingElement.textContent = mode === "edit" ? "Edit bookmark title" : "Delete bookmark?";
+    headingElement.textContent = mode === "edit" ? "Edit bookmark" : "Delete bookmark?";
     targetTitleElement.textContent = bookmark.title;
     targetTitleElement.hidden = mode === "edit";
     targetUrlElement.textContent = bookmark.url;
     originalTitle = bookmark.title;
     titleInputElement.value = originalTitle;
+    originalCollection = bookmark.collectionId ?? "";
+    collectionOptions(collectionSelectElement, getCollections(), originalCollection);
+    collectionSelectElement.disabled = false;
     titleInputElement.readOnly = false;
     titleInputElement.removeAttribute("aria-invalid");
     titleErrorElement.hidden = true;
@@ -110,7 +122,7 @@ export function initializeManagement({
     deleteCopyElement.hidden = mode !== "delete";
     errorElement.hidden = true;
     statusElement.textContent = "";
-    submitButtonElement.textContent = mode === "edit" ? "Save title" : "Delete bookmark";
+    submitButtonElement.textContent = mode === "edit" ? "Save changes" : "Delete bookmark";
     submitButtonElement.disabled = false;
     submitButtonElement.classList.remove("destructive");
 
@@ -133,7 +145,7 @@ export function initializeManagement({
   }
 
   function updateTarget(): void {
-    if (!dialogElement.open || !action || action.mode !== "delete" || targetMissing) {
+    if (!dialogElement.open || !action || targetMissing) {
       return;
     }
 
@@ -144,6 +156,10 @@ export function initializeManagement({
     }
 
     targetTitleElement.textContent = current.title;
+    if (action.mode === "edit") {
+      // Keep both drafts, including a removed assignment that needs a new choice.
+      collectionOptions(collectionSelectElement, getCollections(), collectionSelectElement.value);
+    }
   }
 
   function showMissingTarget(): void {
@@ -155,6 +171,9 @@ export function initializeManagement({
   }
 
   function failureMessage(cause: unknown, mode: ManagementMode): string {
+    if (cause instanceof MissingCollectionError) {
+      return cause.message;
+    }
     if (cause instanceof InvalidStoredBookmarkError) {
       return "This bookmark's saved data is invalid. It hasn't been changed.";
     }
@@ -162,7 +181,7 @@ export function initializeManagement({
       return "Bookmark storage is full. Free some space, then try again.";
     }
     if (mode === "edit") {
-      return "Couldn't save the title. Your draft is kept; try again.";
+      return "Couldn't save changes. Your drafts are kept; try again.";
     }
     return "Couldn't delete the bookmark. No deletion was confirmed; try again.";
   }
@@ -184,26 +203,44 @@ export function initializeManagement({
       return;
     }
 
+    const collection = collectionSelectElement.value;
+    const collectionChanged = collection !== originalCollection;
+    const collectionMissing = collection && !getCollections().some(({ id }) => id === collection);
+    if (currentAction.mode === "edit" && collectionChanged && collectionMissing) {
+      errorElement.textContent = "This collection is no longer available. Choose another collection or Unsorted.";
+      errorElement.hidden = false;
+      collectionSelectElement.focus();
+      return;
+    }
+
     submitting = true;
     titleInputElement.readOnly = true;
+    collectionSelectElement.disabled = true;
     cancelButtonElement.disabled = true;
     submitButtonElement.disabled = true;
     formElement.setAttribute("aria-busy", "true");
     errorElement.hidden = true;
-    statusElement.textContent = currentAction.mode === "edit" ? "Saving title…" : "Deleting bookmark…";
+    statusElement.textContent = currentAction.mode === "edit" ? "Saving changes…" : "Deleting bookmark…";
 
     try {
       let feedbackMessage: string;
       if (currentAction.mode === "edit") {
-        const result = await updateBookmarkTitle(currentAction.url, titleChanged ? title : undefined);
+        let collectionId: string | null | undefined;
+        if (collectionChanged) {
+          collectionId = collection || null;
+        }
+        const result = await updateBookmark(currentAction.url, {
+          title: titleChanged ? title : undefined,
+          collectionId,
+        });
         if (result.status === "not-found") {
           showMissingTarget();
           await refresh();
           return;
         }
         feedbackMessage = result.status === "unchanged"
-          ? "No title changes made. Kept the latest saved title."
-          : "Bookmark title saved.";
+          ? "No changes made. Kept the latest saved details."
+          : "Bookmark changes saved.";
       } else {
         const result = await deleteBookmark(currentAction.url);
         if (result.status === "not-found") {
@@ -223,6 +260,7 @@ export function initializeManagement({
     } finally {
       submitting = false;
       titleInputElement.readOnly = false;
+      collectionSelectElement.disabled = false;
       cancelButtonElement.disabled = false;
       submitButtonElement.disabled = targetMissing;
       formElement.setAttribute("aria-busy", "false");
@@ -247,6 +285,7 @@ export function initializeManagement({
     const previousAction = action;
     action = undefined;
     originalTitle = "";
+    originalCollection = "";
     if (previousAction) {
       restoreFocus(previousAction);
     }
@@ -267,6 +306,12 @@ export function initializeManagement({
   titleInputElement.addEventListener("input", () => {
     titleErrorElement.hidden = true;
     titleInputElement.removeAttribute("aria-invalid");
+    if (!targetMissing) {
+      errorElement.hidden = true;
+    }
+  });
+
+  collectionSelectElement.addEventListener("change", () => {
     if (!targetMissing) {
       errorElement.hidden = true;
     }

@@ -27,7 +27,7 @@ export function bookmarkActions(bookmark: Bookmark, savingViewStatus = false): H
         button.disabled = savingViewStatus;
         break;
       case "edit":
-        label = "Edit title";
+        label = "Edit bookmark";
         break;
       case "delete":
         label = "Delete bookmark";

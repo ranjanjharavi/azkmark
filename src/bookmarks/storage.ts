@@ -13,6 +13,7 @@ import { parseWebUrl } from "../urls.js";
 
 const BOOKMARK_KEY_PREFIX = "azkmark:bookmark:";
 export const COLLECTIONS_KEY = "azkmark:collections";
+export const LAST_COLLECTION_KEY = "azkmark:last-collection";
 
 export interface SaveBookmarkResult {
   status: "saved" | "already-saved";
@@ -170,6 +171,12 @@ export async function readCollections(): Promise<Collection[]> {
   return Object.hasOwn(values, COLLECTIONS_KEY) ? storedCollections(values[COLLECTIONS_KEY]) : [];
 }
 
+export async function readLastCollection(): Promise<string> {
+  const values = await readStorage(LAST_COLLECTION_KEY);
+  const id = values[LAST_COLLECTION_KEY];
+  return isCollectionId(id) ? id : "";
+}
+
 export async function readLibrary(): Promise<LibraryData> {
   // Read definitions and members together, including valid partial collection moves.
   const values = await readStorage(null);
@@ -307,18 +314,18 @@ export async function deleteBookmark(url: string): Promise<DeleteBookmarkResult>
   });
 }
 
-export async function saveBookmark(bookmark: Bookmark): Promise<SaveBookmarkResult> {
+export async function saveBookmark(bookmark: Bookmark, rememberCollection = false): Promise<SaveBookmarkResult> {
   if (!isBookmark(bookmark)) {
     throw new TypeError("Invalid bookmark record.");
   }
 
   // Snapshot before waiting so caller changes cannot alter the key or record
   const record = createBookmark(bookmark, bookmark.savedAt);
-  const save = () => saveRecord(record);
+  const save = () => saveRecord(record, rememberCollection);
   return record.collectionId === undefined ? save() : navigator.locks.request(COLLECTIONS_KEY, save);
 }
 
-function saveRecord(record: Bookmark): Promise<SaveBookmarkResult> {
+function saveRecord(record: Bookmark, rememberCollection: boolean): Promise<SaveBookmarkResult> {
   const key = bookmarkKey(record.url);
   return navigator.locks.request(key, async (): Promise<SaveBookmarkResult> => {
     const existing = await readStoredBookmark(key);
@@ -327,7 +334,11 @@ function saveRecord(record: Bookmark): Promise<SaveBookmarkResult> {
     }
 
     await requireCollection(record.collectionId);
-    await writeStorage({ [key]: record });
+    const items: Record<string, unknown> = { [key]: record };
+    if (rememberCollection) {
+      items[LAST_COLLECTION_KEY] = record.collectionId ?? "";
+    }
+    await writeStorage(items);
     return { status: "saved", bookmark: record };
   });
 }
