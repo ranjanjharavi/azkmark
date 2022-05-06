@@ -77,3 +77,57 @@ export function snapshotCollections(value: unknown): Collection[] {
 
   return collections;
 }
+
+export interface CollectionMergeResult {
+  collections: Collection[];
+  mapping: Map<string, string>;
+  added: number;
+}
+
+// Build the entire mapping before storage writes. The caller supplies fresh IDs
+// only for collisions, keeping this plan independent of storage and browser APIs
+export function mergeCollections(
+  existing: readonly Collection[],
+  incoming: readonly Collection[],
+  createId: () => string,
+): CollectionMergeResult {
+  const collections = snapshotCollections(existing);
+  const candidates = snapshotCollections(incoming);
+  const byName = new Map(collections.map((collection) => [collectionNameKey(collection.name), collection]));
+  const usedIds = new Set(collections.map((collection) => collection.id));
+  
+  // Generated IDs must not consume the identity of a later incoming definition
+  const reservedIds = new Set(usedIds);
+  candidates.forEach(({ id }) => reservedIds.add(id));
+  const mapping = new Map<string, string>();
+  let added = 0;
+
+  for (const candidate of candidates) {
+    const nameKey = collectionNameKey(candidate.name);
+    const match = byName.get(nameKey);
+    if (match) {
+      mapping.set(candidate.id, match.id);
+      continue;
+    }
+
+    let id = candidate.id;
+    if (usedIds.has(id)) {
+      do {
+        id = createId();
+        if (!isCollectionId(id)) {
+          throw new TypeError("Invalid generated collection ID.");
+        }
+      } while (reservedIds.has(id));
+    }
+
+    const collection = { id, name: candidate.name };
+    collections.push(collection);
+    byName.set(nameKey, collection);
+    usedIds.add(id);
+    reservedIds.add(id);
+    mapping.set(candidate.id, id);
+    added++;
+  }
+
+  return { collections, mapping, added };
+}
