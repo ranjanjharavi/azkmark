@@ -1,10 +1,11 @@
 import { createBookmark, isBookmark } from "./model.js";
 import type { Bookmark } from "./model.js";
-import { mergeBookmarks, snapshotBookmarks, snapshotLibrary } from "./backup.js";
+import { mergeBookmarks, snapshotLibrary } from "./backup.js";
 import type { LibraryData } from "./backup.js";
 import {
   collectionNameKey,
   isCollectionId,
+  mergeCollections,
   normalizeCollectionName,
   snapshotCollections,
 } from "./collections.js";
@@ -41,8 +42,8 @@ export type DeleteBookmarkResult =
   | { status: "not-found" };
 
 export type ImportBookmarksResult =
-  | { status: "imported"; added: number; skipped: number }
-  | { status: "failed"; added: number; skipped: number; error: unknown };
+  | { status: "imported"; added: number; skipped: number; collectionsAdded: number }
+  | { status: "failed"; added: number; skipped: number; collectionsAdded: number; error: unknown };
 
 export type DeleteCollectionResult =
   | { status: "deleted" | "not-found"; moved: number }
@@ -345,33 +346,63 @@ function saveRecord(record: Bookmark, rememberCollection: boolean): Promise<Save
 
 export async function importBookmarkRecords(
   bookmarks: readonly Bookmark[],
+  collections: readonly Collection[] = [],
 ): Promise<ImportBookmarksResult> {
-  // Snapshot every candidate before waiting, losing duplicates need reference
-  // validation too, and caller mutations must not change this import's records
-  const candidates = snapshotBookmarks(bookmarks);
-  const incoming = mergeBookmarks([], candidates);
+  // Validate and snapshot the complete file before any storage access, including
+  // references on duplicate records that will lose and empty collections
+  const snapshot = snapshotLibrary(bookmarks, collections);
+  const incoming = mergeBookmarks([], snapshot.bookmarks);
   let added = 0;
   let skipped = incoming.skipped;
+  let collectionsAdded = 0;
 
-  try {
-    // Validate every incoming reference before writing, even duplicate records.
-    // Each save rechecks its assignment under the collection lock as well
-    const { collections } = await readLibrary();
-    snapshotLibrary(candidates, collections);
+  async function importRecords(): Promise<ImportBookmarksResult> {
+    // Reject an already-corrupt library, including unrelated managed records
+    const current = await readLibrary();
+    const definitions = mergeCollections(current.collections, snapshot.collections, () => crypto.randomUUID());
+    const records = incoming.bookmarks.map((bookmark) => {
+      if (bookmark.collectionId === undefined) {
+        return bookmark;
+      }
 
-    for (let index = 0; index < incoming.bookmarks.length; index++) {
-      const result = await saveBookmark(incoming.bookmarks[index]);
+      const collectionId = definitions.mapping.get(bookmark.collectionId);
+      if (collectionId === undefined) {
+        throw new TypeError("Unknown bookmark collection.");
+      }
+
+      return createBookmark({ ...bookmark, collectionId }, bookmark.savedAt);
+    });
+
+    // Finish mapping before writing, preserve definitions even when every URL
+    // already exists. Repeated imports need no definition write if names match
+    if (definitions.added > 0) {
+      await writeStorage({ [COLLECTIONS_KEY]: definitions.collections });
+      collectionsAdded = definitions.added;
+    }
+
+    for (const record of records) {
+      // The collection lock is already held when this file has definitions.
+      // Acquire only the URL lock, and recheck duplicates against its fresh data
+      const result = await saveRecord(record, false);
       if (result.status === "saved") {
         added++;
       } else {
         skipped++;
       }
     }
+    return { status: "imported", added, skipped, collectionsAdded };
+  }
 
-    return { status: "imported", added, skipped };
+  try {
+    if (snapshot.collections.length > 0) {
+      return await navigator.locks.request(COLLECTIONS_KEY, importRecords);
+    }
+
+    return await importRecords();
   } catch (error) {
-    // Per-record locks keep unrelated saves safe; later imports can retry partial progress.
-    return { status: "failed", added, skipped, error };
+    // Definitions precede members, so partial progress is valid and retryable.
+    // Only acknowledged writes count, a retry checks storage again under locks
+    return { status: "failed", added, skipped, collectionsAdded, error };
   }
 }
 

@@ -4,8 +4,7 @@ import { snapshotCollections } from "./collections.js";
 import type { Collection } from "./collections.js";
 
 const BACKUP_FORMAT = "azkmark";
-const BACKUP_VERSION = 2;
-const COLLECTION_BACKUP_VERSION = 3;
+const BACKUP_VERSION = 3;
 
 type BackupVersion = 1 | 2 | 3;
 
@@ -20,7 +19,7 @@ interface BackupEnvelope {
   collections?: unknown;
 }
 
-export function snapshotBookmarks(value: unknown): Bookmark[] {
+function snapshotBookmarks(value: unknown): Bookmark[] {
   if (!Array.isArray(value)) {
     throw new TypeError("Invalid bookmark collection.");
   }
@@ -41,7 +40,7 @@ export function snapshotBookmarks(value: unknown): Bookmark[] {
 function snapshotBackupBookmarks(value: unknown, version: BackupVersion): Bookmark[] {
   const bookmarks = snapshotBookmarks(value);
 
-  if (version !== COLLECTION_BACKUP_VERSION && bookmarks.some((bookmark) => (
+  if (version !== BACKUP_VERSION && bookmarks.some((bookmark) => (
     Object.hasOwn(bookmark, "collectionId")
     || (version === 1 && Object.hasOwn(bookmark, "viewed"))
   ))) {
@@ -70,27 +69,9 @@ export function serializeBackup(
   bookmarks: readonly Bookmark[],
   collections: readonly Collection[] = [],
 ): string {
-  if (snapshotCollections(collections).length > 0) {
-    throw new TypeError("Collection data requires a version 3 backup.");
-  }
-  
   const envelope = {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
-    bookmarks: snapshotBackupBookmarks(bookmarks, BACKUP_VERSION),
-  };
-
-  return `${JSON.stringify(envelope, null, 2)}\n`;
-}
-
-// Pure v3 support; the existing UI remains on v1/v2 until its integration chunk.
-export function serializeLibraryBackup(
-  bookmarks: readonly Bookmark[],
-  collections: readonly Collection[],
-): string {
-  const envelope = {
-    format: BACKUP_FORMAT,
-    version: COLLECTION_BACKUP_VERSION,
     ...snapshotLibrary(bookmarks, collections),
   };
   return `${JSON.stringify(envelope, null, 2)}\n`;
@@ -121,39 +102,38 @@ function parseEnvelope(json: string): BackupEnvelope {
 
   const envelope = value as Record<string, unknown>;
   const version = envelope.version;
-  const fields = version === COLLECTION_BACKUP_VERSION
+  if (
+    envelope.format !== BACKUP_FORMAT
+    || !Object.hasOwn(envelope, "format")
+    || !Object.hasOwn(envelope, "version")
+    || !Object.hasOwn(envelope, "bookmarks")
+    || !Array.isArray(envelope.bookmarks)
+  ) {
+    throw new TypeError("Invalid bookmark backup.");
+  }
+
+  if (version !== 1 && version !== 2 && version !== BACKUP_VERSION) {
+    throw new UnsupportedBackupVersionError();
+  }
+
+  const fields = version === BACKUP_VERSION
     ? ["format", "version", "bookmarks", "collections"]
     : ["format", "version", "bookmarks"];
   if (
     Object.keys(envelope).length !== fields.length
     || fields.some((field) => !Object.hasOwn(envelope, field))
-    || envelope.format !== BACKUP_FORMAT
   ) {
     throw new TypeError("Invalid bookmark backup.");
-  }
-
-  if (version !== 1 && version !== BACKUP_VERSION && version !== COLLECTION_BACKUP_VERSION) {
-    throw new UnsupportedBackupVersionError();
   }
 
   return { version, bookmarks: envelope.bookmarks, collections: envelope.collections };
 }
 
-export function parseBackup(json: string): Bookmark[] {
-  const envelope = parseEnvelope(json);
-
-  if (envelope.version === COLLECTION_BACKUP_VERSION) {
-    throw new UnsupportedBackupVersionError();
-  }
-  
-  return snapshotBackupBookmarks(envelope.bookmarks, envelope.version);
-}
-
-export function parseLibraryBackup(json: string): LibraryData {
+export function parseBackup(json: string): LibraryData {
   const envelope = parseEnvelope(json);
   const bookmarks = snapshotBackupBookmarks(envelope.bookmarks, envelope.version);
 
-  const collections = envelope.version === COLLECTION_BACKUP_VERSION
+  const collections = envelope.version === BACKUP_VERSION
     ? snapshotCollections(envelope.collections)
     : [];
   return snapshotLibrary(bookmarks, collections);

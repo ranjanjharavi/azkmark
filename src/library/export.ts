@@ -45,7 +45,7 @@ export function initializeExport(): void {
 
     let objectUrl: string | undefined;
     try {
-      // Read the complete current library
+      // Export a fresh whole-library v3 snapshot, including empty collections.
       const { bookmarks, collections } = await readLibrary();
       const json = serializeBackup(bookmarks, collections);
       const file = new Blob([json], { type: "application/json;charset=utf-8" });
@@ -61,7 +61,8 @@ export function initializeExport(): void {
       objectUrl = undefined;
 
       const countLabel = bookmarks.length === 1 ? "bookmark" : "bookmarks";
-      statusElement.textContent = `Backup download started with ${bookmarks.length} ${countLabel}.`;
+      const collectionLabel = collections.length === 1 ? "collection" : "collections";
+      statusElement.textContent = `Backup download started with ${bookmarks.length} ${countLabel} and ${collections.length} ${collectionLabel}.`;
     } catch (cause) {
       console.error("Could not export saved bookmarks.", cause);
       statusElement.textContent = "";
