@@ -34,9 +34,9 @@
         </div>
       </div>
       <div id="backup-panel" class="backup-panel" hidden>
-        <p>Exports include the whole library, regardless of the current search or domain filter.</p>
-        <p>Backup files contain saved URLs, titles, and dates, which may be private. Thumbnail URLs are references, not image files.</p>
-        <p id="import-help">Choose an azkmark JSON backup or Chrome bookmark HTML export to merge. Existing bookmarks keep their saved details. Chrome folders are flattened, missing or unusable dates use import time.</p>
+        <p>Exports include the whole library and all collections, even empty ones, regardless of scope or filters.</p>
+        <p>Backup files contain collection names, assignments, saved URLs, titles, dates, and status, which may be private. Thumbnail URLs are references, not image files.</p>
+        <p id="import-help">Choose an azkmark JSON backup or Chrome bookmark HTML export to merge. Collections match by name, existing bookmarks keep all saved details. Chrome folders are flattened into Unsorted, missing or unusable dates use import time.</p>
         <form id="import-form" novalidate>
           <div class="backup-import-controls">
             <div class="library-field">
