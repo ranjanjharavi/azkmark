@@ -1,6 +1,8 @@
 import type { Collection } from "../bookmarks/collections.js";
 
-export function collectionGroup(
+type CollectionSelectMode = "assignment" | "scope" | "management";
+
+function collectionGroup(
   collections: readonly Collection[],
   prefix = "",
 ): HTMLOptGroupElement | undefined {
@@ -21,16 +23,29 @@ export function collectionOptions(
   select: HTMLSelectElement,
   collections: readonly Collection[],
   selected = "",
-  defaultLabel = "Unsorted",
+  mode: CollectionSelectMode = "assignment",
 ): void {
   const options = document.createDocumentFragment();
-  options.appendChild(new Option(defaultLabel, ""));
-  const group = collectionGroup(collections);
+  const prefix = mode === "scope" ? "collection:" : "";
+  let defaultSelected: boolean;
+  
+  if (mode === "scope") {
+    options.appendChild(new Option("All bookmarks", "all"));
+    options.appendChild(new Option("Unsorted", "unsorted"));
+    defaultSelected = selected === "all" || selected === "unsorted";
+  } else {
+    const defaultLabel = mode === "management" ? "New collection" : "Unsorted";
+    options.appendChild(new Option(defaultLabel, ""));
+    defaultSelected = selected === "";
+  }
+
+  const group = collectionGroup(collections, prefix);
   if (group) {
     options.appendChild(group);
   }
-  if (selected && !collections.some(({ id }) => id === selected)) {
-    const missing = new Option("Removed collection — choose another", selected);
+  const available = defaultSelected || collections.some(({ id }) => prefix + id === selected);
+  if (!available) {
+    const missing = new Option("Removed collection", selected);
     missing.disabled = true;
     options.appendChild(missing);
   }
