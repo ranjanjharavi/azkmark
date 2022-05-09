@@ -1,6 +1,7 @@
 import type { Bookmark } from "../bookmarks/model.js";
 import type { Collection } from "../bookmarks/collections.js";
 import { collectionOptions } from "../ui/collections.js";
+import { requireElement } from "../ui/dom.js";
 import {
   deleteBookmark,
   InvalidStoredBookmarkError,
@@ -37,54 +38,20 @@ export function initializeManagement({
   open: (url: string, mode: ManagementMode, index: number) => void;
   updateTarget: () => void;
 } {
-  const dialog = document.querySelector<HTMLDialogElement>("#bookmark-dialog");
-  const heading = document.querySelector<HTMLHeadingElement>("#management-heading");
-  const targetTitle = document.querySelector<HTMLParagraphElement>("#management-target");
-  const targetUrl = document.querySelector<HTMLParagraphElement>("#management-url");
-  const form = document.querySelector<HTMLFormElement>("#management-form");
-  const editFields = document.querySelector<HTMLElement>("#management-edit");
-  const titleInput = document.querySelector<HTMLTextAreaElement>("#bookmark-title");
-  const titleError = document.querySelector<HTMLParagraphElement>("#management-title-error");
-  const collectionSelect = document.querySelector<HTMLSelectElement>("#bookmark-collection");
-  const deleteCopy = document.querySelector<HTMLParagraphElement>("#management-delete");
-  const error = document.querySelector<HTMLParagraphElement>("#management-error");
-  const status = document.querySelector<HTMLParagraphElement>("#management-status");
-  const cancelButton = document.querySelector<HTMLButtonElement>("#management-cancel");
-  const submitButton = document.querySelector<HTMLButtonElement>("#management-submit");
-
-  if (
-    !dialog
-    || !heading
-    || !targetTitle
-    || !targetUrl
-    || !form
-    || !editFields
-    || !titleInput
-    || !titleError
-    || !collectionSelect
-    || !deleteCopy
-    || !error
-    || !status
-    || !cancelButton
-    || !submitButton
-  ) {
-    throw new Error("The bookmark management dialog is incomplete.");
-  }
-
-  const dialogElement = dialog;
-  const headingElement = heading;
-  const targetTitleElement = targetTitle;
-  const targetUrlElement = targetUrl;
-  const formElement = form;
-  const editFieldsElement = editFields;
-  const titleInputElement = titleInput;
-  const titleErrorElement = titleError;
-  const collectionSelectElement = collectionSelect;
-  const deleteCopyElement = deleteCopy;
-  const errorElement = error;
-  const statusElement = status;
-  const cancelButtonElement = cancelButton;
-  const submitButtonElement = submitButton;
+  const dialogElement = requireElement<HTMLDialogElement>("#bookmark-dialog");
+  const headingElement = requireElement<HTMLHeadingElement>("#management-heading");
+  const targetTitleElement = requireElement<HTMLParagraphElement>("#management-target");
+  const targetUrlElement = requireElement<HTMLParagraphElement>("#management-url");
+  const formElement = requireElement<HTMLFormElement>("#management-form");
+  const editFieldsElement = requireElement<HTMLElement>("#management-edit");
+  const titleInputElement = requireElement<HTMLTextAreaElement>("#bookmark-title");
+  const titleErrorElement = requireElement<HTMLParagraphElement>("#management-title-error");
+  const collectionSelectElement = requireElement<HTMLSelectElement>("#bookmark-collection");
+  const deleteCopyElement = requireElement<HTMLParagraphElement>("#management-delete");
+  const errorElement = requireElement<HTMLParagraphElement>("#management-error");
+  const statusElement = requireElement<HTMLParagraphElement>("#management-status");
+  const cancelButtonElement = requireElement<HTMLButtonElement>("#management-cancel");
+  const submitButtonElement = requireElement<HTMLButtonElement>("#management-submit");
 
   let action: ManagementAction | undefined;
   let originalTitle = "";
@@ -163,11 +130,15 @@ export function initializeManagement({
   }
 
   function showMissingTarget(): void {
+    const submitFocused = document.activeElement === submitButtonElement;
     targetMissing = true;
     cancelButtonElement.textContent = "Close";
     submitButtonElement.disabled = true;
     errorElement.textContent = "This bookmark is no longer saved. Close this dialog to continue.";
     errorElement.hidden = false;
+    if (submitFocused && !submitting) {
+      cancelButtonElement.focus({ preventScroll: true });
+    }
   }
 
   function failureMessage(cause: unknown, mode: ManagementMode): string {
@@ -205,7 +176,7 @@ export function initializeManagement({
 
     const collection = collectionSelectElement.value;
     const collectionChanged = collection !== originalCollection;
-    const collectionMissing = collection && !getCollections().some(({ id }) => id === collection);
+    const collectionMissing = Boolean(collection) && !getCollections().some(({ id }) => id === collection);
     if (currentAction.mode === "edit" && collectionChanged && collectionMissing) {
       errorElement.textContent = "This collection is no longer available. Choose another collection or Unsorted.";
       errorElement.hidden = false;
@@ -255,8 +226,13 @@ export function initializeManagement({
       showFeedback(feedbackMessage);
       dialogElement.close();
     } catch (cause) {
-      errorElement.textContent = failureMessage(cause, currentAction.mode);
-      errorElement.hidden = false;
+      if (cause instanceof MissingCollectionError) {
+        await refresh();
+      }
+      if (!targetMissing) {
+        errorElement.textContent = failureMessage(cause, currentAction.mode);
+        errorElement.hidden = false;
+      }
     } finally {
       submitting = false;
       titleInputElement.readOnly = false;
