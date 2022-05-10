@@ -25,8 +25,6 @@ export type UpdateBookmarkResult =
   | { status: "updated" | "unchanged"; bookmark: Bookmark }
   | { status: "not-found" };
 
-export type UpdateBookmarkTitleResult = UpdateBookmarkResult;
-
 export interface BookmarkChanges {
   title?: string | undefined;
   // Undefined preserves the current assignment; null explicitly means Unsorted.
@@ -268,13 +266,6 @@ export async function updateBookmark(
 
   // Membership writes always acquire the collection lock before the URL lock.
   return collectionId === undefined ? edit() : navigator.locks.request(COLLECTIONS_KEY, edit);
-}
-
-export function updateBookmarkTitle(
-  url: string,
-  title: string | undefined,
-): Promise<UpdateBookmarkTitleResult> {
-  return updateBookmark(url, { title });
 }
 
 export async function updateBookmarkViewed(

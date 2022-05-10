@@ -53,6 +53,7 @@ export function initializeCollections({ getCollections, refresh, showFeedback, c
     submit.disabled = false;
     submit.textContent = select.value ? "Save name" : "Create collection";
     submit.classList.remove("destructive");
+    cancel.textContent = "Cancel";
   }
 
   function update(): void {
@@ -62,7 +63,7 @@ export function initializeCollections({ getCollections, refresh, showFeedback, c
     }
 
     const selected = dialog.open ? select.value : "";
-    collectionOptions(select, collections, selected, "New collection");
+    collectionOptions(select, collections, selected, "management");
     
     // Updating definitions never replaces an open name draft or deletion error
     if (!dialog.open || busy) {
@@ -70,23 +71,36 @@ export function initializeCollections({ getCollections, refresh, showFeedback, c
     }
 
     missing = Boolean(selected) && !selectedCollection();
-    submit.disabled = missing;
-    remove.disabled = missing;
-
     if (missing) {
-      error.textContent = "This collection is no longer available. Close this dialog or choose another collection.";
-      error.hidden = false;
-      if (deleting) {
-        cancel.focus({ preventScroll: true });
-      }
-    } else if (deleting) {
+      showMissingCollection();
+      return;
+    }
+    submit.disabled = false;
+    remove.disabled = false;
+    cancel.textContent = "Cancel";
+    if (deleting) {
       updateConfirmation();
+    }
+  }
+
+  function showMissingCollection(): void {
+    const actionFocused = document.activeElement === submit || document.activeElement === remove;
+    missing = true;
+    cancel.textContent = "Close";
+    submit.disabled = true;
+    remove.disabled = true;
+    error.textContent = deleting
+      ? "This collection was already removed. Close this dialog to continue."
+      : "This collection was removed. Choose another collection or New collection; the name draft is kept until the choice changes.";
+    error.hidden = false;
+    if (!busy && (deleting || actionFocused)) {
+      (deleting ? cancel : select).focus({ preventScroll: true });
     }
   }
 
   function updateConfirmation(): void {
     const label = selectedCollection()?.name ?? name.value;
-    confirm.textContent = `Delete “${label}”? Its bookmarks will stay saved in Unsorted. This can't be undone.`;
+    confirm.textContent = `Delete “${label}”? The collection will be removed, but its bookmarks will stay saved and move to Unsorted.`;
   }
 
   function setBusy(next: boolean): void {
@@ -174,9 +188,9 @@ export function initializeCollections({ getCollections, refresh, showFeedback, c
       let message: string;
       if (deleting) {
         const result = await deleteCollection(id);
+        const count = `${result.moved} ${result.moved === 1 ? "bookmark moved" : "bookmarks moved"}`;
         if (result.status === "failed") {
           await refresh();
-          const count = `${result.moved} ${result.moved === 1 ? "bookmark moved" : "bookmarks moved"}`;
           let recovery = "Try again to finish deleting. The collection is kept until all moves succeed.";
     
           if (result.error instanceof StorageQuotaError) {
@@ -188,7 +202,6 @@ export function initializeCollections({ getCollections, refresh, showFeedback, c
           error.hidden = false;
           return;
         }
-        const count = `${result.moved} ${result.moved === 1 ? "bookmark moved" : "bookmarks moved"}`;
         message = result.status === "not-found"
           ? "Collection was already removed. The library has been refreshed."
           : `Collection deleted. ${count} to Unsorted.`;
@@ -202,8 +215,7 @@ export function initializeCollections({ getCollections, refresh, showFeedback, c
     } catch (cause) {
       await refresh();
       if (cause instanceof MissingCollectionError) {
-        missing = true;
-        error.textContent = "This collection is no longer available. Close this dialog or choose another collection.";
+        showMissingCollection();
       } else if (cause instanceof InvalidStoredBookmarkError) {
         error.textContent = "Some saved data is invalid. No collection change was confirmed.";
       } else if (cause instanceof StorageQuotaError) {

@@ -1,7 +1,7 @@
 import { groupBookmarks } from "./bookmarks/domains.js";
 import type { Bookmark } from "./bookmarks/model.js";
 import type { Collection } from "./bookmarks/collections.js";
-import { collectionGroup } from "./ui/collections.js";
+import { collectionOptions } from "./ui/collections.js";
 import { requireElement } from "./ui/dom.js";
 import { initializeCollections } from "./library/collections.js";
 import { filterBookmarks } from "./bookmarks/search.js";
@@ -386,17 +386,9 @@ function updateCollectionOptions(): string {
   const selectedId = collectionScope.slice("collection:".length);
   if (collectionScope.startsWith("collection:") && !collections.some(({ id }) => id === selectedId)) {
     collectionScope = "all";
-    notice = "Collection no longer available. Showing All bookmarks; filters kept.";
+    notice = "Collection removed. Showing all bookmarks with the current search and filters.";
   }
-  const options = document.createDocumentFragment();
-  options.appendChild(new Option("All bookmarks", "all"));
-  options.appendChild(new Option("Unsorted", "unsorted"));
-  const group = collectionGroup(collections, "collection:");
-  if (group) {
-    options.appendChild(group);
-  }
-  collectionSelect.replaceChildren(options);
-  collectionSelect.value = collectionScope;
+  collectionOptions(collectionSelect, collections, collectionScope, "scope");
   return notice;
 }
 
@@ -492,11 +484,11 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   collectionEmptyTitle.textContent = collectionScope === "unsorted"
     ? "No unsorted bookmarks"
     : "No bookmarks in this collection";
-  let emptyCopy = "Choose this collection when saving a page, or move a bookmark here using Edit bookmark.";
+  let emptyCopy = "Save a page to this collection, or use the pen action to move a saved bookmark here.";
   if (collectionScope === "unsorted") {
     emptyCopy = isEmpty
-      ? "Save a page without choosing a collection to add it to Unsorted."
-      : "All saved bookmarks are in collections.";
+      ? "Choose Unsorted in the popup's Save to control to save a page outside a collection."
+      : "All saved bookmarks are in collections. Choose Unsorted when saving or editing a bookmark to move it here.";
   }
   collectionEmptyCopy.textContent = emptyCopy;
   noMatchesElement.hidden = !hasNoMatches;
