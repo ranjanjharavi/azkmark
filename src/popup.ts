@@ -14,6 +14,7 @@ import { createRefreshScheduler } from "./library/refresh.js";
 import { captureThumbnail } from "./metadata.js";
 import { captureCurrentPage } from "./page-capture.js";
 import type { CurrentPage } from "./page-capture.js";
+import { openLibrary } from "./open-library.js";
 
 const saveTo = requireElement<HTMLSelectElement>("#save-to");
 const collectionError = requireElement<HTMLParagraphElement>("#save-to-error");
@@ -136,27 +137,29 @@ pageImageElement.addEventListener("error", showNoThumbnail);
 
 function showLibraryError(message: string): void {
   console.error("Could not open the bookmark library.", message);
-  feedbackElement.textContent = "Could not open the library. Reload the extension and try again.";
+  feedbackElement.textContent = "Couldn't open the library. Try Open library again; reload the extension if the problem continues.";
   feedbackElement.hidden = false;
 }
 
-openLibraryButtonElement.addEventListener("click", () => {
+openLibraryButtonElement.addEventListener("click", async () => {
+  if (openLibraryButtonElement.disabled) {
+    return;
+  }
+  const restoreFocus = document.activeElement === openLibraryButtonElement;
   openLibraryButtonElement.disabled = true;
+  openLibraryButtonElement.setAttribute("aria-busy", "true");
   feedbackElement.hidden = true;
 
   try {
-    chrome.tabs.create({ url: chrome.runtime.getURL("library.html") }, () => {
-      const lastError = chrome.runtime.lastError;
-
-      if (lastError) {
-        showLibraryError(lastError.message || "Unknown Chrome error");
-      }
-
-      openLibraryButtonElement.disabled = false;
-    });
+    await openLibrary();
   } catch (error) {
     showLibraryError(error instanceof Error ? error.message : "Unknown error");
+  } finally {
     openLibraryButtonElement.disabled = false;
+    openLibraryButtonElement.setAttribute("aria-busy", "false");
+    if (restoreFocus && document.activeElement === document.body) {
+      openLibraryButtonElement.focus({ preventScroll: true });
+    }
   }
 });
 
