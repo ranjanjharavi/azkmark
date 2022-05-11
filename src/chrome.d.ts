@@ -9,15 +9,20 @@ declare namespace chrome {
     function getURL(path: string): string;
   }
 
+  namespace extension {
+    function getViews(fetchProperties: { type: "tab"; tabId?: number }): Window[];
+  }
+
   namespace tabs {
     interface Tab {
       id?: number;
+      windowId: number;
       title?: string;
       url?: string;
     }
 
     function query(
-      queryInfo: { active: boolean; currentWindow: boolean },
+      queryInfo: { active?: boolean; currentWindow?: boolean },
       callback: (tabs: Tab[]) => void
     ): void;
 
@@ -25,6 +30,16 @@ declare namespace chrome {
       createProperties: { url: string },
       callback?: (tab: Tab) => void
     ): void;
+
+    function update(
+      tabId: number,
+      updateProperties: { active: boolean },
+      callback: (tab?: Tab) => void
+    ): void;
+  }
+
+  namespace windows {
+    function update(windowId: number, updateInfo: { focused: boolean }, callback: () => void): void;
   }
 
   namespace storage {
