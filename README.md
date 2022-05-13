@@ -1,17 +1,19 @@
 # Azkmark
 
-Local bookmarks with search, previews, and manual viewed status.
+Local bookmarks with search, collections, previews, and manual viewed status.
 
-- **Find:** title/URL search, domain, saved date, and viewed status filters. Date presets: Today, Last 7 days, Last 30 days, or All time. Active ranges refresh at local midnight or on tab return.
-- **Browse:** Cards with lazy previews or an image free List; failed previews fall back to text. Sort by newest, oldest, or title A–Z/Z–A. View and sort persist across reloads/tabs when storage is available, filter reset preserves both.
-- **Manage:** open eye = Viewed, crossed out eye = To view. Pen edits titles, trash requires confirmation. Opening a link never changes its status.
-- **Filters:** disclosure preserves selections, the count excludes search/sort. Escape closes the group and returns focus.
+- **Find:** title/URL search, domain, viewed-status, and saved-date filters. Date presets: Today, Last 7/30 days, All time. Ranges refresh at local midnight/tab return.
+- **Browse:** lazy Cards with text fallback, image-free List. Sort newest/oldest/title A–Z/Z–A. Sort/view persist across tabs/reloads when storage allows, filter reset keeps both.
+- **Collect:** All bookmarks, Unsorted, or named collections. Create/rename/delete, deletion keeps bookmarks in Unsorted. Popup Save to remembers the last successful new save.
+- **Actions:** open/crossed-out eye = Viewed/To view, pen = title/collection edit, trash = confirmed delete. Untouched fields keep newer saved edits. Opening links never changes status.
+- **Filters:** disclosure keeps selections, count excludes search/collection scope/sort/view. Escape closes it and returns focus.
+- **Open library:** reuses a loaded library tab, preserving filters/drafts. Unloaded/discarded tabs may open another.
 
 ## Backup & import
 
-**Export backup** downloads the whole library as JSON, regardless of filters. Backups contain URLs, titles, dates, status, and optional thumbnail references not image files. Uninstall removes local data, export beforehand.
-
-**About backups** accepts azkmark JSON backups and Chrome HTML exports. Existing URL matches remain unchanged, retrying the same file continues after a storage failure. Chrome folders flatten, unsupported links skip, unusable dates default to import time, and imported links start as To view.
+- **Export backup:** whole-library v3 JSON, regardless of scope/filters. Includes empty collections, assignments, URLs, titles, dates, status, and optional thumbnail URLs—not image files. Export before uninstall, local data is deleted.
+- **About backups:** imports JSON v1–3 or Chrome HTML. Existing URLs keep all saved details. Collections match normalized, case-insensitive names, colliding IDs regenerate. Partial failures report confirmed additions, retry the same file without duplicate bookmarks or collections.
+- **Chrome HTML:** folders flatten into Unsorted, unsupported links skip, unusable dates use import time, new links start as To view.
 
 ## Build & load
 
