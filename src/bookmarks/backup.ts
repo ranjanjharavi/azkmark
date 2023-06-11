@@ -42,6 +42,7 @@ function snapshotBackupBookmarks(value: unknown, version: BackupVersion): Bookma
 
   if (version !== BACKUP_VERSION && bookmarks.some((bookmark) => (
     Object.hasOwn(bookmark, "collectionId")
+    || Object.hasOwn(bookmark, "tags")
     || (version === 1 && Object.hasOwn(bookmark, "viewed"))
   ))) {
     throw new TypeError("Invalid bookmark collection.");

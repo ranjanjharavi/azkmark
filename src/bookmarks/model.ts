@@ -1,5 +1,6 @@
 import { parseWebUrl } from "../urls.js";
 import { isCollectionId } from "./collections.js";
+import { isTags, snapshotTags } from "./tags.js";
 
 export interface Bookmark {
   url: string;
@@ -8,15 +9,19 @@ export interface Bookmark {
   thumbnailUrl?: string;
   viewed?: boolean;
   collectionId?: string;
+  tags?: string[];
 }
 
 export type BookmarkDetails = Pick<Bookmark, "url" | "title"> & {
   thumbnailUrl?: string | undefined;
   viewed?: boolean | undefined;
   collectionId?: string | undefined;
+  tags?: readonly string[] | undefined;
 };
 
-const BOOKMARK_FIELDS = new Set(["url", "title", "savedAt", "thumbnailUrl", "viewed", "collectionId"]);
+const BOOKMARK_FIELDS = new Set([
+  "url", "title", "savedAt", "thumbnailUrl", "viewed", "collectionId", "tags",
+]);
 
 export function isBookmark(value: unknown): value is Bookmark {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -69,6 +74,10 @@ export function isBookmark(value: unknown): value is Bookmark {
       return false;
     }
 
+    if (Object.hasOwn(fields, "tags") && !isTags(fields["tags"].value)) {
+      return false;
+    }
+
     if (!Object.hasOwn(fields, "thumbnailUrl")) return true;
 
     const thumbnail = parseWebUrl(fields["thumbnailUrl"].value);
@@ -86,6 +95,7 @@ export function createBookmark(details: BookmarkDetails, savedAt = Date.now()): 
     ...(details?.thumbnailUrl === undefined ? {} : { thumbnailUrl: details.thumbnailUrl }),
     ...(details?.viewed === undefined ? {} : { viewed: details.viewed }),
     ...(details?.collectionId === undefined ? {} : { collectionId: details.collectionId }),
+    ...(details?.tags === undefined ? {} : { tags: snapshotTags(details.tags) }),
   };
 
   if (!isBookmark(record)) {

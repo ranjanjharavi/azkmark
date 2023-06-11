@@ -1,5 +1,7 @@
 import type { Bookmark } from "../bookmarks/model.js";
 import type { Collection } from "../bookmarks/collections.js";
+import { availableTags, sameTags } from "../bookmarks/tags.js";
+import { initializeTagInput } from "../ui/tags.js";
 import { collectionOptions } from "../ui/collections.js";
 import { requireElement } from "../ui/dom.js";
 import {
@@ -53,6 +55,8 @@ export function initializeManagement({
   const cancelButtonElement = requireElement<HTMLButtonElement>("#management-cancel");
   const submitButtonElement = requireElement<HTMLButtonElement>("#management-submit");
 
+  const tagInput = initializeTagInput("bookmark");
+  let originalTags: readonly string[] = [];
   let action: ManagementAction | undefined;
   let originalTitle = "";
   let originalCollection = "";
@@ -79,6 +83,10 @@ export function initializeManagement({
     targetUrlElement.textContent = bookmark.url;
     originalTitle = bookmark.title;
     titleInputElement.value = originalTitle;
+    originalTags = bookmark.tags?.slice() ?? [];
+    tagInput.set(originalTags);
+    tagInput.updateVocabulary(availableTags(bookmarks));
+    tagInput.setDisabled(false);
     originalCollection = bookmark.collectionId ?? "";
     collectionOptions(collectionSelectElement, getCollections(), originalCollection);
     collectionSelectElement.disabled = false;
@@ -124,8 +132,9 @@ export function initializeManagement({
 
     targetTitleElement.textContent = current.title;
     if (action.mode === "edit") {
-      // Keep both drafts, including a removed assignment that needs a new choice.
+      // Refresh choices only, never replace title, collection, or tag drafts.
       collectionOptions(collectionSelectElement, getCollections(), collectionSelectElement.value);
+      tagInput.updateVocabulary(availableTags(getBookmarks() ?? []));
     }
   }
 
@@ -184,7 +193,14 @@ export function initializeManagement({
       return;
     }
 
+    const tags = currentAction.mode === "edit" ? tagInput.read() : [];
+    if (!tags) {
+      return;
+    }
+    const tagsChanged = !sameTags(tags, originalTags);
+
     submitting = true;
+    tagInput.setDisabled(true);
     titleInputElement.readOnly = true;
     collectionSelectElement.disabled = true;
     cancelButtonElement.disabled = true;
@@ -203,6 +219,7 @@ export function initializeManagement({
         const result = await updateBookmark(currentAction.url, {
           title: titleChanged ? title : undefined,
           collectionId,
+          tags: tagsChanged ? tags : undefined,
         });
         if (result.status === "not-found") {
           showMissingTarget();
@@ -235,6 +252,7 @@ export function initializeManagement({
       }
     } finally {
       submitting = false;
+      tagInput.setDisabled(false);
       titleInputElement.readOnly = false;
       collectionSelectElement.disabled = false;
       cancelButtonElement.disabled = false;
@@ -262,6 +280,7 @@ export function initializeManagement({
     action = undefined;
     originalTitle = "";
     originalCollection = "";
+    originalTags = [];
     if (previousAction) {
       restoreFocus(previousAction);
     }
