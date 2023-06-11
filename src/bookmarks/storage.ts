@@ -10,6 +10,7 @@ import {
   snapshotCollections,
 } from "./collections.js";
 import type { Collection } from "./collections.js";
+import { sameTags, snapshotTags } from "./tags.js";
 import { parseWebUrl } from "../urls.js";
 
 const BOOKMARK_KEY_PREFIX = "azkmark:bookmark:";
@@ -29,6 +30,8 @@ export interface BookmarkChanges {
   title?: string | undefined;
   // Undefined preserves the current assignment; null explicitly means Unsorted.
   collectionId?: string | null | undefined;
+  // Undefined preserves the latest tags; an empty array explicitly clears them.
+  tags?: readonly string[] | undefined;
 }
 
 export type UpdateBookmarkViewedResult =
@@ -127,7 +130,6 @@ function storedBookmark(key: string, value: unknown): Bookmark {
   // Read the current fields without rewriting the data or invoking property getters.
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
     const fields = Object.getOwnPropertyDescriptors(value);
-    delete fields.tags;
     value = Object.create(Object.getPrototypeOf(value), fields);
   }
 
@@ -223,7 +225,7 @@ async function requireCollection(id: string | undefined): Promise<void> {
 
 export async function updateBookmark(
   url: string,
-  { title, collectionId }: BookmarkChanges = {},
+  { title, collectionId, tags }: BookmarkChanges = {},
 ): Promise<UpdateBookmarkResult> {
   const key = bookmarkKey(url);
   if (title !== undefined && (typeof title !== "string" || !title.trim())) {
@@ -234,6 +236,7 @@ export async function updateBookmark(
   }
 
   const submittedTitle = title?.trim();
+  const submittedTags = tags === undefined ? undefined : snapshotTags(tags);
   const edit = () => navigator.locks.request(key, async (): Promise<UpdateBookmarkResult> => {
     const existing = await readStoredBookmark(key);
     if (!existing) {
@@ -247,7 +250,16 @@ export async function updateBookmark(
       nextCollectionId = collectionId ?? undefined;
     }
 
-    if (nextTitle === existing.title && nextCollectionId === existing.collectionId) {
+    let nextTags = existing.tags;
+    if (submittedTags !== undefined) {
+      nextTags = submittedTags.length > 0 ? submittedTags : undefined;
+    }
+
+    if (
+      nextTitle === existing.title
+      && nextCollectionId === existing.collectionId
+      && sameTags(nextTags, existing.tags)
+    ) {
       return { status: "unchanged", bookmark: existing };
     }
 
@@ -259,6 +271,7 @@ export async function updateBookmark(
       ...existing,
       title: nextTitle,
       collectionId: nextCollectionId,
+      tags: nextTags,
     }, existing.savedAt);
     await writeStorage({ [key]: updated });
     return { status: "updated", bookmark: updated };
