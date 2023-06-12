@@ -3,11 +3,14 @@ import {
   MissingCollectionError,
   readCollections,
   readLastCollection,
+  readLibrary,
   StorageQuotaError,
   saveBookmark,
   watchBookmarks,
 } from "./bookmarks/storage.js";
 import type { Collection } from "./bookmarks/collections.js";
+import { availableTags } from "./bookmarks/tags.js";
+import { initializeTagInput } from "./ui/tags.js";
 import { collectionOptions } from "./ui/collections.js";
 import { requireElement } from "./ui/dom.js";
 import { createRefreshScheduler } from "./library/refresh.js";
@@ -64,6 +67,7 @@ const titleErrorElement = titleError;
 const saveStatusElement = saveStatus;
 const saveErrorElement = saveError;
 
+const tagInput = initializeTagInput("page");
 let currentPage: CurrentPage | undefined;
 let thumbnailReady: Promise<string | undefined> = Promise.resolve(undefined);
 let imageTimeout: number | undefined;
@@ -76,6 +80,7 @@ let collections: Collection[] = [];
 function updateSaveControls(): void {
   saveButtonElement.disabled = completed || saving || !currentPage || !collectionsReady;
   saveTo.disabled = completed || saving || !collectionsAvailable;
+  tagInput.setDisabled(completed || saving);
 }
 
 async function readSaveCollections(): Promise<void> {
@@ -108,6 +113,14 @@ async function readSaveCollections(): Promise<void> {
 }
 
 const collectionRefresh = createRefreshScheduler(readSaveCollections);
+const tagVocabularyRefresh = createRefreshScheduler(async () => {
+  try {
+    const { bookmarks } = await readLibrary();
+    tagInput.updateVocabulary(availableTags(bookmarks));
+  } catch {
+    // Suggestions are optional; manual tags and saving remain available.
+  }
+});
 
 function clearImageTimeout(): void {
   if (imageTimeout !== undefined) {
@@ -194,6 +207,11 @@ saveFormElement.addEventListener("submit", async (event) => {
     return;
   }
 
+  const tags = tagInput.read();
+  if (!tags) {
+    return;
+  }
+
   const collectionId = saveTo.value || undefined;
   const page = currentPage;
   const restoreSaveFocus = document.activeElement === saveButtonElement;
@@ -210,11 +228,18 @@ saveFormElement.addEventListener("submit", async (event) => {
   try {
     // Wait only for bounded metadata capture, never for the image to load.
     const thumbnailUrl = await thumbnailReady;
-    const bookmark = createBookmark({ url: page.url, title, thumbnailUrl, collectionId }, savedAt);
+    const bookmark = createBookmark({
+      url: page.url,
+      title,
+      thumbnailUrl,
+      collectionId,
+      tags: tags.length > 0 ? tags : undefined,
+    }, savedAt);
     const result = await saveBookmark(bookmark, true);
 
     completed = true;
     pageTitleElement.value = result.bookmark.title;
+    tagInput.set(result.bookmark.tags ?? []);
     collectionOptions(saveTo, collections, result.bookmark.collectionId ?? "");
     saveButtonElement.textContent = "Saved";
     saveStatusElement.textContent = result.status === "saved"
@@ -284,6 +309,10 @@ saveTo.addEventListener("change", () => {
   saveErrorElement.hidden = true;
 });
 
-watchBookmarks(collectionRefresh.schedule);
+watchBookmarks(() => {
+  collectionRefresh.schedule();
+  tagVocabularyRefresh.schedule();
+});
 void collectionRefresh.refresh();
+void tagVocabularyRefresh.refresh();
 initializePagePreview();
