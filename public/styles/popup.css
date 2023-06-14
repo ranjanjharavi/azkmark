@@ -91,6 +91,10 @@ label {
   overflow-wrap: anywhere;
 }
 
+body[data-page="popup"] .tag-entry {
+  margin-top: 0;
+}
+
 .popup-actions {
   display: grid;
   grid-template-columns: 1fr;
