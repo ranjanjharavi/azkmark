@@ -35,7 +35,7 @@
       </div>
       <div id="backup-panel" class="backup-panel" hidden>
         <p>Exports include the whole library and all collections, even empty ones, regardless of scope or filters.</p>
-        <p>Backup files contain collection names, assignments, saved URLs, titles, dates, and status, which may be private. Thumbnail URLs are references, not image files.</p>
+        <p>Backup files contain collection names, assignments, tags, saved URLs, titles, dates, and status, which may be private. Thumbnail URLs are references, not image files.</p>
         <p id="import-help">Choose an azkmark JSON backup or Chrome bookmark HTML export to merge. Collections match by name, existing bookmarks keep all saved details. Chrome folders are flattened into Unsorted, missing or unusable dates use import time.</p>
         <form id="import-form" novalidate>
           <div class="backup-import-controls">
@@ -138,6 +138,18 @@
           <p id="management-title-error" role="alert" hidden>Enter a title before saving.</p>
           <label for="bookmark-collection" class="collection-label">Collection</label>
           <select id="bookmark-collection" class="collection-select" aria-describedby="management-error"><option value="">Unsorted</option></select>
+          <div class="tag-entry">
+            <label for="bookmark-tag">Tags (optional)</label>
+            <div class="tag-input-row">
+              <input id="bookmark-tag" type="text" list="bookmark-tag-options" autocomplete="off" spellcheck="false" aria-describedby="bookmark-tag-help bookmark-tag-error" placeholder="Add a tag" />
+              <button id="bookmark-tag-add" type="button">Add tag</button>
+            </div>
+            <datalist id="bookmark-tag-options"></datalist>
+            <p id="bookmark-tag-help" class="tag-help">Up to 32 tags, 80 characters each. Labels are lowercased; whitespace collapses. Commas stay inside a tag. Save includes pending text.</p>
+            <p id="bookmark-tag-error" class="tag-error" role="alert" hidden></p>
+            <ul id="bookmark-tags" class="tag-drafts" aria-label="Draft tags" hidden></ul>
+            <p id="bookmark-tag-status" class="visually-hidden" role="status" aria-atomic="true"></p>
+          </div>
         </div>
         <p id="management-delete" hidden>This permanently deletes this bookmark from your azkmark library. It can't be undone.</p>
         <p id="management-error" role="alert" hidden></p>
