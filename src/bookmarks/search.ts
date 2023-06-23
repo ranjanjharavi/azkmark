@@ -15,6 +15,7 @@ export interface BookmarkFilterOptions {
   selection?: BookmarkSelection;
   savedDate?: SavedDateSelection;
   viewStatus?: ViewStatusSelection;
+  tag?: string;
   sort?: BookmarkSort;
   now?: number;
 }
@@ -75,6 +76,7 @@ export function filterBookmarks(
     selection = { kind: "all" },
     savedDate = "all",
     viewStatus = "all",
+    tag = "",
     sort = "newest",
     now = Date.now(),
   }: BookmarkFilterOptions = {},
@@ -91,6 +93,8 @@ export function filterBookmarks(
   const range = savedDateRange(savedDate, now);
   const term = query.trim().toLowerCase();
   const matches = source.filter((bookmark) => {
+    const tags = bookmark.tags ?? [];
+    const matchesTag = !tag || tags.includes(tag);
     const matchesDate = !range || (
       bookmark.savedAt >= range.start && bookmark.savedAt < range.end
     );
@@ -98,9 +102,10 @@ export function filterBookmarks(
       || Boolean(bookmark.viewed) === (viewStatus === "viewed");
     const matchesQuery = !term
       || bookmark.title.toLowerCase().includes(term)
-      || bookmark.url.toLowerCase().includes(term);
+      || bookmark.url.toLowerCase().includes(term)
+      || tags.some((label) => label.includes(term));
 
-    return matchesDate && matchesViewStatus && matchesQuery;
+    return matchesDate && matchesViewStatus && matchesTag && matchesQuery;
   });
 
   // Filtering creates a fresh array; Chrome 88 has stable Array.prototype.sort.
