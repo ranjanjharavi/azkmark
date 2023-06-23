@@ -41,6 +41,18 @@ export function bookmarkCard(
     link.appendChild(bookmarkPreview(bookmark.thumbnailUrl));
   }
 
+  if (bookmark.tags?.length) {
+    const tags = document.createElement("ul");
+    tags.className = "bookmark-tags";
+    tags.setAttribute("aria-label", "Tags");
+    bookmark.tags.forEach((tag) => {
+      const label = document.createElement("li");
+      label.textContent = tag;
+      tags.appendChild(label);
+    });
+    link.appendChild(tags);
+  }
+
   card.appendChild(link);
   card.appendChild(bookmarkActions(bookmark, savingViewStatus));
   return card;
