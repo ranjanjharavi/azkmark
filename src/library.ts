@@ -1,6 +1,7 @@
 import { groupBookmarks } from "./bookmarks/domains.js";
 import type { Bookmark } from "./bookmarks/model.js";
 import type { Collection } from "./bookmarks/collections.js";
+import { availableTags } from "./bookmarks/tags.js";
 import { collectionOptions } from "./ui/collections.js";
 import { requireElement } from "./ui/dom.js";
 import { initializeCollections } from "./library/collections.js";
@@ -34,6 +35,7 @@ const collectionEmpty = requireElement<HTMLElement>("#collection-empty");
 const collectionEmptyTitle = requireElement<HTMLHeadingElement>("#collection-empty-title");
 const collectionEmptyCopy = requireElement<HTMLParagraphElement>("#collection-empty-copy");
 const clearCollectionButton = requireElement<HTMLButtonElement>("#clear-collection");
+const tagSelect = requireElement<HTMLSelectElement>("#tag-filter");
 const libraryHeading = document.querySelector<HTMLHeadingElement>("#library-heading");
 const libraryStatus = document.querySelector<HTMLParagraphElement>("#library-status");
 const libraryControls = document.querySelector<HTMLFormElement>("#library-controls");
@@ -118,6 +120,7 @@ type FocusTarget =
   | "manage-collections"
   | "saved-date"
   | "view-status"
+  | "tag"
   | "sort"
   | "view-cards"
   | "view-list"
@@ -138,6 +141,7 @@ let collections: Collection[] = [];
 let collectionScope = "all";
 let selection: BookmarkSelection = { kind: "all" };
 let viewStatusSelection: ViewStatusSelection = "all";
+let tagSelection = "";
 let sortOrder: BookmarkSort = "newest";
 let bookmarkView: BookmarkView = "cards";
 const pendingViewed = new Set<string>();
@@ -170,6 +174,9 @@ function captureFocus(): FocusSnapshot {
   }
   if (activeElement === viewStatusSelectElement) {
     return { target: "view-status" };
+  }
+  if (activeElement === tagSelect) {
+    return { target: "tag" };
   }
   if (activeElement === sortSelectElement) {
     return { target: "sort" };
@@ -263,41 +270,30 @@ function restoreFocus(focus: FocusSnapshot): void {
     return;
   }
 
-  if (focus.target === "saved-date") {
-    if (total > 0) {
-      savedDateSelectElement.focus({ preventScroll: true });
-    } else {
-      focusHeading();
-    }
-    return;
-  }
-
-  if (focus.target === "view-status") {
-    if (total > 0) {
-      viewStatusSelectElement.focus({ preventScroll: true });
-    } else {
-      focusHeading();
-    }
-    return;
-  }
-
-  if (focus.target === "sort") {
-    if (total > 0) {
-      sortSelectElement.focus({ preventScroll: true });
-    } else {
-      focusHeading();
-    }
-    return;
-  }
-
-  const displayTarget = {
+  const controlTargets = {
+    search: searchInputElement,
+    domain: domainSelectElement,
+    "saved-date": savedDateSelectElement,
+    "view-status": viewStatusSelectElement,
+    tag: tagSelect,
+    sort: sortSelectElement,
     "view-cards": cardsRadioElement,
     "view-list": listRadioElement,
     filters: toggleFiltersElement,
   };
-  if (focus.target === "view-cards" || focus.target === "view-list" || focus.target === "filters") {
+  if (
+    focus.target === "search"
+    || focus.target === "domain"
+    || focus.target === "saved-date"
+    || focus.target === "view-status"
+    || focus.target === "tag"
+    || focus.target === "sort"
+    || focus.target === "view-cards"
+    || focus.target === "view-list"
+    || focus.target === "filters"
+  ) {
     if (total > 0) {
-      displayTarget[focus.target].focus({ preventScroll: true });
+      controlTargets[focus.target].focus({ preventScroll: true });
     } else {
       focusHeading();
     }
@@ -311,14 +307,6 @@ function restoreFocus(focus: FocusSnapshot): void {
       focusHeading();
     }
     return;
-  }
-
-  if (total === 0 && (focus.target === "search" || focus.target === "domain")) {
-    focusHeading();
-  } else if (focus.target === "search") {
-    searchInputElement.focus({ preventScroll: true });
-  } else if (focus.target === "domain") {
-    domainSelectElement.focus({ preventScroll: true });
   }
 }
 
@@ -381,6 +369,32 @@ function updateDomainOptions(bookmarks: readonly Bookmark[]): string {
   return notice;
 }
 
+function updateTagOptions(bookmarks: readonly Bookmark[]): void {
+  const vocabulary = availableTags(bookmarks);
+  const options = document.createDocumentFragment();
+  options.appendChild(new Option("All tags", ""));
+
+  if (vocabulary.length > 0) {
+    const group = document.createElement("optgroup");
+    group.label = "Tags";
+
+    vocabulary.forEach((tag) => {
+      group.appendChild(new Option(tag, tag));
+    });
+    options.appendChild(group);
+  }
+
+  // Keep a vanished selection explicit, rather than silently broadening results
+  if (tagSelection && !vocabulary.includes(tagSelection)) {
+    const missing = new Option(`${tagSelection} — no saved bookmarks`, tagSelection);
+    missing.disabled = true;
+    options.appendChild(missing);
+  }
+  
+  tagSelect.replaceChildren(options);
+  tagSelect.value = tagSelection;
+}
+
 function updateCollectionOptions(): string {
   let notice = "";
   const selectedId = collectionScope.slice("collection:".length);
@@ -411,6 +425,7 @@ function updateFilterControls(savedDate: SavedDateSelection): number {
     [domainSelectElement, selection.kind !== "all"],
     [savedDateSelectElement, savedDate !== "all"],
     [viewStatusSelectElement, viewStatusSelection !== "all"],
+    [tagSelect, tagSelection !== ""],
   ];
   let active = 0;
   states.forEach(([control, selected]) => {
@@ -437,6 +452,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
     selection,
     savedDate,
     viewStatus: viewStatusSelection,
+    tag: tagSelection,
     sort: sortOrder,
     now,
   }).filter(inCollectionScope);
@@ -516,6 +532,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     library = data.bookmarks;
     collections = data.collections;
     const notices = [updateDomainOptions(library), updateCollectionOptions()].filter(Boolean);
+    updateTagOptions(library);
     management.updateTarget();
     collectionManagement.update();
     collectionSelect.disabled = false;
@@ -524,6 +541,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     domainSelectElement.disabled = false;
     savedDateSelectElement.disabled = false;
     viewStatusSelectElement.disabled = false;
+    tagSelect.disabled = false;
     sortSelectElement.disabled = false;
     cardsRadioElement.disabled = false;
     listRadioElement.disabled = false;
@@ -555,6 +573,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     domainSelectElement.disabled = true;
     savedDateSelectElement.disabled = true;
     viewStatusSelectElement.disabled = true;
+    tagSelect.disabled = true;
     sortSelectElement.disabled = true;
     cardsRadioElement.disabled = true;
     listRadioElement.disabled = true;
@@ -569,6 +588,7 @@ async function readAndRenderBookmarks(): Promise<void> {
       || focus.target === "manage-collections"
       || focus.target === "saved-date"
       || focus.target === "view-status"
+      || focus.target === "tag"
       || focus.target === "sort"
       || focus.target === "view-cards"
       || focus.target === "view-list"
@@ -701,6 +721,11 @@ viewStatusSelectElement.addEventListener("change", () => {
   render();
 });
 
+tagSelect.addEventListener("change", () => {
+  tagSelection = tagSelect.value;
+  render();
+});
+
 savedDateSelectElement.addEventListener("change", () => {
   render();
 });
@@ -723,6 +748,8 @@ function resetSelections(): void {
   savedDateSelectElement.value = "all";
   viewStatusSelection = "all";
   viewStatusSelectElement.value = "all";
+  tagSelection = "";
+  tagSelect.value = "";
   render();
   if (library?.length) {
     searchInputElement.focus({ preventScroll: true });
