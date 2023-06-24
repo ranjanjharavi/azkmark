@@ -55,7 +55,7 @@
         <div class="library-search-row">
         <div class="library-field search-field">
           <label for="search">Search bookmarks</label>
-          <input id="search" name="query" type="search" placeholder="Title or URL" autocomplete="off" spellcheck="false" disabled />
+          <input id="search" name="query" type="search" placeholder="Title, URL or tag" autocomplete="off" spellcheck="false" disabled />
         </div>
         <button id="toggle-filters" type="button" aria-expanded="true" aria-controls="library-filters" disabled><span>Filters</span><span id="filter-count" aria-hidden="true" hidden></span></button>
         </div>
@@ -83,6 +83,12 @@
             <option value="all">All statuses</option>
             <option value="to-view">To view</option>
             <option value="viewed">Viewed</option>
+          </select>
+        </div>
+        <div class="library-field tag-field">
+          <label for="tag-filter">Tag</label>
+          <select id="tag-filter" name="tag" autocomplete="off" aria-controls="bookmarks" disabled>
+            <option value="">All tags</option>
           </select>
         </div>
         </div>
@@ -118,7 +124,7 @@
       </section>
       <section id="no-matches" aria-labelledby="no-matches-title" hidden>
         <h2 id="no-matches-title">No bookmarks match</h2>
-        <p>Try another title or URL, choose another collection, or change the domain, saved-date range, or view status.</p>
+        <p>Try another search or collection, or change the tag, domain, saved-date range, or view status.</p>
         <button id="reset-filters" type="button" disabled>Show all bookmarks</button>
       </section>
       <div id="library-error" hidden>
