@@ -398,7 +398,6 @@ body[data-page="library"] {
   color: var(--accent-hover);
 }
 
-/* Chrome 88 needs the prefixed mask properties. Icons inherit button state colors. */
 .bookmark-action::before {
   content: "";
   flex: none;
@@ -406,7 +405,6 @@ body[data-page="library"] {
   height: 18px;
   background-color: currentColor;
   -webkit-mask: var(--icon) center / contain no-repeat;
-  mask: var(--icon) center / contain no-repeat;
   pointer-events: none;
 }
 

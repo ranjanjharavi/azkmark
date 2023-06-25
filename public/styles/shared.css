@@ -176,7 +176,6 @@ button.tag-remove::before {
   height: 16px;
   background-color: currentColor;
   -webkit-mask: var(--icon-remove) center / contain no-repeat;
-  mask: var(--icon-remove) center / contain no-repeat;
 }
 
 a {

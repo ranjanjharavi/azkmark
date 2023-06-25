@@ -108,7 +108,6 @@ export function filterBookmarks(
     return matchesDate && matchesViewStatus && matchesTag && matchesQuery;
   });
 
-  // Filtering creates a fresh array; Chrome 88 has stable Array.prototype.sort.
   matches.sort((left, right) => compareBookmarks(left, right, sort));
 
   return matches;
