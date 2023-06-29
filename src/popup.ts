@@ -21,51 +21,19 @@ import { openLibrary } from "./open-library.js";
 
 const saveTo = requireElement<HTMLSelectElement>("#save-to");
 const collectionError = requireElement<HTMLParagraphElement>("#save-to-error");
-const openLibraryButton = document.querySelector<HTMLButtonElement>("#open-library");
-const feedback = document.querySelector<HTMLParagraphElement>("#feedback");
-const pageStatus = document.querySelector<HTMLParagraphElement>("#page-status");
-const pageDetails = document.querySelector<HTMLElement>("#page-details");
-const pageTitle = document.querySelector<HTMLTextAreaElement>("#page-title");
-const pageUrl = document.querySelector<HTMLAnchorElement>("#page-url");
-const pageImage = document.querySelector<HTMLImageElement>("#page-image");
-const previewStatus = document.querySelector<HTMLParagraphElement>("#preview-status");
-const saveForm = document.querySelector<HTMLFormElement>("#save-form");
-const saveButton = document.querySelector<HTMLButtonElement>("#save");
-const titleError = document.querySelector<HTMLParagraphElement>("#title-error");
-const saveStatus = document.querySelector<HTMLParagraphElement>("#save-status");
-const saveError = document.querySelector<HTMLParagraphElement>("#save-error");
-
-if (
-  !openLibraryButton
-  || !feedback
-  || !pageStatus
-  || !pageDetails
-  || !pageTitle
-  || !pageUrl
-  || !pageImage
-  || !previewStatus
-  || !saveForm
-  || !saveButton
-  || !titleError
-  || !saveStatus
-  || !saveError
-) {
-  throw new Error("The popup is missing a required control or page-preview element.");
-}
-
-const openLibraryButtonElement = openLibraryButton;
-const feedbackElement = feedback;
-const pageStatusElement = pageStatus;
-const pageDetailsElement = pageDetails;
-const pageTitleElement = pageTitle;
-const pageUrlElement = pageUrl;
-const pageImageElement = pageImage;
-const previewStatusElement = previewStatus;
-const saveFormElement = saveForm;
-const saveButtonElement = saveButton;
-const titleErrorElement = titleError;
-const saveStatusElement = saveStatus;
-const saveErrorElement = saveError;
+const openLibraryButtonElement = requireElement<HTMLButtonElement>("#open-library");
+const feedbackElement = requireElement<HTMLParagraphElement>("#feedback");
+const pageStatusElement = requireElement<HTMLParagraphElement>("#page-status");
+const pageDetailsElement = requireElement<HTMLElement>("#page-details");
+const pageTitleElement = requireElement<HTMLTextAreaElement>("#page-title");
+const pageUrlElement = requireElement<HTMLAnchorElement>("#page-url");
+const pageImageElement = requireElement<HTMLImageElement>("#page-image");
+const previewStatusElement = requireElement<HTMLParagraphElement>("#preview-status");
+const saveFormElement = requireElement<HTMLFormElement>("#save-form");
+const saveButtonElement = requireElement<HTMLButtonElement>("#save");
+const titleErrorElement = requireElement<HTMLParagraphElement>("#title-error");
+const saveStatusElement = requireElement<HTMLParagraphElement>("#save-status");
+const saveErrorElement = requireElement<HTMLParagraphElement>("#save-error");
 
 const tagInput = initializeTagInput("page");
 let currentPage: CurrentPage | undefined;

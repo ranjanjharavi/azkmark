@@ -36,81 +36,29 @@ const collectionEmptyTitle = requireElement<HTMLHeadingElement>("#collection-emp
 const collectionEmptyCopy = requireElement<HTMLParagraphElement>("#collection-empty-copy");
 const clearCollectionButton = requireElement<HTMLButtonElement>("#clear-collection");
 const tagSelect = requireElement<HTMLSelectElement>("#tag-filter");
-const libraryHeading = document.querySelector<HTMLHeadingElement>("#library-heading");
-const libraryStatus = document.querySelector<HTMLParagraphElement>("#library-status");
-const libraryControls = document.querySelector<HTMLFormElement>("#library-controls");
-const searchInput = document.querySelector<HTMLInputElement>("#search");
-const domainSelect = document.querySelector<HTMLSelectElement>("#domain");
-const savedDateSelect = document.querySelector<HTMLSelectElement>("#saved-date");
-const viewStatusSelect = document.querySelector<HTMLSelectElement>("#view-status");
-const sortSelect = document.querySelector<HTMLSelectElement>("#sort-by");
-const cardsRadio = document.querySelector<HTMLInputElement>("#view-cards");
-const listRadio = document.querySelector<HTMLInputElement>("#view-list");
-const toggleFilters = document.querySelector<HTMLButtonElement>("#toggle-filters");
-const filters = document.querySelector<HTMLDivElement>("#library-filters");
-const filterCount = document.querySelector<HTMLSpanElement>("#filter-count");
-const emptyState = document.querySelector<HTMLElement>("#library-empty");
-const noMatches = document.querySelector<HTMLElement>("#no-matches");
-const resetFilters = document.querySelector<HTMLButtonElement>("#reset-filters");
-const managementFeedback = document.querySelector<HTMLParagraphElement>("#management-feedback");
-const viewedFeedback = document.querySelector<HTMLParagraphElement>("#viewed-feedback");
-const viewedError = document.querySelector<HTMLParagraphElement>("#viewed-error");
-const libraryError = document.querySelector<HTMLDivElement>("#library-error");
-const readError = document.querySelector<HTMLParagraphElement>("#read-error");
-const retryButton = document.querySelector<HTMLButtonElement>("#retry");
-const bookmarksList = document.querySelector<HTMLUListElement>("#bookmarks");
-
-if (
-  !libraryHeading
-  || !libraryStatus
-  || !libraryControls
-  || !searchInput
-  || !domainSelect
-  || !savedDateSelect
-  || !viewStatusSelect
-  || !sortSelect
-  || !cardsRadio
-  || !listRadio
-  || !toggleFilters
-  || !filters
-  || !filterCount
-  || !emptyState
-  || !noMatches
-  || !resetFilters
-  || !managementFeedback
-  || !viewedFeedback
-  || !viewedError
-  || !libraryError
-  || !readError
-  || !retryButton
-  || !bookmarksList
-) {
-  throw new Error("The library is missing a required heading, control, or state.");
-}
-
-const libraryHeadingElement = libraryHeading;
-const libraryStatusElement = libraryStatus;
-const libraryControlsElement = libraryControls;
-const searchInputElement = searchInput;
-const domainSelectElement = domainSelect;
-const savedDateSelectElement = savedDateSelect;
-const viewStatusSelectElement = viewStatusSelect;
-const sortSelectElement = sortSelect;
-const cardsRadioElement = cardsRadio;
-const listRadioElement = listRadio;
-const toggleFiltersElement = toggleFilters;
-const filtersElement = filters;
-const filterCountElement = filterCount;
-const emptyStateElement = emptyState;
-const noMatchesElement = noMatches;
-const resetFiltersButton = resetFilters;
-const managementFeedbackElement = managementFeedback;
-const viewedFeedbackElement = viewedFeedback;
-const viewedErrorElement = viewedError;
-const libraryErrorElement = libraryError;
-const readErrorElement = readError;
-const retryButtonElement = retryButton;
-const bookmarksListElement = bookmarksList;
+const libraryHeadingElement = requireElement<HTMLHeadingElement>("#library-heading");
+const libraryStatusElement = requireElement<HTMLParagraphElement>("#library-status");
+const libraryControlsElement = requireElement<HTMLFormElement>("#library-controls");
+const searchInputElement = requireElement<HTMLInputElement>("#search");
+const domainSelectElement = requireElement<HTMLSelectElement>("#domain");
+const savedDateSelectElement = requireElement<HTMLSelectElement>("#saved-date");
+const viewStatusSelectElement = requireElement<HTMLSelectElement>("#view-status");
+const sortSelectElement = requireElement<HTMLSelectElement>("#sort-by");
+const cardsRadioElement = requireElement<HTMLInputElement>("#view-cards");
+const listRadioElement = requireElement<HTMLInputElement>("#view-list");
+const toggleFiltersElement = requireElement<HTMLButtonElement>("#toggle-filters");
+const filtersElement = requireElement<HTMLDivElement>("#library-filters");
+const filterCountElement = requireElement<HTMLSpanElement>("#filter-count");
+const emptyStateElement = requireElement<HTMLElement>("#library-empty");
+const noMatchesElement = requireElement<HTMLElement>("#no-matches");
+const resetFiltersButton = requireElement<HTMLButtonElement>("#reset-filters");
+const managementFeedbackElement = requireElement<HTMLParagraphElement>("#management-feedback");
+const viewedFeedbackElement = requireElement<HTMLParagraphElement>("#viewed-feedback");
+const viewedErrorElement = requireElement<HTMLParagraphElement>("#viewed-error");
+const libraryErrorElement = requireElement<HTMLDivElement>("#library-error");
+const readErrorElement = requireElement<HTMLParagraphElement>("#read-error");
+const retryButtonElement = requireElement<HTMLButtonElement>("#retry");
+const bookmarksListElement = requireElement<HTMLUListElement>("#bookmarks");
 
 type FocusTarget =
   | "list"
