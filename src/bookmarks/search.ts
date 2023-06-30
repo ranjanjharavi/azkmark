@@ -93,19 +93,28 @@ export function filterBookmarks(
   const range = savedDateRange(savedDate, now);
   const term = query.trim().toLowerCase();
   const matches = source.filter((bookmark) => {
-    const tags = bookmark.tags ?? [];
-    const matchesTag = !tag || tags.includes(tag);
     const matchesDate = !range || (
       bookmark.savedAt >= range.start && bookmark.savedAt < range.end
     );
+    if (!matchesDate) {
+      return false;
+    }
+
     const matchesViewStatus = viewStatus === "all"
       || Boolean(bookmark.viewed) === (viewStatus === "viewed");
-    const matchesQuery = !term
+    if (!matchesViewStatus) {
+      return false;
+    }
+
+    const tags = bookmark.tags ?? [];
+    if (tag && !tags.includes(tag)) {
+      return false;
+    }
+
+    return !term
       || bookmark.title.toLowerCase().includes(term)
       || bookmark.url.toLowerCase().includes(term)
       || tags.some((label) => label.includes(term));
-
-    return matchesDate && matchesViewStatus && matchesTag && matchesQuery;
   });
 
   matches.sort((left, right) => compareBookmarks(left, right, sort));
