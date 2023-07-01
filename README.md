@@ -7,7 +7,7 @@ Local bookmarks with search, collections, previews, and manual viewed status.
 - **Collect:** All bookmarks, Unsorted, or named collections. Create/rename/delete, deletion keeps bookmarks in Unsorted. Popup Save to remembers the last successful new save.
 - **Tags:** shown in Cards/List. Draft Add/remove in popup/editor Save includes pending text. Up to 32 unique, 80-character labels, lowercase, collapsed whitespace, literal commas. Suggestions are optional.
 - **Actions:** open/crossed-out eye = Viewed/To view, pen = title/collection/tag edit, trash = confirmed delete. Untouched fields keep newer saved edits. Opening links never changes status.
-- **Filters:** disclosure keeps selections, count excludes search/collection scope/sort/view. Missing tags stay selected until changed/reset. Escape closes it and returns focus.
+- **Filters:** disclosure keeps selections, count excludes search/collection scope/sort/view. Missing tags stay selected until changed/reset. Escape closes the disclosure and returns focus.
 - **Open library:** reuses a loaded library tab, preserving filters/drafts. Unloaded/discarded tabs may open another.
 
 ## Backup & import

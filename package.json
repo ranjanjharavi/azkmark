@@ -9,7 +9,7 @@
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "typescript": "4.6.3"
+    "typescript": "5.0.4"
   },
   "license": "MIT"
 }
