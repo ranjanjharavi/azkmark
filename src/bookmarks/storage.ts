@@ -196,10 +196,6 @@ export async function readLibrary(): Promise<LibraryData> {
   }
 }
 
-export async function readBookmarks(): Promise<Bookmark[]> {
-  return (await readLibrary()).bookmarks;
-}
-
 export function watchBookmarks(onChange: () => void): void {
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local") {
