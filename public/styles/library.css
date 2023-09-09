@@ -9,15 +9,15 @@ body[data-page="library"] {
   max-width: 1080px;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 32px;
+  padding: var(--library-space-8);
 }
 
 .library-header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 16px;
+  gap: var(--library-space-6);
+  margin-bottom: var(--library-space-4);
 }
 
 .library-header h1 {
@@ -48,8 +48,8 @@ body[data-page="library"] {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 16px 24px;
-  margin-bottom: 16px;
+  gap: var(--library-space-4) var(--library-space-6);
+  margin-bottom: var(--library-space-4);
 }
 
 .collection-controls {
@@ -57,7 +57,7 @@ body[data-page="library"] {
   flex: 1 1 440px;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 12px;
+  gap: var(--library-space-3);
   min-width: 0;
 }
 
@@ -71,7 +71,7 @@ body[data-page="library"] {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--library-space-2);
   max-width: 100%;
   margin-left: auto;
 }
@@ -106,15 +106,15 @@ body[data-page="library"] {
 .backup-panel {
   box-sizing: border-box;
   width: 100%;
-  margin: 0 0 16px;
-  padding: 16px;
+  margin: 0 0 var(--library-space-4);
+  padding: var(--library-space-4);
   border: 1px solid var(--rule);
   border-radius: var(--radius-card);
   background: var(--page);
 }
 
 .backup-panel p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--library-space-2);
   color: var(--secondary);
   font-size: var(--font-size-body);
   overflow-wrap: anywhere;
@@ -125,14 +125,14 @@ body[data-page="library"] {
 }
 
 #import-form {
-  margin-top: 12px;
+  margin-top: var(--library-space-3);
 }
 
 .backup-import-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 12px;
+  gap: var(--library-space-3);
 }
 
 .backup-import-controls .library-field {
@@ -144,7 +144,7 @@ body[data-page="library"] {
   display: block;
   width: 100%;
   min-height: var(--control-height);
-  padding: 8px;
+  padding: var(--library-space-2);
   border: 1px solid var(--control-rule);
   border-radius: var(--radius-control);
   background: var(--control);
@@ -162,7 +162,7 @@ body[data-page="library"] {
 
 #export-status,
 #import-status {
-  margin: 0 0 8px;
+  margin: 0 0 var(--library-space-2);
   color: var(--accent);
   font-size: var(--font-size-small);
 }
@@ -174,20 +174,20 @@ body[data-page="library"] {
 
 #export-error,
 #import-error {
-  margin: 0 0 16px;
+  margin: 0 0 var(--library-space-4);
   color: var(--danger);
   font-size: var(--font-size-small);
   overflow-wrap: anywhere;
 }
 
 .library-controls {
-  margin: 0 0 24px;
+  margin: 0 0 var(--library-space-6);
 }
 
 .library-search-row {
   display: flex;
   align-items: flex-end;
-  gap: 12px;
+  gap: var(--library-space-3);
 }
 
 .search-field {
@@ -198,7 +198,7 @@ body[data-page="library"] {
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 8px;
+  gap: var(--library-space-2);
   background: var(--control);
   border-color: var(--control-rule);
   color: var(--secondary);
@@ -232,15 +232,15 @@ body[data-page="library"] {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 16px;
-  margin-top: 16px;
+  gap: var(--library-space-4);
+  margin-top: var(--library-space-4);
 }
 
 .library-fields {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
   flex: 1 1 640px;
-  gap: 12px;
+  gap: var(--library-space-3);
   min-width: 0;
 }
 
@@ -248,7 +248,7 @@ body[data-page="library"] {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 12px;
+  gap: var(--library-space-3);
   max-width: 100%;
   margin-left: auto;
 }
@@ -260,7 +260,7 @@ body[data-page="library"] {
 
 .library-view-control {
   display: flex;
-  gap: 4px;
+  gap: var(--library-space-1);
   margin: 0;
   padding: 0;
   border: 0;
@@ -270,15 +270,15 @@ body[data-page="library"] {
   color: var(--secondary);
   font-size: var(--font-size-small);
   font-weight: 500;
-  margin-bottom: 4px;
+  margin-bottom: var(--library-space-1);
 }
 
 .view-option {
   display: inline-flex;
   align-items: center;
   min-height: var(--control-height);
-  gap: 4px;
-  padding: 0 8px;
+  gap: var(--library-space-1);
+  padding: 0 var(--library-space-2);
   border-radius: var(--radius-control);
   background: var(--control);
   cursor: pointer;
@@ -298,7 +298,7 @@ body[data-page="library"] {
 #management-edit label,
 #collection-edit label {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: var(--library-space-1);
   color: var(--secondary);
   font-size: var(--font-size-small);
   font-weight: 500;
@@ -310,12 +310,12 @@ body[data-page="library"] {
   display: block;
   width: 100%;
   min-height: var(--control-height);
-  padding: 8px 12px;
+  padding: var(--library-space-2) var(--library-space-3);
   border: 1px solid var(--control-rule);
   border-radius: var(--radius-control);
   background: var(--control);
   color: var(--ink);
-  font: 16px/1.4 var(--body-font);
+  font: var(--font-size-lead)/1.4 var(--body-font);
 }
 
 .library-controls input:hover,
@@ -332,7 +332,7 @@ body[data-page="library"] {
 #clear-collection {
   box-sizing: border-box;
   min-height: var(--control-height);
-  margin-top: 16px;
+  margin-top: var(--library-space-4);
   border-color: transparent;
   background: var(--accent-soft);
   color: var(--accent-hover);
@@ -350,7 +350,7 @@ body[data-page="library"] {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
-  gap: 12px;
+  gap: var(--library-space-3);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -373,8 +373,8 @@ body[data-page="library"] {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 4px;
-  padding: 4px 8px;
+  gap: var(--library-space-1);
+  padding: var(--library-space-1) var(--library-space-2);
   border-top: 1px solid var(--rule);
 }
 
@@ -442,9 +442,9 @@ body[data-page="library"] {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 104px;
   grid-template-rows: minmax(24px, auto) minmax(48px, auto);
-  column-gap: 16px;
+  column-gap: var(--library-space-4);
   min-width: 0;
-  padding: 16px 16px 8px;
+  padding: var(--library-space-4) var(--library-space-4) var(--library-space-2);
   color: var(--ink);
   text-decoration: none;
   overflow-wrap: anywhere;
@@ -465,7 +465,7 @@ body[data-page="library"] {
 .bookmark-link h2 {
   grid-column: 1;
   grid-row: 2;
-  margin: 8px 0 0;
+  margin: var(--library-space-2) 0 0;
   font: 600 var(--font-size-title)/1.3 var(--display-font);
   letter-spacing: -0.015em;
   overflow-wrap: anywhere;
@@ -475,7 +475,7 @@ body[data-page="library"] {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--library-space-3);
   grid-column: 1;
   grid-row: 1;
   align-self: center;
@@ -493,11 +493,11 @@ body[data-page="library"] {
 .bookmark-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 12px;
+  gap: var(--library-space-1) var(--library-space-3);
   grid-column: 1 / -1;
   grid-row: 3;
   min-width: 0;
-  margin: 8px 0 0;
+  margin: var(--library-space-2) 0 0;
   padding: 0;
   color: var(--secondary);
   font-size: var(--font-size-small);
@@ -542,7 +542,7 @@ body[data-page="library"] {
   align-self: center;
   justify-self: center;
   margin: 0;
-  padding: 8px;
+  padding: var(--library-space-2);
   color: var(--tertiary);
   font-size: var(--font-size-small);
   text-align: center;
@@ -560,8 +560,8 @@ body[data-page="library"] {
 #bookmarks[data-view="list"] .bookmark-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 4px 8px 4px 16px;
+  gap: var(--library-space-4);
+  padding: var(--library-space-1) var(--library-space-2) var(--library-space-1) var(--library-space-4);
   border: 0;
   border-bottom: 1px solid var(--rule);
   border-radius: 0;
@@ -580,9 +580,9 @@ body[data-page="library"] {
   flex: 1;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto;
-  row-gap: 4px;
+  row-gap: var(--library-space-1);
   min-height: 56px;
-  padding: 8px 0;
+  padding: var(--library-space-2) 0;
 }
 
 #bookmarks[data-view="list"] .bookmark-link h2 {
@@ -608,17 +608,17 @@ body[data-page="library"] {
 
 @media (max-width: 540px) {
   .library-search-row {
-    gap: 8px;
+    gap: var(--library-space-2);
   }
 
   #toggle-filters {
-    gap: 4px;
-    padding: 8px;
+    gap: var(--library-space-1);
+    padding: var(--library-space-2);
   }
 
   .bookmark-link:not(.bookmark-link--text-only) {
     grid-template-columns: minmax(0, 1fr) 80px;
-    column-gap: 12px;
+    column-gap: var(--library-space-3);
   }
 
   .library-fields {
@@ -650,8 +650,8 @@ body[data-page="library"] {
 #collection-empty,
 #no-matches,
 #library-error {
-  margin-top: 24px;
-  padding: 32px 24px;
+  margin-top: var(--library-space-6);
+  padding: var(--library-space-8) var(--library-space-6);
   border: 1px solid var(--rule);
   border-radius: var(--radius-card);
   background: var(--page);
@@ -661,7 +661,7 @@ body[data-page="library"] {
 #library-empty h2,
 #collection-empty h2,
 #no-matches h2 {
-  margin: 0 0 8px;
+  margin: 0 0 var(--library-space-2);
   font: 600 var(--font-size-subheading)/1.3 var(--display-font);
 }
 
@@ -674,14 +674,14 @@ body[data-page="library"] {
 }
 
 #read-error {
-  margin: 0 0 16px;
+  margin: 0 0 var(--library-space-4);
   color: var(--danger);
   overflow-wrap: anywhere;
 }
 
 #management-feedback,
 #viewed-feedback {
-  margin: 0 0 16px;
+  margin: 0 0 var(--library-space-4);
   color: var(--accent);
   font-size: var(--font-size-small);
 }
@@ -691,7 +691,7 @@ body[data-page="library"] {
 }
 
 #viewed-error {
-  margin: 0 0 16px;
+  margin: 0 0 var(--library-space-4);
   color: var(--danger);
   font-size: var(--font-size-small);
   overflow-wrap: anywhere;
@@ -719,13 +719,13 @@ body[data-page="library"] {
 
 #management-heading,
 #collection-heading {
-  margin: 0 0 16px;
+  margin: 0 0 var(--library-space-4);
   font: 600 var(--font-size-dialog)/1.2 var(--display-font);
   overflow-wrap: anywhere;
 }
 
 #management-target {
-  margin: 0 0 8px;
+  margin: 0 0 var(--library-space-2);
   color: var(--ink);
   font: 600 var(--font-size-title)/1.3 var(--display-font);
   overflow-wrap: anywhere;
@@ -743,13 +743,13 @@ body[data-page="library"] {
   display: block;
   width: 100%;
   min-height: 96px;
-  padding: 12px;
+  padding: var(--library-space-3);
   border: 1px solid var(--control-rule);
   border-radius: var(--radius-small);
   background: var(--control);
   color: var(--ink);
   caret-color: var(--accent);
-  font: 16px/1.45 var(--body-font);
+  font: var(--font-size-lead)/1.45 var(--body-font);
   resize: vertical;
   overflow-wrap: anywhere;
 }
@@ -759,24 +759,24 @@ body[data-page="library"] {
 }
 
 #management-title-error {
-  margin: 4px 0 0;
+  margin: var(--library-space-1) 0 0;
   color: var(--danger);
   font-size: var(--font-size-small);
 }
 
 .collection-label {
-  margin-top: 16px;
+  margin-top: var(--library-space-4);
 }
 
 #management-delete,
 #collection-confirm {
-  margin: 0 0 16px;
+  margin: 0 0 var(--library-space-4);
   color: var(--secondary);
 }
 
 #management-error,
 #collection-error {
-  margin: 12px 0 0;
+  margin: var(--library-space-3) 0 0;
   color: var(--danger);
   font-size: var(--font-size-small);
   overflow-wrap: anywhere;
@@ -785,7 +785,7 @@ body[data-page="library"] {
 #management-status,
 #collection-status {
   min-height: 1.5em;
-  margin: 8px 0 0;
+  margin: var(--library-space-2) 0 0;
   color: var(--secondary);
   font-size: var(--font-size-small);
 }
@@ -794,8 +794,8 @@ body[data-page="library"] {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
+  gap: var(--library-space-2);
+  margin-top: var(--library-space-4);
 }
 
 .management-actions button {
@@ -833,7 +833,7 @@ body[data-page="library"] {
 
 @media (max-width: 860px) {
   .library-main {
-    padding: 24px;
+    padding: var(--library-space-6);
   }
 
   #bookmarks {
@@ -843,11 +843,11 @@ body[data-page="library"] {
 
 @media (max-width: 760px) {
   .library-main {
-    padding: 16px;
+    padding: var(--library-space-4);
   }
 
   .library-header {
-    gap: 12px;
+    gap: var(--library-space-3);
   }
 
   .library-fields {
