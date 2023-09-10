@@ -12,26 +12,39 @@
     <script type="module" src="library.js"></script>
   </head>
   <body data-page="library">
+    <header class="library-app-header">
+      <div class="library-brand">
+        <svg class="library-brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 34" aria-hidden="true" focusable="false">
+          <path d="M3 1h22v32l-11-7-11 7Z" />
+          <path class="library-brand-letter" d="m9 21 5-14 5 14m-8-5h6" />
+        </svg>
+        <span>azkmark</span>
+        <span class="library-context">Your bookmark library</span>
+      </div>
+      <div class="backup-tools">
+        <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
+        <button id="export-backup" type="button">
+          <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+          </svg>
+          Export backup
+        </button>
+      </div>
+    </header>
     <main class="library-main">
       <header class="library-header">
         <h1 id="library-heading" tabindex="-1">All bookmarks</h1>
         <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
       </header>
-      <div class="library-actions">
-        <div class="collection-controls">
-          <div class="library-field">
-            <label for="collection">Collection</label>
-            <select id="collection" class="collection-select" autocomplete="off" aria-controls="bookmarks" disabled>
-              <option value="all">All bookmarks</option>
-              <option value="unsorted">Unsorted</option>
-            </select>
-          </div>
-          <button id="manage-collections" type="button" disabled>Manage collections</button>
+      <div class="collection-controls">
+        <div class="library-field">
+          <label for="collection">Collection</label>
+          <select id="collection" class="collection-select" autocomplete="off" aria-controls="bookmarks" disabled>
+            <option value="all">All bookmarks</option>
+            <option value="unsorted">Unsorted</option>
+          </select>
         </div>
-        <div class="backup-tools">
-          <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
-          <button id="export-backup" type="button">Export backup</button>
-        </div>
+        <button id="manage-collections" type="button" disabled>Manage collections</button>
       </div>
       <div id="backup-panel" class="backup-panel" hidden>
         <p>Exports include the whole library and all collections, even empty ones, regardless of scope or filters.</p>
