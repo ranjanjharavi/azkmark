@@ -2,8 +2,8 @@ import { groupBookmarks } from "./bookmarks/domains.js";
 import type { Bookmark } from "./bookmarks/model.js";
 import type { Collection } from "./bookmarks/collections.js";
 import { availableTags } from "./bookmarks/tags.js";
-import { collectionOptions } from "./ui/collections.js";
 import { requireElement } from "./ui/dom.js";
+import { collectionButtons } from "./library/collection-navigation.js";
 import { initializeCollections } from "./library/collections.js";
 import { filterBookmarks } from "./bookmarks/search.js";
 import type {
@@ -29,7 +29,7 @@ import { createRefreshScheduler } from "./library/refresh.js";
 import { initializeSavedDateRefresh } from "./library/saved-date-refresh.js";
 import type { ManagementAction, ManagementMode } from "./library/management.js";
 
-const collectionSelect = requireElement<HTMLSelectElement>("#collection");
+const collectionNavigationElement = requireElement<HTMLElement>("#collection-navigation");
 const manageCollectionsButton = requireElement<HTMLButtonElement>("#manage-collections");
 const collectionEmpty = requireElement<HTMLElement>("#collection-empty");
 const collectionEmptyTitle = requireElement<HTMLHeadingElement>("#collection-empty-title");
@@ -80,6 +80,7 @@ type BookmarkAction = ManagementMode | "viewed";
 
 interface FocusSnapshot {
   target: FocusTarget;
+  collectionScope?: string;
   bookmarkUrl?: string;
   bookmarkAction?: BookmarkAction;
 }
@@ -105,8 +106,12 @@ function captureFocus(): FocusSnapshot {
   if (activeElement === searchInputElement) {
     return { target: "search" };
   }
-  if (activeElement === collectionSelect) {
-    return { target: "collection" };
+  if (
+    activeElement instanceof HTMLButtonElement
+    && collectionNavigationElement.contains(activeElement)
+    && activeElement.hasAttribute("value")
+  ) {
+    return { target: "collection", collectionScope: activeElement.value };
   }
   if (activeElement === manageCollectionsButton) {
     return { target: "manage-collections" };
@@ -174,7 +179,24 @@ function focusHeading(): void {
 function restoreFocus(focus: FocusSnapshot): void {
   const total = library?.length ?? 0;
   if (focus.target === "collection") {
-    collectionSelect.focus({ preventScroll: true });
+    const buttons = collectionNavigationElement.querySelectorAll<HTMLButtonElement>("button[value]");
+    let selectedButton: HTMLButtonElement | undefined;
+    for (let index = 0; index < buttons.length; index++) {
+      const button = buttons[index];
+      if (button.disabled) {
+        continue;
+      }
+
+      if (button.value === focus.collectionScope) {
+        button.focus({ preventScroll: true });
+        return;
+      }
+      
+      if (button.value === collectionScope) {
+        selectedButton = button;
+      }
+    }
+    selectedButton?.focus({ preventScroll: true });
     return;
   }
   if (focus.target === "manage-collections") {
@@ -343,15 +365,27 @@ function updateTagOptions(bookmarks: readonly Bookmark[]): void {
   tagSelect.value = tagSelection;
 }
 
-function updateCollectionOptions(): string {
+function updateCollectionNavigation(): string {
   let notice = "";
   const selectedId = collectionScope.slice("collection:".length);
   if (collectionScope.startsWith("collection:") && !collections.some(({ id }) => id === selectedId)) {
     collectionScope = "all";
     notice = "Collection removed. Showing all bookmarks with the current search and filters.";
   }
-  collectionOptions(collectionSelect, collections, collectionScope, "scope");
+  collectionNavigationElement.replaceChildren(
+    collectionButtons(collections, collectionScope),
+    manageCollectionsButton,
+  );
   return notice;
+}
+
+function updateCollectionControls(disabled: boolean): void {
+  const buttons = collectionNavigationElement.querySelectorAll<HTMLButtonElement>("button[value]");
+  buttons.forEach((button) => {
+    button.disabled = disabled;
+    button.setAttribute("aria-pressed", String(button.value === collectionScope));
+  });
+  manageCollectionsButton.disabled = disabled;
 }
 
 function inCollectionScope(bookmark: Bookmark): boolean {
@@ -394,6 +428,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
     return;
   }
 
+  updateCollectionControls(false);
   const savedDate = savedDateSelectElement.value as SavedDateSelection;
   const matches = filterBookmarks(library, {
     query: searchInputElement.value,
@@ -479,12 +514,10 @@ async function readAndRenderBookmarks(): Promise<void> {
     const focus = captureFocus();
     library = data.bookmarks;
     collections = data.collections;
-    const notices = [updateDomainOptions(library), updateCollectionOptions()].filter(Boolean);
+    const notices = [updateDomainOptions(library), updateCollectionNavigation()].filter(Boolean);
     updateTagOptions(library);
     management.updateTarget();
     collectionManagement.update();
-    collectionSelect.disabled = false;
-    manageCollectionsButton.disabled = false;
     searchInputElement.disabled = false;
     domainSelectElement.disabled = false;
     savedDateSelectElement.disabled = false;
@@ -512,8 +545,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     libraryErrorElement.hidden = false;
     emptyStateElement.hidden = true;
     collectionEmpty.hidden = true;
-    collectionSelect.disabled = true;
-    manageCollectionsButton.disabled = true;
+    updateCollectionControls(true);
     noMatchesElement.hidden = true;
     bookmarksListElement.hidden = true;
     bookmarksListElement.setAttribute("aria-busy", "false");
@@ -682,14 +714,23 @@ libraryControlsElement.addEventListener("submit", (event) => {
   event.preventDefault();
 });
 
-collectionSelect.addEventListener("change", () => {
-  collectionScope = collectionSelect.value;
+collectionNavigationElement.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof Element) || !library) {
+    return;
+  }
+
+  const button = target.closest<HTMLButtonElement>("button[value]");
+  if (!button || button.disabled || !collectionNavigationElement.contains(button)) {
+    return;
+  }
+
+  collectionScope = button.value;
   render();
 });
 
 function resetSelections(): void {
   collectionScope = "all";
-  collectionSelect.value = "all";
   searchInputElement.value = "";
   selection = { kind: "all" };
   domainSelectElement.value = "all";

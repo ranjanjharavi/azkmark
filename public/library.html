@@ -36,16 +36,11 @@
         <h1 id="library-heading" tabindex="-1">All bookmarks</h1>
         <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
       </header>
-      <div class="collection-controls">
-        <div class="library-field">
-          <label for="collection">Collection</label>
-          <select id="collection" class="collection-select" autocomplete="off" aria-controls="bookmarks" disabled>
-            <option value="all">All bookmarks</option>
-            <option value="unsorted">Unsorted</option>
-          </select>
-        </div>
-        <button id="manage-collections" type="button" disabled>Manage collections</button>
-      </div>
+      <nav id="collection-navigation" class="collection-navigation" aria-label="Collections">
+        <button class="collection-tab" type="button" value="all" aria-pressed="true" aria-controls="bookmarks" disabled>All bookmarks</button>
+        <button class="collection-tab" type="button" value="unsorted" aria-pressed="false" aria-controls="bookmarks" disabled>Unsorted</button>
+        <button id="manage-collections" class="collection-tab" type="button" disabled>Manage collections</button>
+      </nav>
       <div id="backup-panel" class="backup-panel" hidden>
         <p>Exports include the whole library and all collections, even empty ones, regardless of scope or filters.</p>
         <p>Backup files contain collection names, assignments, tags, saved URLs, titles, dates, and status, which may be private. Thumbnail URLs are references, not image files.</p>
