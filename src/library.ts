@@ -365,7 +365,7 @@ function updateTagOptions(bookmarks: readonly Bookmark[]): void {
   tagSelect.value = tagSelection;
 }
 
-function updateCollectionNavigation(): string {
+function updateCollectionNavigation(bookmarks: readonly Bookmark[]): string {
   let notice = "";
   const selectedId = collectionScope.slice("collection:".length);
   if (collectionScope.startsWith("collection:") && !collections.some(({ id }) => id === selectedId)) {
@@ -373,7 +373,7 @@ function updateCollectionNavigation(): string {
     notice = "Collection removed. Showing all bookmarks with the current search and filters.";
   }
   collectionNavigationElement.replaceChildren(
-    collectionButtons(collections, collectionScope),
+    collectionButtons(collections, bookmarks, collectionScope),
     manageCollectionsButton,
   );
   return notice;
@@ -514,7 +514,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     const focus = captureFocus();
     library = data.bookmarks;
     collections = data.collections;
-    const notices = [updateDomainOptions(library), updateCollectionNavigation()].filter(Boolean);
+    const notices = [updateDomainOptions(library), updateCollectionNavigation(library)].filter(Boolean);
     updateTagOptions(library);
     management.updateTarget();
     collectionManagement.update();
