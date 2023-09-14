@@ -129,6 +129,13 @@ body[data-page="library"] {
   font-weight: 600;
 }
 
+.collection-count {
+  padding-left: var(--library-space-2);
+  font-size: var(--font-size-small);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
 .backup-tools {
   display: flex;
   flex-wrap: wrap;
@@ -989,5 +996,9 @@ body[data-page="library"] {
     padding-right: var(--library-space-2);
     padding-left: var(--library-space-2);
     font-size: var(--font-size-small);
+  }
+
+  .collection-count {
+    padding-left: var(--library-space-1);
   }
 }
