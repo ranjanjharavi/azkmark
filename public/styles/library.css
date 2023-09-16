@@ -162,7 +162,8 @@ body[data-page="library"] {
   stroke-linejoin: round;
 }
 
-#backup-help-toggle {
+#backup-help-toggle,
+#open-import {
   box-sizing: border-box;
   min-height: var(--control-height);
   border-color: transparent;
@@ -172,7 +173,8 @@ body[data-page="library"] {
   font-weight: 500;
 }
 
-#backup-help-toggle:hover:not(:disabled) {
+#backup-help-toggle:hover:not(:disabled),
+#open-import:hover:not(:disabled) {
   border-color: transparent;
   background: var(--control);
   color: var(--ink);
@@ -184,6 +186,7 @@ body[data-page="library"] {
   color: var(--accent-hover);
 }
 
+#open-import,
 #export-backup {
   box-sizing: border-box;
   display: inline-flex;

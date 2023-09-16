@@ -23,6 +23,12 @@
       </div>
       <div class="backup-tools">
         <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
+        <button id="open-import" type="button" aria-controls="backup-panel">
+          <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5" />
+          </svg>
+          Import
+        </button>
         <button id="export-backup" type="button">
           <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
@@ -42,9 +48,9 @@
         <button id="manage-collections" class="collection-tab" type="button" disabled>Manage collections</button>
       </nav>
       <div id="backup-panel" class="backup-panel" hidden>
-        <p>Exports include the whole library and all collections, even empty ones, regardless of scope or filters.</p>
-        <p>Backup files contain collection names, assignments, tags, saved URLs, titles, dates, and status, which may be private. Thumbnail URLs are references, not image files.</p>
-        <p id="import-help">Choose an azkmark JSON backup or Chrome bookmark HTML export to merge. Collections match by name, existing bookmarks keep all saved details. Chrome folders are flattened into Unsorted, missing or unusable dates use import time.</p>
+        <p>What's exported: Your entire library and all collections, bypassing any active filters.</p>
+        <p>Data included: URLs, titles, dates, statuses, tags, collection assignments, and thumbnail links.</p>
+        <p id="import-help">Import formats: azkmark JSON or Chrome HTML.</p>
         <form id="import-form" novalidate>
           <div class="backup-import-controls">
             <div class="library-field">
