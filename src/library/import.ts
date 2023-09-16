@@ -18,10 +18,11 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
   const importButton = document.querySelector<HTMLButtonElement>("#import-backup");
   const status = document.querySelector<HTMLParagraphElement>("#import-status");
   const error = document.querySelector<HTMLParagraphElement>("#import-error");
+  const openImport = document.querySelector<HTMLButtonElement>("#open-import");
   const helpToggle = document.querySelector<HTMLButtonElement>("#backup-help-toggle");
   const helpPanel = document.querySelector<HTMLDivElement>("#backup-panel");
 
-  if (!form || !fileInput || !importButton || !status || !error || !helpToggle || !helpPanel) {
+  if (!form || !fileInput || !importButton || !status || !error || !openImport || !helpToggle || !helpPanel) {
     throw new Error("The backup import controls are incomplete.");
   }
 
@@ -30,10 +31,30 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
   const importButtonElement = importButton;
   const statusElement = status;
   const errorElement = error;
+  const openImportButton = openImport;
   const helpToggleElement = helpToggle;
   const helpPanelElement = helpPanel;
 
   let importing = false;
+
+  function setPanelOpen(open: boolean): void {
+    if (!open && helpPanelElement.contains(document.activeElement)) {
+      helpToggleElement.focus({ preventScroll: true });
+    }
+    helpPanelElement.hidden = !open;
+    helpToggleElement.setAttribute("aria-expanded", String(open));
+  }
+
+  helpToggleElement.addEventListener("click", () => {
+    setPanelOpen(helpPanelElement.hidden);
+  });
+
+  openImportButton.addEventListener("click", () => {
+    setPanelOpen(true);
+    if (!importing) {
+      fileInputElement.focus();
+    }
+  });
 
   function importSummary(result: ImportBookmarksResult): string {
     const bookmarksLabel = result.added === 1 ? "bookmark" : "bookmarks";

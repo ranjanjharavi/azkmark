@@ -3,31 +3,16 @@ import { InvalidStoredBookmarkError, readLibrary } from "../bookmarks/storage.js
 
 export function initializeExport(): void {
   const button = document.querySelector<HTMLButtonElement>("#export-backup");
-  const helpToggle = document.querySelector<HTMLButtonElement>("#backup-help-toggle");
-  const helpPanel = document.querySelector<HTMLDivElement>("#backup-panel");
   const status = document.querySelector<HTMLParagraphElement>("#export-status");
   const error = document.querySelector<HTMLParagraphElement>("#export-error");
 
-  if (!button || !helpToggle || !helpPanel || !status || !error) {
+  if (!button || !status || !error) {
     throw new Error("The library is missing a required backup control or state.");
   }
 
   const exportButton = button;
-  const helpToggleButton = helpToggle;
-  const helpPanelElement = helpPanel;
   const statusElement = status;
   const errorElement = error;
-
-  helpToggleButton.addEventListener("click", () => {
-    const expanded = helpToggleButton.getAttribute("aria-expanded") === "true";
-    if (expanded) {
-      helpToggleButton.setAttribute("aria-expanded", "false");
-      helpPanelElement.hidden = true;
-    } else {
-      helpToggleButton.setAttribute("aria-expanded", "true");
-      helpPanelElement.hidden = false;
-    }
-  });
 
   let exporting = false;
 
