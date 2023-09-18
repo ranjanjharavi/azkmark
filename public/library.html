@@ -67,61 +67,71 @@
       <p id="import-error" role="alert" hidden></p>
       <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
         <div class="library-search-row">
-        <div class="library-field search-field">
-          <label for="search">Search bookmarks</label>
-          <input id="search" name="query" type="search" placeholder="Title, URL or tag" autocomplete="off" spellcheck="false" disabled />
+          <label class="search-field" for="search">
+            <svg class="library-control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="10.5" cy="10.5" r="6.5" />
+              <path d="m16 16 5 5" />
+            </svg>
+            <span class="visually-hidden">Search bookmarks</span>
+            <input id="search" name="query" type="search" placeholder="Search titles, URLs, or tags…" autocomplete="off" spellcheck="false" disabled />
+          </label>
+          <button id="toggle-filters" type="button" aria-expanded="false" aria-controls="library-filters" disabled>
+            <svg class="library-control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M4 7h16M4 17h16M9 4v6M15 14v6" />
+            </svg>
+            <span>Filters</span>
+            <span id="filter-count" aria-hidden="true" hidden></span>
+          </button>
         </div>
-        <button id="toggle-filters" type="button" aria-expanded="true" aria-controls="library-filters" disabled><span>Filters</span><span id="filter-count" aria-hidden="true" hidden></span></button>
+        <div id="library-filters" class="library-fields" hidden>
+          <div class="library-field domain-field">
+            <label for="domain">Domain</label>
+            <select id="domain" name="domain" disabled>
+              <option value="all">All bookmarks (0)</option>
+              <option value="general">General (0)</option>
+            </select>
+          </div>
+          <div class="library-field date-field">
+            <label for="saved-date">Saved date</label>
+            <select id="saved-date" name="saved-date" autocomplete="off" disabled>
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="7-days">Last 7 days</option>
+              <option value="30-days">Last 30 days</option>
+            </select>
+          </div>
+          <div class="library-field status-field">
+            <label for="view-status">View status</label>
+            <select id="view-status" name="view-status" autocomplete="off" disabled>
+              <option value="all">All statuses</option>
+              <option value="to-view">To view</option>
+              <option value="viewed">Viewed</option>
+            </select>
+          </div>
+          <div class="library-field tag-field">
+            <label for="tag-filter">Tag</label>
+            <select id="tag-filter" name="tag" autocomplete="off" aria-controls="bookmarks" disabled>
+              <option value="">All tags</option>
+            </select>
+          </div>
         </div>
         <div class="library-toolbar">
-        <div id="library-filters" class="library-fields">
-        <div class="library-field domain-field">
-          <label for="domain">Domain</label>
-          <select id="domain" name="domain" disabled>
-            <option value="all">All bookmarks (0)</option>
-            <option value="general">General (0)</option>
-          </select>
-        </div>
-        <div class="library-field date-field">
-          <label for="saved-date">Saved date</label>
-          <select id="saved-date" name="saved-date" autocomplete="off" disabled>
-            <option value="all">All time</option>
-            <option value="today">Today</option>
-            <option value="7-days">Last 7 days</option>
-            <option value="30-days">Last 30 days</option>
-          </select>
-        </div>
-        <div class="library-field status-field">
-          <label for="view-status">View status</label>
-          <select id="view-status" name="view-status" autocomplete="off" disabled>
-            <option value="all">All statuses</option>
-            <option value="to-view">To view</option>
-            <option value="viewed">Viewed</option>
-          </select>
-        </div>
-        <div class="library-field tag-field">
-          <label for="tag-filter">Tag</label>
-          <select id="tag-filter" name="tag" autocomplete="off" aria-controls="bookmarks" disabled>
-            <option value="">All tags</option>
-          </select>
-        </div>
-        </div>
-        <div class="library-display-controls">
-        <div class="library-field library-sort">
-          <label for="sort-by">Sort by</label>
-          <select id="sort-by" name="sort" autocomplete="off" aria-controls="bookmarks" disabled>
-            <option value="newest">Newest saved</option>
-            <option value="oldest">Oldest saved</option>
-            <option value="title-asc">Title A–Z</option>
-            <option value="title-desc">Title Z–A</option>
-          </select>
-        </div>
-        <fieldset id="library-view" class="library-view-control">
-          <legend>Bookmark view</legend>
-          <label class="view-option"><input id="view-cards" type="radio" name="library-view" value="cards" aria-controls="bookmarks" checked disabled /> Cards</label>
-          <label class="view-option"><input id="view-list" type="radio" name="library-view" value="list" aria-controls="bookmarks" disabled /> List</label>
-        </fieldset>
-        </div>
+          <div class="library-display-controls">
+            <div class="library-field library-sort">
+              <label for="sort-by">Sort by</label>
+              <select id="sort-by" name="sort" autocomplete="off" aria-controls="bookmarks" disabled>
+                <option value="newest">Newest saved</option>
+                <option value="oldest">Oldest saved</option>
+                <option value="title-asc">Title A–Z</option>
+                <option value="title-desc">Title Z–A</option>
+              </select>
+            </div>
+            <fieldset id="library-view" class="library-view-control">
+              <legend>Bookmark view</legend>
+              <label class="view-option"><input id="view-cards" type="radio" name="library-view" value="cards" aria-controls="bookmarks" checked disabled /> Cards</label>
+              <label class="view-option"><input id="view-list" type="radio" name="library-view" value="list" aria-controls="bookmarks" disabled /> List</label>
+            </fieldset>
+          </div>
         </div>
       </form>
       <p id="management-feedback" role="status" aria-atomic="true" hidden></p>
