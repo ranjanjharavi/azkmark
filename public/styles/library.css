@@ -81,14 +81,15 @@ body[data-page="library"] {
   overflow-wrap: anywhere;
 }
 
-#library-status {
+#library-total {
   flex: none;
   max-width: 40%;
   margin: 0;
-  color: var(--secondary);
+  color: var(--tertiary);
   font-size: var(--font-size-small);
   font-variant-numeric: tabular-nums;
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .collection-navigation {
@@ -285,7 +286,7 @@ body[data-page="library"] {
 }
 
 .library-controls {
-  margin: 0 0 var(--library-space-6);
+  margin: 0;
 }
 
 .library-search-row {
@@ -369,11 +370,24 @@ body[data-page="library"] {
 }
 
 .library-toolbar {
+  box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--library-space-4);
-  margin-top: var(--library-space-4);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--library-space-3);
+  min-height: 68px;
+  padding: var(--library-space-3) 0;
+}
+
+#library-status {
+  flex: 1 1 160px;
+  min-width: 0;
+  margin: 0;
+  color: var(--tertiary);
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .library-fields {
@@ -389,14 +403,26 @@ body[data-page="library"] {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
+  justify-content: flex-end;
   gap: var(--library-space-3);
+  min-width: 0;
   max-width: 100%;
   margin-left: auto;
 }
 
 .library-sort {
-  width: 176px;
+  display: flex;
+  align-items: center;
+  gap: var(--library-space-2);
+  min-width: 0;
   max-width: 100%;
+}
+
+.library-sort label {
+  flex: none;
+  color: var(--tertiary);
+  font-size: var(--font-size-small);
+  font-weight: 500;
 }
 
 .library-view-control {
@@ -425,7 +451,7 @@ body[data-page="library"] {
   cursor: pointer;
 }
 
-.library-controls .library-view-control input {
+.library-view-control input {
   width: auto;
   min-height: 0;
   margin: 0;
@@ -446,7 +472,8 @@ body[data-page="library"] {
 }
 
 .library-controls input,
-.library-controls select {
+.library-controls select,
+.library-sort select {
   box-sizing: border-box;
   display: block;
   width: 100%;
@@ -461,6 +488,22 @@ body[data-page="library"] {
 
 .library-fields select {
   font-size: var(--font-size-small);
+}
+
+.library-sort select {
+  width: auto;
+  min-width: 0;
+  max-width: 160px;
+  padding: var(--library-space-2);
+  border-color: transparent;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+}
+
+.library-sort select:hover:not(:disabled) {
+  background: var(--control);
 }
 
 .library-controls input:hover,
@@ -782,12 +825,6 @@ body[data-page="library"] {
 
   #bookmarks[data-view="list"] .bookmark-link {
     flex-basis: 100%;
-  }
-}
-
-@media (max-width: 360px) {
-  #library-status {
-    max-width: 64px;
   }
 }
 

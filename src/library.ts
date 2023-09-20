@@ -37,8 +37,10 @@ const collectionEmptyCopy = requireElement<HTMLParagraphElement>("#collection-em
 const clearCollectionButton = requireElement<HTMLButtonElement>("#clear-collection");
 const tagSelect = requireElement<HTMLSelectElement>("#tag-filter");
 const libraryHeadingElement = requireElement<HTMLHeadingElement>("#library-heading");
+const libraryTotalElement = requireElement<HTMLParagraphElement>("#library-total");
 const libraryStatusElement = requireElement<HTMLParagraphElement>("#library-status");
 const libraryControlsElement = requireElement<HTMLFormElement>("#library-controls");
+const libraryDisplayControlsElement = requireElement<HTMLDivElement>("#library-display-controls");
 const searchInputElement = requireElement<HTMLInputElement>("#search");
 const domainSelectElement = requireElement<HTMLSelectElement>("#domain");
 const savedDateSelectElement = requireElement<HTMLSelectElement>("#saved-date");
@@ -469,6 +471,9 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   }
 
   libraryHeadingElement.textContent = heading;
+  const referenceLabel = library.length === 1 ? "saved reference" : "saved references";
+  libraryTotalElement.textContent = `${library.length} ${referenceLabel}`;
+  libraryTotalElement.hidden = false;
   let statusText = bookmarkCount(library.length);
   if (filtered) {
     statusText = `${matches.length} of ${library.length} bookmarks`;
@@ -478,6 +483,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   }
   libraryStatusElement.textContent = statusText;
   libraryControlsElement.hidden = isEmpty;
+  libraryDisplayControlsElement.hidden = isEmpty;
   emptyStateElement.hidden = !isEmpty || collectionScope !== "all";
   collectionEmpty.hidden = !scopeEmpty;
   collectionEmptyTitle.textContent = collectionScope === "unsorted"
@@ -538,6 +544,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     const focus = captureFocus();
     console.error("Could not read saved bookmarks.", error);
     library = undefined;
+    libraryTotalElement.hidden = true;
     bookmarkPreviews.clear();
     savedDateRefresh.update("all");
     libraryStatusElement.textContent = "Couldn't load your bookmarks.";

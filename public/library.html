@@ -40,7 +40,7 @@
     <main class="library-main">
       <header class="library-header">
         <h1 id="library-heading" tabindex="-1">All bookmarks</h1>
-        <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
+        <p id="library-total" hidden></p>
       </header>
       <nav id="collection-navigation" class="collection-navigation" aria-label="Collections">
         <button class="collection-tab" type="button" value="all" aria-pressed="true" aria-controls="bookmarks" disabled>All bookmarks</button>
@@ -115,25 +115,26 @@
             </select>
           </div>
         </div>
-        <div class="library-toolbar">
-          <div class="library-display-controls">
-            <div class="library-field library-sort">
-              <label for="sort-by">Sort by</label>
-              <select id="sort-by" name="sort" autocomplete="off" aria-controls="bookmarks" disabled>
-                <option value="newest">Newest saved</option>
-                <option value="oldest">Oldest saved</option>
-                <option value="title-asc">Title A–Z</option>
-                <option value="title-desc">Title Z–A</option>
-              </select>
-            </div>
-            <fieldset id="library-view" class="library-view-control">
-              <legend>Bookmark view</legend>
-              <label class="view-option"><input id="view-cards" type="radio" name="library-view" value="cards" aria-controls="bookmarks" checked disabled /> Cards</label>
-              <label class="view-option"><input id="view-list" type="radio" name="library-view" value="list" aria-controls="bookmarks" disabled /> List</label>
-            </fieldset>
-          </div>
-        </div>
       </form>
+      <div class="library-toolbar">
+        <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
+        <div id="library-display-controls" class="library-display-controls" hidden>
+          <div class="library-sort">
+            <label for="sort-by">Sort by</label>
+            <select id="sort-by" name="sort" autocomplete="off" aria-controls="bookmarks" disabled>
+              <option value="newest">Newest saved</option>
+              <option value="oldest">Oldest saved</option>
+              <option value="title-asc">Title A–Z</option>
+              <option value="title-desc">Title Z–A</option>
+            </select>
+          </div>
+          <fieldset id="library-view" class="library-view-control">
+            <legend>Bookmark view</legend>
+            <label class="view-option"><input id="view-cards" type="radio" name="library-view" value="cards" aria-controls="bookmarks" checked disabled /> Cards</label>
+            <label class="view-option"><input id="view-list" type="radio" name="library-view" value="list" aria-controls="bookmarks" disabled /> List</label>
+          </fieldset>
+        </div>
+      </div>
       <p id="management-feedback" role="status" aria-atomic="true" hidden></p>
       <p id="viewed-feedback" role="status" aria-atomic="true"></p>
       <p id="viewed-error" role="alert" hidden></p>
