@@ -12,152 +12,153 @@
     <script type="module" src="library.js"></script>
   </head>
   <body data-page="library">
-    <header class="library-app-header">
-      <div class="library-brand">
-        <svg class="library-brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 34" aria-hidden="true" focusable="false">
-          <path d="M3 1h22v32l-11-7-11 7Z" />
-          <path class="library-brand-letter" d="m9 21 5-14 5 14m-8-5h6" />
-        </svg>
-        <span>azkmark</span>
-        <span class="library-context">Your bookmark library</span>
-      </div>
-      <div class="backup-tools">
-        <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
-        <button id="open-import" type="button" aria-controls="backup-panel">
-          <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5" />
+    <div class="library-shell">
+      <header class="library-app-header">
+        <div class="library-brand">
+          <svg class="library-brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 34" aria-hidden="true" focusable="false">
+            <path d="M3 1h22v32l-11-7-11 7Z" />
+            <path class="library-brand-letter" d="m9 21 5-14 5 14m-8-5h6" />
           </svg>
-          Import
-        </button>
-        <button id="export-backup" type="button">
-          <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
-          </svg>
-          Export backup
-        </button>
-      </div>
-    </header>
-    <main class="library-main">
-      <header class="library-header">
-        <h1 id="library-heading" tabindex="-1">All bookmarks</h1>
-        <p id="library-total" hidden></p>
-      </header>
-      <nav id="collection-navigation" class="collection-navigation" aria-label="Collections">
-        <button class="collection-tab" type="button" value="all" aria-pressed="true" aria-controls="bookmarks" disabled>All bookmarks</button>
-        <button class="collection-tab" type="button" value="unsorted" aria-pressed="false" aria-controls="bookmarks" disabled>Unsorted</button>
-        <button id="manage-collections" class="collection-tab" type="button" disabled>Manage collections</button>
-      </nav>
-      <div id="backup-panel" class="backup-panel" hidden>
-        <p>What's exported: Your entire library and all collections, bypassing any active filters.</p>
-        <p>Data included: URLs, titles, dates, statuses, tags, collection assignments, and thumbnail links.</p>
-        <p id="import-help">Import formats: azkmark JSON or Chrome HTML.</p>
-        <form id="import-form" novalidate>
-          <div class="backup-import-controls">
-            <div class="library-field">
-              <label for="backup-file">Import file</label>
-              <input id="backup-file" name="backup-file" type="file" accept=".json,.html,.htm,application/json,text/html" required aria-describedby="import-help import-error" />
-            </div>
-            <button id="import-backup" type="submit" disabled>Import bookmarks</button>
-          </div>
-        </form>
-      </div>
-      <p id="export-status" role="status" aria-atomic="true"></p>
-      <p id="export-error" role="alert" hidden></p>
-      <p id="import-status" role="status" aria-atomic="true"></p>
-      <p id="import-error" role="alert" hidden></p>
-      <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
-        <div class="library-search-row">
-          <label class="search-field" for="search">
-            <svg class="library-control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <circle cx="10.5" cy="10.5" r="6.5" />
-              <path d="m16 16 5 5" />
+          <span>azkmark</span>
+          <span class="library-context">Your bookmark library</span>
+        </div>
+        <div class="backup-tools">
+          <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
+          <button id="open-import" type="button" aria-controls="backup-panel">
+            <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5" />
             </svg>
-            <span class="visually-hidden">Search bookmarks</span>
-            <input id="search" name="query" type="search" placeholder="Search titles, URLs, or tags…" autocomplete="off" spellcheck="false" disabled />
-          </label>
-          <button id="toggle-filters" type="button" aria-expanded="false" aria-controls="library-filters" disabled>
-            <svg class="library-control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M4 7h16M4 17h16M9 4v6M15 14v6" />
+            Import
+          </button>
+          <button id="export-backup" type="button">
+            <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
             </svg>
-            <span>Filters</span>
-            <span id="filter-count" aria-hidden="true" hidden></span>
+            Export backup
           </button>
         </div>
-        <div id="library-filters" class="library-fields" hidden>
-          <div class="library-field domain-field">
-            <label for="domain">Domain</label>
-            <select id="domain" name="domain" disabled>
-              <option value="all">All bookmarks (0)</option>
-              <option value="general">General (0)</option>
-            </select>
+      </header>
+      <main class="library-main">
+        <header class="library-header">
+          <h1 id="library-heading" tabindex="-1">All bookmarks</h1>
+          <p id="library-total" hidden></p>
+        </header>
+        <nav id="collection-navigation" class="collection-navigation" aria-label="Collections">
+          <button class="collection-tab" type="button" value="all" aria-pressed="true" aria-controls="bookmarks" disabled>All bookmarks</button>
+          <button class="collection-tab" type="button" value="unsorted" aria-pressed="false" aria-controls="bookmarks" disabled>Unsorted</button>
+          <button id="manage-collections" class="collection-tab" type="button" disabled>Manage collections</button>
+        </nav>
+        <div id="backup-panel" class="backup-panel" hidden>
+          <p>What's exported: Your entire library and all collections, bypassing any active filters.</p>
+          <p>Data included: URLs, titles, dates, statuses, tags, collection assignments, and thumbnail links.</p>
+          <p id="import-help">Import formats: azkmark JSON or Chrome HTML.</p>
+          <form id="import-form" novalidate>
+            <div class="backup-import-controls">
+              <div class="library-field">
+                <label for="backup-file">Import file</label>
+                <input id="backup-file" name="backup-file" type="file" accept=".json,.html,.htm,application/json,text/html" required aria-describedby="import-help import-error" />
+              </div>
+              <button id="import-backup" type="submit" disabled>Import bookmarks</button>
+            </div>
+          </form>
+        </div>
+        <p id="export-status" role="status" aria-atomic="true"></p>
+        <p id="export-error" role="alert" hidden></p>
+        <p id="import-status" role="status" aria-atomic="true"></p>
+        <p id="import-error" role="alert" hidden></p>
+        <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
+          <div class="library-search-row">
+            <label class="search-field" for="search">
+              <svg class="library-control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="m16 16 5 5" />
+              </svg>
+              <span class="visually-hidden">Search bookmarks</span>
+              <input id="search" name="query" type="search" placeholder="Search titles, URLs, or tags…" autocomplete="off" spellcheck="false" disabled />
+            </label>
+            <button id="toggle-filters" type="button" aria-expanded="false" aria-controls="library-filters" disabled>
+              <svg class="library-control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 7h16M4 17h16M9 4v6M15 14v6" />
+              </svg>
+              <span>Filters</span>
+              <span id="filter-count" aria-hidden="true" hidden></span>
+            </button>
           </div>
-          <div class="library-field date-field">
-            <label for="saved-date">Saved date</label>
-            <select id="saved-date" name="saved-date" autocomplete="off" disabled>
-              <option value="all">All time</option>
-              <option value="today">Today</option>
-              <option value="7-days">Last 7 days</option>
-              <option value="30-days">Last 30 days</option>
-            </select>
+          <div id="library-filters" class="library-fields" hidden>
+            <div class="library-field domain-field">
+              <label for="domain">Domain</label>
+              <select id="domain" name="domain" disabled>
+                <option value="all">All bookmarks (0)</option>
+                <option value="general">General (0)</option>
+              </select>
+            </div>
+            <div class="library-field date-field">
+              <label for="saved-date">Saved date</label>
+              <select id="saved-date" name="saved-date" autocomplete="off" disabled>
+                <option value="all">All time</option>
+                <option value="today">Today</option>
+                <option value="7-days">Last 7 days</option>
+                <option value="30-days">Last 30 days</option>
+              </select>
+            </div>
+            <div class="library-field status-field">
+              <label for="view-status">View status</label>
+              <select id="view-status" name="view-status" autocomplete="off" disabled>
+                <option value="all">All statuses</option>
+                <option value="to-view">To view</option>
+                <option value="viewed">Viewed</option>
+              </select>
+            </div>
+            <div class="library-field tag-field">
+              <label for="tag-filter">Tag</label>
+              <select id="tag-filter" name="tag" autocomplete="off" aria-controls="bookmarks" disabled>
+                <option value="">All tags</option>
+              </select>
+            </div>
           </div>
-          <div class="library-field status-field">
-            <label for="view-status">View status</label>
-            <select id="view-status" name="view-status" autocomplete="off" disabled>
-              <option value="all">All statuses</option>
-              <option value="to-view">To view</option>
-              <option value="viewed">Viewed</option>
-            </select>
-          </div>
-          <div class="library-field tag-field">
-            <label for="tag-filter">Tag</label>
-            <select id="tag-filter" name="tag" autocomplete="off" aria-controls="bookmarks" disabled>
-              <option value="">All tags</option>
-            </select>
+        </form>
+        <div class="library-toolbar">
+          <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
+          <div id="library-display-controls" class="library-display-controls" hidden>
+            <div class="library-sort">
+              <label for="sort-by">Sort by</label>
+              <select id="sort-by" name="sort" autocomplete="off" aria-controls="bookmarks" disabled>
+                <option value="newest">Newest saved</option>
+                <option value="oldest">Oldest saved</option>
+                <option value="title-asc">Title A–Z</option>
+                <option value="title-desc">Title Z–A</option>
+              </select>
+            </div>
           </div>
         </div>
-      </form>
-      <div class="library-toolbar">
-        <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
-        <div id="library-display-controls" class="library-display-controls" hidden>
-          <div class="library-sort">
-            <label for="sort-by">Sort by</label>
-            <select id="sort-by" name="sort" autocomplete="off" aria-controls="bookmarks" disabled>
-              <option value="newest">Newest saved</option>
-              <option value="oldest">Oldest saved</option>
-              <option value="title-asc">Title A–Z</option>
-              <option value="title-desc">Title Z–A</option>
-            </select>
-          </div>
-          <fieldset id="library-view" class="library-view-control">
-            <legend>Bookmark view</legend>
-            <label class="view-option"><input id="view-cards" type="radio" name="library-view" value="cards" aria-controls="bookmarks" checked disabled /> Cards</label>
-            <label class="view-option"><input id="view-list" type="radio" name="library-view" value="list" aria-controls="bookmarks" disabled /> List</label>
-          </fieldset>
+        <p id="management-feedback" role="status" aria-atomic="true" hidden></p>
+        <p id="viewed-feedback" role="status" aria-atomic="true"></p>
+        <p id="viewed-error" role="alert" hidden></p>
+        <section id="library-empty" aria-labelledby="empty-title" hidden>
+          <h2 id="empty-title">No bookmarks yet</h2>
+          <p>Save a page from the azkmark toolbar popup to start the library.</p>
+        </section>
+        <section id="collection-empty" aria-labelledby="collection-empty-title" hidden>
+          <h2 id="collection-empty-title">No bookmarks in this collection</h2>
+          <p id="collection-empty-copy">Save a page to this collection, or use the pen action to move a saved bookmark here.</p>
+          <button id="clear-collection" type="button">Show all bookmarks</button>
+        </section>
+        <section id="no-matches" aria-labelledby="no-matches-title" hidden>
+          <h2 id="no-matches-title">No bookmarks match</h2>
+          <p>Try another search or collection, or change the tag, domain, saved-date range, or view status.</p>
+          <button id="reset-filters" type="button" disabled>Show all bookmarks</button>
+        </section>
+        <div id="library-error" hidden>
+          <p id="read-error" role="alert"></p>
+          <button id="retry" type="button">Try again</button>
         </div>
-      </div>
-      <p id="management-feedback" role="status" aria-atomic="true" hidden></p>
-      <p id="viewed-feedback" role="status" aria-atomic="true"></p>
-      <p id="viewed-error" role="alert" hidden></p>
-      <section id="library-empty" aria-labelledby="empty-title" hidden>
-        <h2 id="empty-title">No bookmarks yet</h2>
-        <p>Save a page from the azkmark toolbar popup to start the library.</p>
-      </section>
-      <section id="collection-empty" aria-labelledby="collection-empty-title" hidden>
-        <h2 id="collection-empty-title">No bookmarks in this collection</h2>
-        <p id="collection-empty-copy">Save a page to this collection, or use the pen action to move a saved bookmark here.</p>
-        <button id="clear-collection" type="button">Show all bookmarks</button>
-      </section>
-      <section id="no-matches" aria-labelledby="no-matches-title" hidden>
-        <h2 id="no-matches-title">No bookmarks match</h2>
-        <p>Try another search or collection, or change the tag, domain, saved-date range, or view status.</p>
-        <button id="reset-filters" type="button" disabled>Show all bookmarks</button>
-      </section>
-      <div id="library-error" hidden>
-        <p id="read-error" role="alert"></p>
-        <button id="retry" type="button">Try again</button>
-      </div>
-      <ul id="bookmarks" data-view="cards" aria-label="Saved bookmarks" aria-busy="true" hidden></ul>
-    </main>
+        <p id="selection-feedback" class="visually-hidden" role="status" aria-atomic="true"></p>
+        <div id="bookmark-workspace" class="bookmark-workspace" hidden>
+          <ul id="bookmarks" aria-label="Saved bookmarks" aria-busy="true"></ul>
+          <article id="bookmark-details" aria-label="Selected bookmark details"></article>
+        </div>
+      </main>
+    </div>
     <dialog id="bookmark-dialog" aria-labelledby="management-heading">
       <h2 id="management-heading">Edit bookmark</h2>
       <p id="management-target" hidden></p>
