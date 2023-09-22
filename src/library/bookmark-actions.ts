@@ -4,7 +4,7 @@ type BookmarkAction = "viewed" | "edit" | "delete";
 
 const ACTIONS: readonly BookmarkAction[] = ["viewed", "edit", "delete"];
 
-// Cards and List share metadata for delegated clicks and URL-based focus recovery.
+// Detail actions share metadata for delegated clicks and URL-based focus recovery.
 // Decorative icons are selected entirely by CSS tokens and these attributes.
 export function bookmarkActions(bookmark: Bookmark, savingViewStatus = false): HTMLDivElement {
   const actions = document.createElement("div");

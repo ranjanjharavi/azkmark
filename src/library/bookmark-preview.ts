@@ -31,7 +31,7 @@ export function bookmarkPreview(thumbnailUrl: string): HTMLDivElement {
   return preview;
 }
 
-export function initializeBookmarkPreviews(list: HTMLUListElement): {
+export function initializeBookmarkPreviews(host: HTMLElement): {
   observe: () => void;
   clear: () => void;
 } {
@@ -50,15 +50,13 @@ export function initializeBookmarkPreviews(list: HTMLUListElement): {
   function register(preview: HTMLDivElement): void {
     const image = preview.querySelector<HTMLImageElement>(".bookmark-image[data-thumbnail-url]");
     const loading = preview.querySelector<HTMLParagraphElement>(".preview-loading");
-    const link = preview.closest<HTMLAnchorElement>(".bookmark-link");
     const thumbnailUrl = image?.getAttribute("data-thumbnail-url");
-    if (!image || !loading || !link || !thumbnailUrl) {
+    if (!image || !loading || !thumbnailUrl) {
       return;
     }
 
     const imageElement = image;
     const loadingElement = loading;
-    const linkElement = link;
     const imageUrl = thumbnailUrl;
     let timer: number | undefined;
     let started = false;
@@ -97,7 +95,6 @@ export function initializeBookmarkPreviews(list: HTMLUListElement): {
       }
       dispose();
       preview.remove();
-      linkElement.classList.add("bookmark-link--text-only");
     }
 
     function start(): void {
@@ -123,7 +120,7 @@ export function initializeBookmarkPreviews(list: HTMLUListElement): {
   }
 
   function observe(): void {
-    list.querySelectorAll<HTMLDivElement>(".bookmark-preview").forEach((preview) => {
+    host.querySelectorAll<HTMLDivElement>(".bookmark-preview").forEach((preview) => {
       if (!pending.has(preview)) {
         register(preview);
       }
