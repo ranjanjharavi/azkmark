@@ -739,10 +739,11 @@ body[data-page="library"] {
 
 .bookmark-tags {
   display: flex;
+  align-items: flex-start;
   flex-wrap: wrap;
-  gap: var(--library-space-1) var(--library-space-3);
+  gap: var(--library-space-1) var(--library-space-2);
   min-width: 0;
-  margin: var(--library-space-2) 0 0;
+  margin: 0;
   padding: 0;
   color: var(--secondary);
   font-size: var(--font-size-small);
@@ -750,7 +751,12 @@ body[data-page="library"] {
 }
 
 .bookmark-tags li {
+  box-sizing: border-box;
   min-width: 0;
+  max-width: 100%;
+  padding: var(--library-space-1) var(--library-space-2);
+  border-radius: var(--radius-small);
+  background: var(--control);
   overflow-wrap: anywhere;
 }
 
