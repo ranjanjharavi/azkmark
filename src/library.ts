@@ -438,7 +438,9 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   bookmarksListElement.replaceChildren(rows);
   bookmarkDetailsElement.replaceChildren();
   if (selectedBookmark) {
-    bookmarkDetailsElement.appendChild(bookmarkDetails(selectedBookmark, pendingViewed.has(selectedBookmark.url)));
+    const savingViewStatus = pendingViewed.has(selectedBookmark.url);
+    const details = bookmarkDetails(selectedBookmark, collections, savingViewStatus);
+    bookmarkDetailsElement.appendChild(details);
   }
   selectionFeedbackElement.textContent = "";
 

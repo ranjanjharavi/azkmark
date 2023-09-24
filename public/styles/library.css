@@ -586,8 +586,25 @@ body[data-page="library"] {
   background: var(--shelf);
 }
 
+.bookmark-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--library-space-3);
+  margin-bottom: 20px;
+}
+
+.bookmark-reference-label {
+  color: var(--tertiary);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .bookmark-detail-title {
-  margin: var(--library-space-4) 0;
+  margin: 0 0 var(--library-space-4);
   font: 500 30px/1.2 var(--display-font);
   letter-spacing: -0.025em;
   overflow-wrap: anywhere;
@@ -599,7 +616,6 @@ body[data-page="library"] {
   align-items: center;
   justify-content: center;
   min-height: var(--control-height);
-  margin-top: var(--library-space-6);
   padding: var(--library-space-2) var(--library-space-4);
   border: 1px solid var(--accent);
   border-radius: var(--radius-control);
@@ -613,10 +629,34 @@ body[data-page="library"] {
   background: var(--accent-hover);
 }
 
+.bookmark-tags + .bookmark-open {
+  margin-top: var(--library-space-6);
+}
+
 .bookmark-url {
-  margin: var(--library-space-3) 0 var(--library-space-6);
+  margin: var(--library-space-3) 0 0;
   color: var(--secondary);
   font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+.bookmark-detail-metadata {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: var(--library-space-3);
+  margin: var(--library-space-6) 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  font-size: var(--font-size-small);
+}
+
+.bookmark-detail-metadata dt {
+  color: var(--tertiary);
+}
+
+.bookmark-detail-metadata dd {
+  min-width: 0;
+  margin: 0;
   overflow-wrap: anywhere;
 }
 
@@ -626,8 +666,6 @@ body[data-page="library"] {
   align-items: center;
   justify-content: flex-start;
   gap: var(--library-space-2);
-  padding-top: var(--library-space-4);
-  border-top: 1px solid var(--rule);
 }
 
 .bookmark-action {
@@ -721,7 +759,7 @@ body[data-page="library"] {
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
   height: 168px;
-  margin: var(--library-space-4) 0 var(--library-space-6);
+  margin: 0 0 var(--library-space-6);
   overflow: hidden;
   border-radius: var(--radius-small);
   background: var(--control);
