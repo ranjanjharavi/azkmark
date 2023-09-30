@@ -3,6 +3,7 @@ import type { Collection } from "../bookmarks/collections.js";
 import { bookmarkDomain } from "../bookmarks/domains.js";
 import { bookmarkActions } from "./bookmark-actions.js";
 import { bookmarkPreview } from "./bookmark-preview.js";
+import { formatSavedDate } from "./saved-date.js";
 
 function appendMetadata(list: HTMLDListElement, label: string, value: string | HTMLTimeElement): void {
   const term = document.createElement("dt");
@@ -80,19 +81,12 @@ export function bookmarkDetails(
   const collectionName = collections.find(({ id }) => id === bookmark.collectionId)?.name ?? "Unsorted";
   appendMetadata(metadata, "Collection", collectionName);
 
-  const savedDate = new Date(bookmark.savedAt);
-  let savedValue: string | HTMLTimeElement = `Timestamp ${bookmark.savedAt}`;
-  
-  if (!Number.isNaN(savedDate.getTime())) {
+  const savedDate = formatSavedDate(bookmark.savedAt);
+  let savedValue: string | HTMLTimeElement = savedDate.full;
+  if (savedDate.dateTime) {
     const time = document.createElement("time");
-    time.dateTime = savedDate.toISOString().replace(/^\+/, "");
-    time.textContent = savedDate.toLocaleString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    time.dateTime = savedDate.dateTime;
+    time.textContent = savedDate.full;
     savedValue = time;
   }
   appendMetadata(metadata, "Saved", savedValue);
