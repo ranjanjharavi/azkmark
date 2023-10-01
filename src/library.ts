@@ -432,7 +432,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   selectedUrl = selectedBookmark?.url;
   const rows = document.createDocumentFragment();
   matches.forEach((bookmark) => {
-    rows.appendChild(bookmarkRow(bookmark, bookmark.url === selectedUrl));
+    rows.appendChild(bookmarkRow(bookmark, bookmark.url === selectedUrl, now));
   });
   bookmarkPreviews.clear();
   bookmarksListElement.replaceChildren(rows);
