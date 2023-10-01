@@ -495,7 +495,7 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   libraryErrorElement.hidden = true;
 
   bookmarkPreviews.observe();
-  savedDateRefresh.update(isEmpty ? "all" : savedDate, now);
+  savedDateRefresh.update(!isEmpty, now);
   restoreFocus(focus);
 }
 
@@ -538,7 +538,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     selectedUrl = undefined;
     libraryTotalElement.hidden = true;
     bookmarkPreviews.clear();
-    savedDateRefresh.update("all");
+    savedDateRefresh.update(false);
     libraryStatusElement.textContent = "Couldn't load your bookmarks.";
     readErrorElement.textContent = "Couldn't load your bookmarks. Try again.";
     libraryErrorElement.hidden = false;
