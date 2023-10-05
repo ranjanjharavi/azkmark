@@ -766,8 +766,8 @@ body[data-page="library"] {
 
 .bookmark-preview {
   display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   height: 168px;
   margin: 0 0 var(--library-space-6);
   overflow: hidden;
