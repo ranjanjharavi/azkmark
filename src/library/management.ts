@@ -17,7 +17,6 @@ export type ManagementMode = "edit" | "delete";
 export interface ManagementAction {
   url: string;
   mode: ManagementMode;
-  index: number;
 }
 
 interface ManagementCallbacks {
@@ -37,7 +36,7 @@ export function initializeManagement({
   showFeedback,
   clearFeedback,
 }: ManagementCallbacks): {
-  open: (url: string, mode: ManagementMode, index: number) => void;
+  open: (url: string, mode: ManagementMode) => void;
   updateTarget: () => void;
 } {
   const dialogElement = requireElement<HTMLDialogElement>("#bookmark-dialog");
@@ -63,7 +62,7 @@ export function initializeManagement({
   let submitting = false;
   let targetMissing = false;
 
-  function open(url: string, mode: ManagementMode, index: number): void {
+  function open(url: string, mode: ManagementMode): void {
     const bookmarks = getBookmarks();
     if (!bookmarks || dialogElement.open || submitting) {
       return;
@@ -74,7 +73,7 @@ export function initializeManagement({
       return;
     }
 
-    action = { url, mode, index };
+    action = { url, mode };
     targetMissing = false;
     clearFeedback();
     headingElement.textContent = mode === "edit" ? "Edit bookmark" : "Delete bookmark?";

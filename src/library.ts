@@ -27,6 +27,7 @@ import { initializeImport } from "./library/import.js";
 import { initializeManagement } from "./library/management.js";
 import { createRefreshScheduler } from "./library/refresh.js";
 import { initializeSavedDateRefresh } from "./library/saved-date-refresh.js";
+import { reconcileSelection } from "./library/selection.js";
 import type { ManagementAction, ManagementMode } from "./library/management.js";
 
 const collectionNavigationElement = requireElement<HTMLElement>("#collection-navigation");
@@ -428,7 +429,11 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   // Domain grouping must use the whole library, never the collection subset.
   const scopeSize = library.filter(inCollectionScope).length;
 
-  const selectedBookmark = matches.find(({ url }) => url === selectedUrl) ?? matches[0];
+  const previousUrls = Array.from(
+    bookmarksListElement.querySelectorAll<HTMLButtonElement>(".bookmark-select"),
+    (button) => button.getAttribute("data-bookmark-url") ?? "",
+  );
+  const selectedBookmark = reconcileSelection(matches, library, selectedUrl, previousUrls);
   selectedUrl = selectedBookmark?.url;
   const rows = document.createDocumentFragment();
   matches.forEach((bookmark) => {
@@ -789,19 +794,10 @@ bookmarkDetailsElement.addEventListener("click", (event) => {
     return;
   }
 
-  let rowIndex = 0;
-  for (let index = 0; index < bookmarksListElement.children.length; index++) {
-    const row = bookmarksListElement.children[index].querySelector<HTMLButtonElement>(".bookmark-select");
-    if (row?.getAttribute("data-bookmark-url") === url) {
-      rowIndex = index;
-      break;
-    }
-  }
-
   if (mode === "viewed") {
     void setBookmarkViewed(button, url);
   } else if (mode === "edit" || mode === "delete") {
-    management.open(url, mode, rowIndex);
+    management.open(url, mode);
   }
 });
 
