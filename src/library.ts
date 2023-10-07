@@ -838,4 +838,16 @@ libraryControlsElement.addEventListener("keydown", (event) => {
 
 watchBookmarks(scheduleBookmarkRefresh);
 
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    scheduleBookmarkRefresh();
+  }
+});
+
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    scheduleBookmarkRefresh();
+  }
+});
+
 void refreshBookmarks();
