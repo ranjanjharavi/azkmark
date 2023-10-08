@@ -557,7 +557,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     libraryTotalElement.hidden = true;
     bookmarkPreviews.clear();
     savedDateRefresh.update(false);
-    libraryStatusElement.textContent = "Couldn't load your bookmarks.";
+    libraryStatusElement.textContent = "";
     readErrorElement.textContent = "Couldn't load your bookmarks. Try again.";
     libraryErrorElement.hidden = false;
     emptyStateElement.hidden = true;
