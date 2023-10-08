@@ -172,6 +172,19 @@ function focusBookmarkRow(url: string | undefined): boolean {
     const button = buttons[index];
     if (button.getAttribute("data-bookmark-url") === url) {
       button.focus({ preventScroll: true });
+      const listBounds = bookmarksListElement.getBoundingClientRect();
+      const rowBounds = button.getBoundingClientRect();
+      const listHeight = bookmarksListElement.clientHeight;
+      const visibleTop = listBounds.top + bookmarksListElement.clientTop;
+      const visibleBottom = visibleTop + listHeight;
+      if (rowBounds.top <= visibleTop && rowBounds.bottom >= visibleBottom) {
+        return true;
+      }
+      if (rowBounds.top < visibleTop || rowBounds.height > listHeight) {
+        bookmarksListElement.scrollTop += rowBounds.top - visibleTop;
+      } else if (rowBounds.bottom > visibleBottom) {
+        bookmarksListElement.scrollTop += rowBounds.bottom - visibleBottom;
+      }
       return true;
     }
   }
