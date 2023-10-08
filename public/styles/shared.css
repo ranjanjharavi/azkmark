@@ -41,11 +41,6 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-#library-heading:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 4px;
-}
-
 button:disabled {
   border-color: var(--control-rule);
   background: var(--control);
