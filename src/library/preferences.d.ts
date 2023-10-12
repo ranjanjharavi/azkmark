@@ -4,5 +4,5 @@ interface Window {
     fallback: T;
     values: readonly T[];
     apply: (value: T) => void;
-  }): (controls: readonly (HTMLInputElement | HTMLSelectElement)[]) => void;
+  }): (controls: readonly HTMLSelectElement[]) => void;
 }

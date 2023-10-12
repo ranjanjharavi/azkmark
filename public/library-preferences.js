@@ -6,11 +6,7 @@ window.azkmarkLibraryPreference = ({ key, fallback, values, apply }) => {
   function update(next) {
     value = values.includes(next) ? next : fallback;
     controls.forEach((control) => {
-      if ("checked" in control) {
-        control.checked = control.value === value;
-      } else {
-        control.value = value;
-      }
+      control.value = value;
     });
     apply(value);
   }
@@ -41,9 +37,6 @@ window.azkmarkLibraryPreference = ({ key, fallback, values, apply }) => {
     update(value);
     controls.forEach((control) => {
       control.addEventListener("change", () => {
-        if ("checked" in control && !control.checked) {
-          return;
-        }
         update(control.value);
         try {
           if (value === fallback) {
