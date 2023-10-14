@@ -24,12 +24,13 @@
         </div>
         <div class="backup-tools">
           <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
-          <button id="open-import" type="button" aria-controls="backup-panel">
+          <button id="open-import" type="button">
             <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5" />
             </svg>
             Import
           </button>
+          <input id="backup-file" type="file" accept=".json,.html,.htm,application/json,text/html" hidden />
           <button id="export-backup" type="button">
             <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
@@ -51,16 +52,7 @@
         <div id="backup-panel" class="backup-panel" hidden>
           <p>What's exported: Your entire library and all collections, bypassing any active filters.</p>
           <p>Data included: URLs, titles, dates, statuses, tags, collection assignments, and thumbnail links.</p>
-          <p id="import-help">Import formats: azkmark JSON or Chrome HTML.</p>
-          <form id="import-form" novalidate>
-            <div class="backup-import-controls">
-              <div class="library-field">
-                <label for="backup-file">Import file</label>
-                <input id="backup-file" name="backup-file" type="file" accept=".json,.html,.htm,application/json,text/html" required aria-describedby="import-help import-error" />
-              </div>
-              <button id="import-backup" type="submit" disabled>Import bookmarks</button>
-            </div>
-          </form>
+          <p>Import: use Import in the header to choose an azkmark JSON backup or Chrome HTML export.</p>
         </div>
         <p id="export-status" role="status" aria-atomic="true"></p>
         <p id="export-error" role="alert" hidden></p>

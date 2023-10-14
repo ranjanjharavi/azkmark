@@ -233,42 +233,6 @@ body[data-page="library"] {
   margin-bottom: 0;
 }
 
-#import-form {
-  margin-top: var(--library-space-3);
-}
-
-.backup-import-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--library-space-3);
-}
-
-.backup-import-controls .library-field {
-  flex: 1 1 260px;
-}
-
-#backup-file {
-  box-sizing: border-box;
-  display: block;
-  width: 100%;
-  min-height: var(--control-height);
-  padding: var(--library-space-2);
-  border: 1px solid var(--control-rule);
-  border-radius: var(--radius-control);
-  background: var(--control);
-  color: var(--ink);
-  font: var(--font-size-body)/1.4 var(--body-font);
-}
-
-#backup-file:hover:not(:disabled) {
-  border-color: var(--tertiary);
-}
-
-#backup-file[aria-invalid="true"] {
-  border-color: var(--danger);
-}
-
 #export-status,
 #import-status {
   margin: 0 0 var(--library-space-2);

@@ -13,22 +13,18 @@ interface ImportCallbacks {
 }
 
 export function initializeImport({ refresh }: ImportCallbacks): void {
-  const form = document.querySelector<HTMLFormElement>("#import-form");
   const fileInput = document.querySelector<HTMLInputElement>("#backup-file");
-  const importButton = document.querySelector<HTMLButtonElement>("#import-backup");
   const status = document.querySelector<HTMLParagraphElement>("#import-status");
   const error = document.querySelector<HTMLParagraphElement>("#import-error");
   const openImport = document.querySelector<HTMLButtonElement>("#open-import");
   const helpToggle = document.querySelector<HTMLButtonElement>("#backup-help-toggle");
   const helpPanel = document.querySelector<HTMLDivElement>("#backup-panel");
 
-  if (!form || !fileInput || !importButton || !status || !error || !openImport || !helpToggle || !helpPanel) {
+  if (!fileInput || !status || !error || !openImport || !helpToggle || !helpPanel) {
     throw new Error("The backup import controls are incomplete.");
   }
 
-  const formElement = form;
   const fileInputElement = fileInput;
-  const importButtonElement = importButton;
   const statusElement = status;
   const errorElement = error;
   const openImportButton = openImport;
@@ -37,22 +33,15 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
 
   let importing = false;
 
-  function setPanelOpen(open: boolean): void {
-    if (!open && helpPanelElement.contains(document.activeElement)) {
-      helpToggleElement.focus({ preventScroll: true });
-    }
+  helpToggleElement.addEventListener("click", () => {
+    const open = helpPanelElement.hidden;
     helpPanelElement.hidden = !open;
     helpToggleElement.setAttribute("aria-expanded", String(open));
-  }
-
-  helpToggleElement.addEventListener("click", () => {
-    setPanelOpen(helpPanelElement.hidden);
   });
 
   openImportButton.addEventListener("click", () => {
-    setPanelOpen(true);
     if (!importing) {
-      fileInputElement.focus();
+      fileInputElement.click();
     }
   });
 
@@ -65,51 +54,31 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
   function failureMessage(cause: unknown, summary: string): string {
     const counts = `Confirmed this attempt: ${summary} Existing bookmarks were kept.`;
     if (cause instanceof InvalidStoredBookmarkError) {
-      return `Some saved data is invalid. ${counts} Repair the library, then retry this file.`;
+      return `Some saved data is invalid. ${counts} Repair the library, then choose this file again.`;
     }
     if (cause instanceof StorageQuotaError) {
-      return `Storage is full. ${counts} Free some space, then retry this file to continue.`;
+      return `Storage is full. ${counts} Free some space, then choose this file again to continue.`;
     }
-    return `Couldn't finish importing. ${counts} Retry the same file to continue.`;
+    return `Couldn't finish importing. ${counts} Choose the same file again to continue.`;
   }
 
-  fileInputElement.addEventListener("change", () => {
-    if (importing) {
-      return;
-    }
-    errorElement.hidden = true;
-    statusElement.textContent = "";
-    fileInputElement.removeAttribute("aria-invalid");
-    importButtonElement.disabled = !fileInputElement.files || fileInputElement.files.length === 0;
-  });
-
-  async function submit(event: Event): Promise<void> {
-    event.preventDefault();
-    if (importing) {
-      return;
-    }
-
+  async function importSelectedFile(): Promise<void> {
     const file = fileInputElement.files?.[0];
-    if (!file) {
-      errorElement.textContent = "Choose an azkmark JSON backup or Chrome HTML export before importing.";
-      errorElement.hidden = false;
-      fileInputElement.setAttribute("aria-invalid", "true");
-      fileInputElement.focus();
+    if (importing || !file) {
       return;
     }
 
-    const restoreFileFocus = document.activeElement === fileInputElement;
-    const restoreSubmitFocus = document.activeElement === importButtonElement;
+    const restoreButtonFocus = document.activeElement === openImportButton;
+    // Allow choosing the same file again after success or a partial failure.
+    fileInputElement.value = "";
     importing = true;
     fileInputElement.disabled = true;
-    importButtonElement.disabled = true;
-    formElement.setAttribute("aria-busy", "true");
-    fileInputElement.removeAttribute("aria-invalid");
+    openImportButton.disabled = true;
+    openImportButton.setAttribute("aria-busy", "true");
     errorElement.hidden = true;
     statusElement.textContent = "Reading file…";
 
     let readingFile = true;
-    let focusFileAfter = false;
     try {
       const text = await file.text();
       readingFile = false;
@@ -142,36 +111,26 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
     } catch (cause) {
       statusElement.textContent = "";
       if (readingFile) {
-        errorElement.textContent = "Couldn't read the selected file. Try again or choose another file.";
+        errorElement.textContent = "Couldn't read the selected file. Use Import to try again or choose another file.";
       } else if (cause instanceof UnsupportedBackupVersionError) {
         errorElement.textContent = "This backup version isn't supported. Choose an azkmark version 1, 2 or 3 backup.";
       } else {
         errorElement.textContent = "This isn't a valid azkmark JSON backup or Chrome HTML export. No bookmarks or collections were changed.";
       }
       errorElement.hidden = false;
-      fileInputElement.setAttribute("aria-invalid", "true");
-      focusFileAfter = true;
     } finally {
       importing = false;
       fileInputElement.disabled = false;
-      importButtonElement.disabled = !fileInputElement.files || fileInputElement.files.length === 0;
-      formElement.setAttribute("aria-busy", "false");
+      openImportButton.disabled = false;
+      openImportButton.setAttribute("aria-busy", "false");
 
-      if (document.activeElement === document.body) {
-        if (focusFileAfter && !helpPanelElement.hidden) {
-          fileInputElement.focus({ preventScroll: true });
-        } else if (restoreSubmitFocus && !helpPanelElement.hidden) {
-          importButtonElement.focus({ preventScroll: true });
-        } else if (restoreFileFocus && !helpPanelElement.hidden) {
-          fileInputElement.focus({ preventScroll: true });
-        } else if (restoreSubmitFocus || restoreFileFocus || focusFileAfter) {
-          helpToggleElement.focus({ preventScroll: true });
-        }
+      if (restoreButtonFocus && document.activeElement === document.body) {
+        openImportButton.focus({ preventScroll: true });
       }
     }
   }
 
-  formElement.addEventListener("submit", (event) => {
-    void submit(event);
+  fileInputElement.addEventListener("change", () => {
+    void importSelectedFile();
   });
 }
