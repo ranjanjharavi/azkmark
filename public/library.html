@@ -23,7 +23,7 @@
           <span class="library-context">Your bookmark library</span>
         </div>
         <div class="backup-tools">
-          <button id="backup-help-toggle" type="button" aria-expanded="false" aria-controls="backup-panel">About backups</button>
+          <button id="open-backup-help" type="button" aria-haspopup="dialog" aria-controls="backup-dialog">About backups</button>
           <button id="open-import" type="button">
             <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5" />
@@ -49,11 +49,6 @@
           <button class="collection-tab" type="button" value="unsorted" aria-pressed="false" aria-controls="bookmarks" disabled>Unsorted</button>
           <button id="manage-collections" class="collection-tab" type="button" disabled>Manage collections</button>
         </nav>
-        <div id="backup-panel" class="backup-panel" hidden>
-          <p>What's exported: Your entire library and all collections, bypassing any active filters.</p>
-          <p>Data included: URLs, titles, dates, statuses, tags, collection assignments, and thumbnail links.</p>
-          <p>Import: use Import in the header to choose an azkmark JSON backup or Chrome HTML export.</p>
-        </div>
         <p id="export-status" role="status" aria-atomic="true"></p>
         <p id="export-error" role="alert" hidden></p>
         <p id="import-status" role="status" aria-atomic="true"></p>
@@ -151,6 +146,15 @@
         </div>
       </main>
     </div>
+    <dialog id="backup-dialog" aria-labelledby="backup-heading">
+      <h2 id="backup-heading">About backups</h2>
+      <p>What's exported: Your entire library and all collections, bypassing any active filters.</p>
+      <p>Data included: URLs, titles, dates, statuses, tags, collection assignments, and thumbnail links.</p>
+      <p>Import: use Import in the header to choose an azkmark JSON backup or Chrome HTML export.</p>
+      <form method="dialog" class="management-actions">
+        <button type="submit" autofocus>Close</button>
+      </form>
+    </dialog>
     <dialog id="bookmark-dialog" aria-labelledby="management-heading">
       <h2 id="management-heading">Edit bookmark</h2>
       <p id="management-target" hidden></p>

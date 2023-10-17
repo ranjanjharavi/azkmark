@@ -30,6 +30,8 @@ import { initializeSavedDateRefresh } from "./library/saved-date-refresh.js";
 import { reconcileSelection } from "./library/selection.js";
 import type { ManagementAction, ManagementMode } from "./library/management.js";
 
+const backupHelpButtonElement = requireElement<HTMLButtonElement>("#open-backup-help");
+const backupDialogElement = requireElement<HTMLDialogElement>("#backup-dialog");
 const collectionNavigationElement = requireElement<HTMLElement>("#collection-navigation");
 const manageCollectionsButton = requireElement<HTMLButtonElement>("#manage-collections");
 const collectionEmpty = requireElement<HTMLElement>("#collection-empty");
@@ -641,6 +643,10 @@ const management = initializeManagement({
 
 initializeExport();
 initializeImport({ refresh: refreshBookmarks });
+
+backupHelpButtonElement.addEventListener("click", () => {
+  backupDialogElement.showModal();
+});
 
 async function setBookmarkViewed(button: HTMLButtonElement, url: string): Promise<void> {
   const targetStatus = button.getAttribute("data-viewed");

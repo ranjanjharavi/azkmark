@@ -17,10 +17,8 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
   const status = document.querySelector<HTMLParagraphElement>("#import-status");
   const error = document.querySelector<HTMLParagraphElement>("#import-error");
   const openImport = document.querySelector<HTMLButtonElement>("#open-import");
-  const helpToggle = document.querySelector<HTMLButtonElement>("#backup-help-toggle");
-  const helpPanel = document.querySelector<HTMLDivElement>("#backup-panel");
 
-  if (!fileInput || !status || !error || !openImport || !helpToggle || !helpPanel) {
+  if (!fileInput || !status || !error || !openImport) {
     throw new Error("The backup import controls are incomplete.");
   }
 
@@ -28,16 +26,8 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
   const statusElement = status;
   const errorElement = error;
   const openImportButton = openImport;
-  const helpToggleElement = helpToggle;
-  const helpPanelElement = helpPanel;
 
   let importing = false;
-
-  helpToggleElement.addEventListener("click", () => {
-    const open = helpPanelElement.hidden;
-    helpPanelElement.hidden = !open;
-    helpToggleElement.setAttribute("aria-expanded", String(open));
-  });
 
   openImportButton.addEventListener("click", () => {
     if (!importing) {
