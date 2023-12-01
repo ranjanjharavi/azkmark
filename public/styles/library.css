@@ -519,7 +519,7 @@ body[data-page="library"] {
 
 #bookmark-details {
   min-width: 0;
-  padding: 28px var(--library-space-8);
+  padding: 28px var(--library-space-8) var(--library-space-3);
   background: var(--shelf);
 }
 
@@ -528,16 +528,13 @@ body[data-page="library"] {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--library-space-3);
+  gap: var(--library-space-2);
   margin-bottom: 20px;
 }
 
-.bookmark-reference-label {
+.bookmark-saved-date {
   color: var(--tertiary);
   font-size: var(--font-size-small);
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .bookmark-detail-title {
@@ -553,6 +550,7 @@ body[data-page="library"] {
   align-items: center;
   justify-content: center;
   min-height: var(--control-height);
+  margin-top: var(--library-space-6);
   padding: var(--library-space-2) var(--library-space-4);
   border: 1px solid var(--accent);
   border-radius: var(--radius-control);
@@ -566,12 +564,8 @@ body[data-page="library"] {
   background: var(--accent-hover);
 }
 
-.bookmark-tags + .bookmark-open {
-  margin-top: var(--library-space-6);
-}
-
 .bookmark-url {
-  margin: var(--library-space-3) 0 0;
+  margin: 0;
   color: var(--secondary);
   font-size: var(--font-size-small);
   overflow-wrap: anywhere;
@@ -601,19 +595,30 @@ body[data-page="library"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
-  gap: var(--library-space-2);
+  justify-content: space-between;
+  gap: var(--library-space-4);
+  padding-top: var(--library-space-4);
+  border-top: 1px solid var(--rule);
 }
 
-.bookmark-action {
+.bookmark-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--library-space-2);
+  margin-left: auto;
+}
+
+.bookmark-action,
+.bookmark-action:disabled {
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--control-height);
+  gap: var(--library-space-2);
   min-height: var(--control-height);
-  padding: 0;
-  border-radius: var(--radius-small);
+  padding: var(--library-space-2) var(--library-space-4);
+  border-radius: var(--radius-control);
   border-color: transparent;
   background: transparent;
   color: var(--secondary);
@@ -636,10 +641,6 @@ body[data-page="library"] {
 }
 
 .bookmark-action[data-action="viewed"] {
-  --icon: var(--icon-to-view);
-}
-
-.bookmark-action[data-action="viewed"][aria-pressed="true"] {
   --icon: var(--icon-viewed);
 }
 
@@ -649,9 +650,10 @@ body[data-page="library"] {
 
 .bookmark-action[data-action="delete"] {
   --icon: var(--icon-delete);
+  color: var(--danger);
 }
 
-.bookmark-action[data-action="viewed"][aria-pressed="true"]:not(:disabled) {
+.bookmark-action.is-viewed:not(:disabled) {
   background: var(--accent-soft);
   color: var(--accent-hover);
 }
@@ -701,7 +703,7 @@ body[data-page="library"] {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
-  height: 168px;
+  height: 184px;
   margin: 0 0 var(--library-space-6);
   overflow: hidden;
   border-radius: var(--radius-small);
@@ -713,10 +715,14 @@ body[data-page="library"] {
   grid-area: 1 / 1;
 }
 
-.bookmark-image {
+.bookmark-image,
+.preview-placeholder {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.bookmark-image {
   object-fit: cover;
   visibility: hidden;
 }
@@ -954,7 +960,7 @@ body[data-page="library"] {
   }
 
   #bookmark-details {
-    padding: var(--library-space-6);
+    padding: var(--library-space-6) var(--library-space-6) var(--library-space-3);
   }
 
   .bookmark-detail-title {
@@ -1052,6 +1058,6 @@ body[data-page="library"] {
   }
 
   #bookmark-details {
-    padding: var(--library-space-6) 20px;
+    padding: var(--library-space-6) 20px var(--library-space-3);
   }
 }

@@ -146,6 +146,26 @@
         </div>
       </main>
     </div>
+    <template id="bookmark-preview-placeholder">
+      <svg class="preview-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No thumbnail available" focusable="false">
+        <rect width="640" height="256" fill="var(--control)" />
+        <rect x="128" y="24" width="384" height="208" rx="8" fill="var(--page)" stroke="var(--control-rule)" />
+        <path d="M128 64h384" stroke="var(--control-rule)" />
+        <g fill="var(--control-rule)">
+          <circle cx="148" cy="44" r="4" />
+          <circle cx="164" cy="44" r="4" />
+          <circle cx="180" cy="44" r="4" />
+        </g>
+        <rect x="152" y="84" width="120" height="124" rx="4" fill="var(--accent-soft)" />
+        <rect x="288" y="84" width="164" height="16" rx="4" fill="var(--control-rule)" />
+        <g fill="var(--control)">
+          <rect x="288" y="112" width="200" height="8" rx="4" />
+          <rect x="288" y="132" width="184" height="8" rx="4" />
+          <rect x="288" y="152" width="136" height="8" rx="4" />
+        </g>
+        <rect x="288" y="184" width="84" height="24" rx="4" fill="var(--accent-soft)" />
+      </svg>
+    </template>
     <dialog id="backup-dialog" aria-labelledby="backup-heading">
       <h2 id="backup-heading">About backups</h2>
       <p>What's exported: Your entire library and all collections, bypassing any active filters.</p>
