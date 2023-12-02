@@ -9,6 +9,11 @@ const ACTIONS: readonly BookmarkAction[] = ["viewed", "edit", "delete"];
 export function bookmarkActions(bookmark: Bookmark, savingViewStatus = false): HTMLDivElement {
   const actions = document.createElement("div");
   actions.className = "bookmark-actions";
+  actions.setAttribute("role", "group");
+  actions.setAttribute("aria-label", "Bookmark actions");
+
+  const managementActions = document.createElement("div");
+  managementActions.className = "bookmark-action-group";
 
   ACTIONS.forEach((action) => {
     const button = document.createElement("button");
@@ -20,22 +25,28 @@ export function bookmarkActions(bookmark: Bookmark, savingViewStatus = false): H
     let label: string;
     switch (action) {
       case "viewed":
-        label = bookmark.viewed ? "Viewed. Mark to view" : "To view. Mark viewed";
+        label = bookmark.viewed ? "Mark not viewed" : "Mark viewed";
         button.setAttribute("data-viewed", String(!bookmark.viewed));
-        button.setAttribute("aria-pressed", String(Boolean(bookmark.viewed)));
+        button.classList.toggle("is-viewed", Boolean(bookmark.viewed));
         button.setAttribute("aria-busy", String(savingViewStatus));
         button.disabled = savingViewStatus;
         break;
       case "edit":
-        label = "Edit bookmark";
+        label = "Edit";
         break;
       case "delete":
-        label = "Delete bookmark";
+        label = "Delete";
         break;
     }
+    button.textContent = label;
     button.setAttribute("aria-label", `${label}: ${bookmark.title}`);
-    actions.appendChild(button);
+    if (action === "viewed") {
+      actions.appendChild(button);
+    } else {
+      managementActions.appendChild(button);
+    }
   });
 
+  actions.appendChild(managementActions);
   return actions;
 }

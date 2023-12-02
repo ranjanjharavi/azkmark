@@ -1,3 +1,5 @@
+import { requireElement } from "../ui/dom.js";
+
 const PREVIEW_TIMEOUT_MS = 10000;
 
 interface PreviewRegistration {
@@ -6,9 +8,18 @@ interface PreviewRegistration {
   dispose: () => void;
 }
 
-export function bookmarkPreview(thumbnailUrl: string): HTMLDivElement {
+function showPreviewPlaceholder(preview: HTMLDivElement): void {
+  const template = requireElement<HTMLTemplateElement>("#bookmark-preview-placeholder");
+  preview.replaceChildren(template.content.cloneNode(true));
+}
+
+export function bookmarkPreview(thumbnailUrl?: string): HTMLDivElement {
   const preview = document.createElement("div");
   preview.className = "bookmark-preview";
+  if (!thumbnailUrl) {
+    showPreviewPlaceholder(preview);
+    return preview;
+  }
 
   const loading = document.createElement("p");
   loading.className = "preview-loading";
@@ -94,7 +105,7 @@ export function initializeBookmarkPreviews(host: HTMLElement): {
         return;
       }
       dispose();
-      preview.remove();
+      showPreviewPlaceholder(preview);
     }
 
     function start(): void {
