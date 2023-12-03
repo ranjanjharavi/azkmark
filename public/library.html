@@ -146,7 +146,7 @@
         </div>
       </main>
     </div>
-    <template id="bookmark-preview-placeholder">
+    <template id="bookmark-preview-placeholders">
       <svg class="preview-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No thumbnail available" focusable="false">
         <rect width="640" height="256" fill="var(--control)" />
         <rect x="128" y="24" width="384" height="208" rx="8" fill="var(--page)" stroke="var(--control-rule)" />
@@ -164,6 +164,26 @@
           <rect x="288" y="152" width="136" height="8" rx="4" />
         </g>
         <rect x="288" y="184" width="84" height="24" rx="4" fill="var(--accent-soft)" />
+      </svg>
+      <svg class="preview-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No thumbnail available" focusable="false">
+        <rect width="640" height="256" fill="var(--accent-soft)" />
+        <path d="M0 64h640M0 128h640M0 192h640M80 0v256M160 0v256M240 0v256M320 0v256M400 0v256M480 0v256M560 0v256" stroke="var(--accent)" opacity="0.12" />
+        <rect x="80" y="44" width="140" height="168" rx="4" fill="var(--accent)" />
+        <rect x="236" y="44" width="324" height="72" rx="4" fill="var(--page)" />
+        <rect x="236" y="132" width="154" height="80" rx="4" fill="var(--preview-muted)" />
+        <rect x="406" y="132" width="154" height="80" rx="4" fill="var(--page)" />
+      </svg>
+      <svg class="preview-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No thumbnail available" focusable="false">
+        <rect width="640" height="256" fill="var(--accent-soft)" />
+        <circle cx="202" cy="128" r="80" fill="var(--accent)" />
+        <path d="m300 204 92-152 92 152Z" fill="var(--preview-muted)" />
+        <rect x="446" y="72" width="112" height="112" rx="4" fill="var(--page)" stroke="var(--accent)" />
+        <path d="M80 224h480" stroke="var(--accent)" opacity="0.25" />
+      </svg>
+      <svg class="preview-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No thumbnail available" focusable="false">
+        <rect width="640" height="256" fill="var(--accent-soft)" />
+        <path d="M160 60c60-16 112-12 160 12 48-24 100-28 160-12v148c-60-16-112-12-160 12-48-24-100-28-160-12Z" fill="var(--page)" stroke="var(--accent)" stroke-width="3" />
+        <path d="M320 72v148M188 94h84M188 118h96M188 142h76M352 94h92M352 118h76M352 142h92" stroke="var(--accent)" stroke-width="3" opacity="0.4" />
       </svg>
     </template>
     <dialog id="backup-dialog" aria-labelledby="backup-heading">

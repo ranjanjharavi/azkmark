@@ -727,6 +727,10 @@ body[data-page="library"] {
   visibility: hidden;
 }
 
+.preview-placeholder {
+  --preview-muted: #a9b79c;
+}
+
 .bookmark-image.loaded {
   visibility: visible;
 }
