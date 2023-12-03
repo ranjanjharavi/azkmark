@@ -49,7 +49,7 @@ export function bookmarkDetails(
   }
   header.appendChild(saved);
   details.appendChild(header);
-  details.appendChild(bookmarkPreview(bookmark.thumbnailUrl));
+  details.appendChild(bookmarkPreview(bookmark.url, bookmark.thumbnailUrl));
 
   const title = document.createElement("h2");
   title.className = "bookmark-detail-title";

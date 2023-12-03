@@ -1,6 +1,8 @@
 import { requireElement } from "../ui/dom.js";
 
 const PREVIEW_TIMEOUT_MS = 10000;
+// Keep each bookmark's random artwork stable across library rerenders
+const placeholderByUrl = new Map<string, number>();
 
 interface PreviewRegistration {
   image: HTMLImageElement;
@@ -8,16 +10,36 @@ interface PreviewRegistration {
   dispose: () => void;
 }
 
-function showPreviewPlaceholder(preview: HTMLDivElement): void {
-  const template = requireElement<HTMLTemplateElement>("#bookmark-preview-placeholder");
-  preview.replaceChildren(template.content.cloneNode(true));
+function getRandomIndex(max: number): number {
+  if (max <= 0) return 0;
+  const buffer = new Uint32Array(1);
+  crypto.getRandomValues(buffer);
+  return buffer[0] % max;
 }
 
-export function bookmarkPreview(thumbnailUrl?: string): HTMLDivElement {
+function showPreviewPlaceholder(preview: HTMLDivElement, bookmarkUrl: string): void {
+  const template = requireElement<HTMLTemplateElement>("#bookmark-preview-placeholders");
+  const placeholders = template.content.children;
+  if (placeholders.length === 0) return;
+
+  let index = placeholderByUrl.get(bookmarkUrl);
+  if (index === undefined) {
+    index = getRandomIndex(placeholders.length);
+    placeholderByUrl.set(bookmarkUrl, index);
+  }
+
+  const selectedNode = placeholders[index];
+  if (selectedNode) {
+    preview.replaceChildren(selectedNode.cloneNode(true));
+  }
+}
+
+export function bookmarkPreview(bookmarkUrl: string, thumbnailUrl?: string): HTMLDivElement {
   const preview = document.createElement("div");
   preview.className = "bookmark-preview";
+  preview.setAttribute("data-bookmark-url", bookmarkUrl);
   if (!thumbnailUrl) {
-    showPreviewPlaceholder(preview);
+    showPreviewPlaceholder(preview, bookmarkUrl);
     return preview;
   }
 
@@ -62,13 +84,15 @@ export function initializeBookmarkPreviews(host: HTMLElement): {
     const image = preview.querySelector<HTMLImageElement>(".bookmark-image[data-thumbnail-url]");
     const loading = preview.querySelector<HTMLParagraphElement>(".preview-loading");
     const thumbnailUrl = image?.getAttribute("data-thumbnail-url");
-    if (!image || !loading || !thumbnailUrl) {
+    const bookmarkUrl = preview.getAttribute("data-bookmark-url");
+    if (!image || !loading || !thumbnailUrl || !bookmarkUrl) {
       return;
     }
 
     const imageElement = image;
     const loadingElement = loading;
     const imageUrl = thumbnailUrl;
+    const previewUrl = bookmarkUrl;
     let timer: number | undefined;
     let started = false;
     let disposed = false;
@@ -105,7 +129,7 @@ export function initializeBookmarkPreviews(host: HTMLElement): {
         return;
       }
       dispose();
-      showPreviewPlaceholder(preview);
+      showPreviewPlaceholder(preview, previewUrl);
     }
 
     function start(): void {
