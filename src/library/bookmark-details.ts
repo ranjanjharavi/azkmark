@@ -67,7 +67,17 @@ export function bookmarkDetails(
   link.target = "_blank";
   link.rel = "noopener noreferrer";
   link.setAttribute("data-bookmark-url", bookmark.url);
-  link.textContent = "Open page ↗";
+  link.textContent = "Open page";
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  const arrow = document.createElementNS(svgNamespace, "svg");
+  arrow.classList.add("library-control-icon");
+  arrow.setAttribute("viewBox", "0 0 24 24");
+  arrow.setAttribute("aria-hidden", "true");
+  arrow.setAttribute("focusable", "false");
+  const arrowPath = document.createElementNS(svgNamespace, "path");
+  arrowPath.setAttribute("d", "M7 17 17 7M7 7h10v10");
+  arrow.appendChild(arrowPath);
+  link.appendChild(arrow);
   details.appendChild(link);
 
   const metadata = document.createElement("dl");

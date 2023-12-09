@@ -549,6 +549,7 @@ body[data-page="library"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--library-space-2);
   min-height: var(--control-height);
   margin-top: var(--library-space-6);
   padding: var(--library-space-2) var(--library-space-4);
