@@ -47,7 +47,7 @@
         <nav id="collection-navigation" class="collection-navigation" aria-label="Collections">
           <button class="collection-tab" type="button" value="all" aria-pressed="true" aria-controls="bookmarks" disabled>All bookmarks</button>
           <button class="collection-tab" type="button" value="unsorted" aria-pressed="false" aria-controls="bookmarks" disabled>Unsorted</button>
-          <button id="manage-collections" class="collection-tab" type="button" disabled>Manage collections</button>
+          <button id="manage-collections" class="collection-tab" type="button" aria-haspopup="dialog" aria-controls="collection-dialog" disabled>Manage collections</button>
         </nav>
         <p id="export-status" role="status" aria-atomic="true"></p>
         <p id="export-error" role="alert" hidden></p>
@@ -228,22 +228,46 @@
         </div>
       </form>
     </dialog>
-    <dialog id="collection-dialog" aria-labelledby="collection-heading">
-      <h2 id="collection-heading">Manage collections</h2>
-      <form id="collection-form" novalidate>
-        <div id="collection-edit">
-          <label for="collection-edit-id">Collection to manage</label>
-          <select id="collection-edit-id" class="collection-select"><option value="">New collection</option></select>
-          <label for="collection-name" class="collection-label">Collection name</label>
-          <input id="collection-name" type="text" maxlength="100" required autocomplete="off" aria-describedby="collection-error" />
-        </div>
-        <p id="collection-confirm" hidden></p>
+    <dialog id="collection-dialog" aria-labelledby="collection-heading" aria-describedby="collection-description">
+      <header class="collection-dialog-header">
+        <h2 id="collection-heading">Manage collections</h2>
+        <p id="collection-description">Deleting a collection keeps its bookmarks in Unsorted.</p>
+      </header>
+      <div class="collection-dialog-body">
+        <p id="collection-total"></p>
+        <ul id="collection-manager-list" aria-label="Collections"></ul>
+        <p id="collection-manager-empty" hidden>No collections yet. Add a collection to start.</p>
+        <form id="collection-rename-form" class="collection-rename-form" novalidate hidden>
+          <label for="collection-rename-name">Collection name</label>
+          <div class="collection-inline-controls">
+            <input id="collection-rename-name" class="collection-name-input" type="text" maxlength="100" required autocomplete="off" aria-describedby="collection-rename-error" />
+            <button id="collection-rename-save" type="submit">Save</button>
+            <button id="collection-rename-cancel" class="collection-quiet-button" type="button">Cancel</button>
+          </div>
+          <p id="collection-rename-error" role="alert" hidden></p>
+        </form>
+        <form id="collection-form" class="collection-create-form" novalidate>
+          <label for="collection-name">New collection</label>
+          <input id="collection-name" class="collection-name-input" type="text" maxlength="100" required autocomplete="off" placeholder="e.g. Inspiration" aria-describedby="collection-error" />
+          <button id="collection-submit" type="submit">Add collection</button>
+        </form>
         <p id="collection-error" role="alert" hidden></p>
         <p id="collection-status" role="status" aria-atomic="true"></p>
+      </div>
+      <footer class="collection-dialog-footer">
+        <p id="collection-unsorted"></p>
+        <button id="collection-cancel" class="collection-quiet-button" type="button">Done</button>
+      </footer>
+    </dialog>
+    <dialog id="collection-delete-dialog" aria-labelledby="collection-delete-heading" aria-describedby="collection-confirm">
+      <h2 id="collection-delete-heading">Delete collection?</h2>
+      <p id="collection-confirm"></p>
+      <p id="collection-delete-error" role="alert" hidden></p>
+      <p id="collection-delete-status" role="status" aria-atomic="true"></p>
+      <form id="collection-delete-form" novalidate>
         <div class="management-actions">
-          <button id="collection-delete" type="button" hidden>Delete collection</button>
-          <button id="collection-cancel" type="button">Cancel</button>
-          <button id="collection-submit" type="submit">Create collection</button>
+          <button id="collection-delete-cancel" class="collection-quiet-button" type="button" autofocus>Keep collection</button>
+          <button id="collection-delete-submit" class="destructive" type="submit">Delete collection</button>
         </div>
       </form>
     </dialog>
