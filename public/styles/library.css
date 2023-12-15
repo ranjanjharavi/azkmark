@@ -631,7 +631,8 @@ body[data-page="library"] {
   color: var(--accent-hover);
 }
 
-.bookmark-action::before {
+.bookmark-action::before,
+.collection-row-action::before {
   content: "";
   flex: none;
   width: 18px;
@@ -820,6 +821,7 @@ body[data-page="library"] {
 
 #bookmark-dialog,
 #collection-dialog,
+#collection-delete-dialog,
 #backup-dialog {
   box-sizing: border-box;
   width: calc(100% - 32px);
@@ -836,12 +838,14 @@ body[data-page="library"] {
 
 #bookmark-dialog::backdrop,
 #collection-dialog::backdrop,
+#collection-delete-dialog::backdrop,
 #backup-dialog::backdrop {
   background: rgba(40, 53, 43, 0.48);
 }
 
 #management-heading,
 #collection-heading,
+#collection-delete-heading,
 #backup-heading {
   margin: 0 0 var(--library-space-4);
   font: 600 var(--font-size-dialog)/1.2 var(--display-font);
@@ -899,7 +903,9 @@ body[data-page="library"] {
 }
 
 #management-error,
-#collection-error {
+#collection-error,
+#collection-rename-error,
+#collection-delete-error {
   margin: var(--library-space-3) 0 0;
   color: var(--danger);
   font-size: var(--font-size-small);
@@ -907,7 +913,8 @@ body[data-page="library"] {
 }
 
 #management-status,
-#collection-status {
+#collection-status,
+#collection-delete-status {
   min-height: 1.5em;
   margin: var(--library-space-2) 0 0;
   color: var(--secondary);
@@ -928,17 +935,13 @@ body[data-page="library"] {
   flex: 1 1 120px;
 }
 
-#management-cancel,
-#collection-cancel,
-#collection-delete {
+#management-cancel {
   border-color: var(--control-rule);
   background: var(--control);
   color: var(--secondary);
 }
 
-#management-cancel:hover:not(:disabled),
-#collection-cancel:hover:not(:disabled),
-#collection-delete:hover:not(:disabled) {
+#management-cancel:hover:not(:disabled) {
   border-color: var(--tertiary);
   background: var(--page);
   color: var(--ink);
@@ -953,6 +956,197 @@ body[data-page="library"] {
 .management-actions .destructive:hover:not(:disabled) {
   border-color: var(--danger-hover);
   background: var(--danger-hover);
+}
+
+#collection-dialog {
+  max-width: 560px;
+  padding: 0;
+}
+
+.collection-dialog-header {
+  padding: 24px 28px 20px;
+}
+
+#collection-heading {
+  margin-bottom: var(--library-space-3);
+  font: 500 28px/1.2 var(--display-font);
+}
+
+#collection-description,
+#collection-total,
+#collection-manager-empty,
+#collection-unsorted {
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+}
+
+#collection-description,
+#collection-unsorted {
+  margin: 0;
+}
+
+.collection-dialog-body {
+  padding: 0 28px var(--library-space-6);
+}
+
+#collection-total {
+  margin: 0 0 var(--library-space-2);
+  color: var(--tertiary);
+}
+
+#collection-manager-list {
+  max-height: 320px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.collection-manager-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--library-space-3);
+  padding: var(--library-space-2) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.collection-row-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--library-space-3);
+  min-width: 0;
+  width: 100%;
+  padding: var(--library-space-2) 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.collection-row-summary:hover:not(:disabled) {
+  background: var(--control);
+  color: var(--ink);
+}
+
+.collection-row-summary strong {
+  min-width: 0;
+  font-weight: 500;
+}
+
+.collection-manager-row :focus-visible {
+  outline-offset: -2px;
+}
+
+.collection-row-count {
+  flex: none;
+  color: var(--tertiary);
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.collection-row-actions {
+  display: flex;
+  gap: var(--library-space-1);
+}
+
+.collection-row-action,
+.collection-row-action:disabled {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height);
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--secondary);
+}
+
+.collection-row-action:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--control);
+  color: var(--ink);
+}
+
+.collection-row-action[data-collection-action="rename"] {
+  --icon: var(--icon-edit);
+}
+
+.collection-row-action[data-collection-action="delete"] {
+  --icon: var(--icon-delete);
+  color: var(--danger);
+}
+
+.collection-row-action[data-collection-action="delete"]:hover:not(:disabled) {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.collection-rename-form {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+#collection-dialog label {
+  display: block;
+  margin-bottom: var(--library-space-2);
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+}
+
+.collection-inline-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--library-space-2);
+}
+
+.collection-inline-controls input {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.collection-create-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: var(--library-space-2);
+  margin-top: 20px;
+}
+
+.collection-create-form label {
+  grid-column: 1 / -1;
+}
+
+.collection-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--library-space-3);
+  padding: var(--library-space-3) 28px;
+  border-top: 1px solid var(--rule);
+  background: var(--shelf);
+}
+
+.collection-quiet-button {
+  border-color: transparent;
+  background: transparent;
+  color: var(--secondary);
+}
+
+.collection-quiet-button:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--control);
+  color: var(--ink);
+}
+
+#collection-cancel,
+#collection-delete-cancel {
+  border-color: var(--control-rule);
 }
 
 @media (max-width: 860px) {
@@ -987,7 +1181,7 @@ body[data-page="library"] {
   }
 
   #bookmark-dialog,
-  #collection-dialog,
+  #collection-delete-dialog,
   #backup-dialog {
     padding: 20px;
   }
@@ -1064,5 +1258,30 @@ body[data-page="library"] {
 
   #bookmark-details {
     padding: var(--library-space-6) 20px var(--library-space-3);
+  }
+
+  .collection-dialog-header {
+    padding: 20px;
+  }
+
+  .collection-dialog-body {
+    padding: 0 20px 20px;
+  }
+
+  .collection-dialog-footer {
+    padding: var(--library-space-4) 20px;
+  }
+
+  .collection-manager-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--library-space-1);
+  }
+
+  .collection-row-actions {
+    justify-content: flex-end;
+  }
+
+  #collection-manager-list {
+    max-height: 240px;
   }
 }
