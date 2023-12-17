@@ -1,3 +1,4 @@
+import type { Bookmark } from "../bookmarks/model.js";
 import type { Collection } from "../bookmarks/collections.js";
 import {
   deleteCollection,
@@ -6,240 +7,418 @@ import {
   saveCollection,
   StorageQuotaError,
 } from "../bookmarks/storage.js";
-import { collectionOptions } from "../ui/collections.js";
 import { requireElement } from "../ui/dom.js";
+import { countCollectionBookmarks } from "./collection-counts.js";
+import { collectionRow } from "./collection-row.js";
 
 interface CollectionCallbacks {
+  getBookmarks: () => readonly Bookmark[] | undefined;
   getCollections: () => readonly Collection[] | undefined;
   refresh: () => Promise<void>;
   showFeedback: (message: string) => void;
   clearFeedback: () => void;
 }
 
-export function initializeCollections({ getCollections, refresh, showFeedback, clearFeedback }: CollectionCallbacks): {
-  update: () => void;
-} {
+export function initializeCollections({
+  getBookmarks,
+  getCollections,
+  refresh,
+  showFeedback,
+  clearFeedback,
+}: CollectionCallbacks): { update: () => void } {
   const open = requireElement<HTMLButtonElement>("#manage-collections");
   const dialog = requireElement<HTMLDialogElement>("#collection-dialog");
+  const list = requireElement<HTMLUListElement>("#collection-manager-list");
+  const total = requireElement<HTMLParagraphElement>("#collection-total");
+  const empty = requireElement<HTMLParagraphElement>("#collection-manager-empty");
+  const unsorted = requireElement<HTMLParagraphElement>("#collection-unsorted");
   const form = requireElement<HTMLFormElement>("#collection-form");
-  const edit = requireElement<HTMLElement>("#collection-edit");
-  const select = requireElement<HTMLSelectElement>("#collection-edit-id");
   const name = requireElement<HTMLInputElement>("#collection-name");
-  const confirm = requireElement<HTMLParagraphElement>("#collection-confirm");
   const error = requireElement<HTMLParagraphElement>("#collection-error");
   const status = requireElement<HTMLParagraphElement>("#collection-status");
-  const cancel = requireElement<HTMLButtonElement>("#collection-cancel");
-  const remove = requireElement<HTMLButtonElement>("#collection-delete");
-  const submit = requireElement<HTMLButtonElement>("#collection-submit");
+  const close = requireElement<HTMLButtonElement>("#collection-cancel");
+  const renameForm = requireElement<HTMLFormElement>("#collection-rename-form");
+  const renameName = requireElement<HTMLInputElement>("#collection-rename-name");
+  const renameError = requireElement<HTMLParagraphElement>("#collection-rename-error");
+  const renameSave = requireElement<HTMLButtonElement>("#collection-rename-save");
+  const renameCancel = requireElement<HTMLButtonElement>("#collection-rename-cancel");
+  const deleteDialog = requireElement<HTMLDialogElement>("#collection-delete-dialog");
+  const deleteHeading = requireElement<HTMLHeadingElement>("#collection-delete-heading");
+  const deleteForm = requireElement<HTMLFormElement>("#collection-delete-form");
+  const confirm = requireElement<HTMLParagraphElement>("#collection-confirm");
+  const deleteError = requireElement<HTMLParagraphElement>("#collection-delete-error");
+  const deleteStatus = requireElement<HTMLParagraphElement>("#collection-delete-status");
+  const deleteCancel = requireElement<HTMLButtonElement>("#collection-delete-cancel");
+  const deleteSubmit = requireElement<HTMLButtonElement>("#collection-delete-submit");
   const retry = requireElement<HTMLButtonElement>("#retry");
+  let editing: Collection | undefined;
+  let deleting: Collection | undefined;
+  let missingEdit = false;
+  let missingDelete = false;
   let busy = false;
-  let deleting = false;
-  let missing = false;
 
-  function selectedCollection(): Collection | undefined {
-    return getCollections()?.find(({ id }) => id === select.value);
-  }
-
-  function reset(): void {
-    deleting = false;
-    missing = false;
-    edit.hidden = false;
-    confirm.hidden = true;
-    error.hidden = true;
-    status.textContent = "";
-    name.value = selectedCollection()?.name ?? "";
-    name.removeAttribute("aria-invalid");
-    remove.hidden = !select.value;
-    submit.disabled = false;
-    submit.textContent = select.value ? "Save name" : "Create collection";
-    submit.classList.remove("destructive");
-    cancel.textContent = "Cancel";
-  }
-
-  function update(): void {
-    const collections = getCollections();
-    if (!collections) {
+  function focusRow(id: string | undefined, action: "rename" | "delete", options: FocusOptions = {}): void {
+    const buttons = list.querySelectorAll<HTMLButtonElement>("button[data-collection-action]");
+    for (let index = 0; index < buttons.length; index++) {
+      const button = buttons[index];
+      const row = button.closest<HTMLLIElement>("li[data-collection-id]");
+      if (
+        row?.dataset.collectionId !== id
+        || button.dataset.collectionAction !== action
+        || button.disabled
+        || button.closest("[hidden]")
+      ) {
+        continue;
+      }
+      button.focus(options);
       return;
     }
-
-    const selected = dialog.open ? select.value : "";
-    collectionOptions(select, collections, selected, "management");
-    
-    // Updating definitions never replaces an open name draft or deletion error
-    if (!dialog.open || busy) {
-      return;
-    }
-
-    missing = Boolean(selected) && !selectedCollection();
-    if (missing) {
-      showMissingCollection();
-      return;
-    }
-    submit.disabled = false;
-    remove.disabled = false;
-    cancel.textContent = "Cancel";
-    if (deleting) {
-      updateConfirmation();
-    }
-  }
-
-  function showMissingCollection(): void {
-    const actionFocused = document.activeElement === submit || document.activeElement === remove;
-    missing = true;
-    cancel.textContent = "Close";
-    submit.disabled = true;
-    remove.disabled = true;
-    error.textContent = deleting
-      ? "This collection was already removed. Close this dialog to continue."
-      : "This collection was removed. Choose another collection or New collection; the name draft is kept until the choice changes.";
-    error.hidden = false;
-    if (!busy && (deleting || actionFocused)) {
-      (deleting ? cancel : select).focus({ preventScroll: true });
-    }
-  }
-
-  function updateConfirmation(): void {
-    const label = selectedCollection()?.name ?? name.value;
-    confirm.textContent = `Delete “${label}”? The collection will be removed, but its bookmarks will stay saved and move to Unsorted.`;
+    name.focus(options);
   }
 
   function setBusy(next: boolean): void {
     busy = next;
     name.readOnly = next;
-    select.disabled = next;
-    cancel.disabled = next;
-    remove.disabled = next || missing;
-    submit.disabled = next || missing;
-    form.setAttribute("aria-busy", String(next));
+    renameName.readOnly = next;
+    dialog.querySelectorAll<HTMLButtonElement>("button").forEach((button) => {
+      button.disabled = next;
+    });
+    renameSave.disabled = next || missingEdit;
+    deleteSubmit.disabled = next || missingDelete;
+    deleteCancel.disabled = next;
+    deleteCancel.textContent = missingDelete ? "Close" : "Keep collection";
+    for (const target of [form, renameForm, deleteForm]) {
+      target.setAttribute("aria-busy", String(next));
+    }
+  }
+
+  function renderRows(collections: readonly Collection[], counts: ReadonlyMap<string | undefined, number>): void {
+    const active = document.activeElement;
+    const inEditor = active instanceof HTMLElement && renameForm.contains(active);
+    const row = active instanceof Element ? active.closest<HTMLLIElement>("li[data-collection-id]") : null;
+    const action = active instanceof HTMLButtonElement ? active.dataset.collectionAction : undefined;
+    const scrollTop = list.scrollTop;
+    const start = renameName.selectionStart;
+    const end = renameName.selectionEnd;
+    const direction = renameName.selectionDirection;
+    const sorted = collections.slice().sort((left, right) => left.name.localeCompare(right.name));
+    // Retain the editor and draft even if another tab removes its collection
+    if (editing && missingEdit) {
+      sorted.push(editing);
+    }
+    const rows = document.createDocumentFragment();
+    renameForm.hidden = !editing;
+    sorted.forEach((collection) => {
+      const isEditing = editing?.id === collection.id;
+      const item = collectionRow(collection, counts.get(collection.id) ?? 0, isEditing);
+      if (isEditing) {
+        item.appendChild(renameForm);
+      }
+      rows.appendChild(item);
+    });
+    list.replaceChildren(rows);
+    list.scrollTop = scrollTop;
+    if (inEditor && active.isConnected) {
+      active.focus({ preventScroll: true });
+      if (active === renameName && start !== null && end !== null) {
+        renameName.setSelectionRange(start, end, direction ?? "none");
+      }
+    } else if (row && (action === "rename" || action === "delete")) {
+      focusRow(row.dataset.collectionId, action, { preventScroll: true });
+    }
+  }
+
+  function showMissingRename(): void {
+    renameError.textContent = "This collection was removed. The name draft is kept. Cancel to continue.";
+    renameError.hidden = false;
+    if (document.activeElement === renameSave) {
+      renameCancel.focus();
+    }
+  }
+
+  function update(): void {
+    if (!dialog.open || busy) {
+      return;
+    }
+    renameForm.hidden = !editing;
+    const collections = getCollections();
+    const bookmarks = getBookmarks();
+    if (!collections || !bookmarks) {
+      return;
+    }
+    const wasMissingEdit = missingEdit;
+    const wasMissingDelete = missingDelete;
+    missingEdit = Boolean(editing && !collections.some(({ id }) => id === editing?.id));
+    missingDelete = Boolean(deleting && !collections.some(({ id }) => id === deleting?.id));
+    const counts = countCollectionBookmarks(bookmarks);
+    renderRows(collections, counts);
+    const unit = collections.length === 1 ? "collection" : "collections";
+    total.textContent = collections.length + " " + unit;
+    empty.hidden = collections.length > 0 || Boolean(editing);
+    const count = counts.get(undefined) ?? 0;
+    unsorted.textContent = count + (count === 1 ? " bookmark in Unsorted" : " bookmarks in Unsorted");
+    if (missingEdit && !wasMissingEdit) {
+      showMissingRename();
+    } else if (!missingEdit && wasMissingEdit) {
+      renameError.hidden = true;
+    }
+    if (deleting) {
+      const current = collections.find(({ id }) => id === deleting?.id) ?? deleting;
+      deleteHeading.textContent = "Delete “" + current.name + "”?";
+      const members = counts.get(deleting.id) ?? 0;
+      const memberUnit = members === 1 ? "bookmark" : "bookmarks";
+      confirm.textContent = members + " " + memberUnit + " will move to Unsorted. No bookmarks will be deleted.";
+      if (missingDelete && !wasMissingDelete) {
+        const previous = deleteError.hidden ? "" : deleteError.textContent + " ";
+        deleteError.textContent = previous + "This collection was removed. Close this confirmation to continue.";
+        deleteError.hidden = false;
+      } else if (!missingDelete && wasMissingDelete) {
+        deleteError.hidden = true;
+      }
+    }
+    setBusy(false);
   }
 
   open.addEventListener("click", () => {
-    if (!getCollections() || dialog.open || busy) {
+    if (!getCollections() || !getBookmarks() || dialog.open || busy) {
+      return;
+    }
+    editing = undefined;
+    missingEdit = false;
+    name.value = "";
+    name.removeAttribute("aria-invalid");
+    error.hidden = true;
+    status.textContent = "";
+    clearFeedback();
+    dialog.showModal();
+    update();
+    const first = list.querySelector<HTMLButtonElement>("button");
+    if (first) {
+      first.focus();
+    } else {
+      name.focus();
+    }
+  });
+
+  list.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element) || busy) {
+      return;
+    }
+    const button = event.target.closest<HTMLButtonElement>("button[data-collection-action]");
+    const row = button?.closest<HTMLLIElement>("li[data-collection-id]");
+    const collection = getCollections()?.find(({ id }) => id === row?.dataset.collectionId);
+    if (!button || !collection) {
+      return;
+    }
+    if (button.dataset.collectionAction === "rename") {
+      editing = collection;
+      missingEdit = false;
+      renameName.value = collection.name;
+      renameName.removeAttribute("aria-invalid");
+      renameError.hidden = true;
+      status.textContent = "";
+      update();
+      renameName.focus();
+      renameName.select();
+    } else if (button.dataset.collectionAction === "delete") {
+      deleting = collection;
+      missingDelete = false;
+      deleteError.hidden = true;
+      deleteStatus.textContent = "";
+      update();
+      deleteDialog.showModal();
+      deleteCancel.focus();
+    }
+  });
+
+  renameCancel.addEventListener("click", () => {
+    if (busy) {
+      return;
+    }
+    const id = editing?.id;
+    editing = undefined;
+    missingEdit = false;
+    if (!getCollections() || !getBookmarks()) {
+      dialog.close();
       return;
     }
     update();
-    reset();
-    setBusy(false);
-    clearFeedback();
-    dialog.showModal();
-    name.focus();
-  });
-
-  select.addEventListener("change", () => {
-    reset();
-    setBusy(false);
-    name.focus();
+    focusRow(id, "rename");
   });
 
   name.addEventListener("input", () => {
     name.removeAttribute("aria-invalid");
-    if (!busy && !missing) {
-      error.hidden = true;
-    }
-  });
-
-  remove.addEventListener("click", () => {
-    if (busy || missing || !select.value) {
-      return;
-    }
-
-    deleting = true;
-    edit.hidden = true;
-    remove.hidden = true;
     error.hidden = true;
-    updateConfirmation();
-    confirm.hidden = false;
-    submit.textContent = "Delete collection";
-    submit.classList.add("destructive");
-    cancel.focus();
   });
-  
-  cancel.addEventListener("click", () => {
+  renameName.addEventListener("input", () => {
+    renameName.removeAttribute("aria-invalid");
+    if (!missingEdit) {
+      renameError.hidden = true;
+    }
+  });
+  close.addEventListener("click", () => {
     if (!busy) {
       dialog.close();
     }
   });
-
-  dialog.addEventListener("cancel", (event) => {
-    if (busy) {
-      event.preventDefault();
+  deleteCancel.addEventListener("click", () => {
+    if (!busy) {
+      deleteDialog.close();
     }
   });
-
+  for (const target of [dialog, deleteDialog]) {
+    target.addEventListener("cancel", (event) => {
+      if (busy) {
+        event.preventDefault();
+      }
+    });
+  }
   dialog.addEventListener("close", () => {
     if (!dialog.open) {
       (open.disabled ? retry : open).focus({ preventScroll: true });
     }
   });
-
-  async function save(event: Event): Promise<void> {
-    event.preventDefault();
-    if (busy || missing) {
+  deleteDialog.addEventListener("close", () => {
+    if (deleteDialog.open) {
       return;
     }
+    const id = deleting?.id;
+    deleting = undefined;
+    missingDelete = false;
+    if (dialog.open) {
+      focusRow(id, "delete");
+    }
+  });
 
-    // Snapshot the target and draft before waiting; live reads may change options
-    const id = select.value;
-    const draft = name.value;
+  async function saveName(input: HTMLInputElement, target?: Collection): Promise<void> {
+    if (busy || deleteDialog.open || (target && missingEdit)) {
+      return;
+    }
+    // Snapshot identity and draft before storage or live refreshes can run.
+    const id = target?.id;
+    const draft = input.value;
+    const fieldError = target ? renameError : error;
+    let saved: Collection | undefined;
     setBusy(true);
-    error.hidden = true;
-    status.textContent = deleting ? "Deleting collection…" : "Saving collection…";
+    fieldError.hidden = true;
+    status.textContent = "Saving collection…";
     try {
-      let message: string;
-      if (deleting) {
-        const result = await deleteCollection(id);
-        const count = `${result.moved} ${result.moved === 1 ? "bookmark moved" : "bookmarks moved"}`;
-        if (result.status === "failed") {
-          await refresh();
-          let recovery = "Try again to finish deleting. The collection is kept until all moves succeed.";
-    
-          if (result.error instanceof StorageQuotaError) {
-            recovery = "Storage is full. Free some space, then retry to finish deleting.";
-          } else if (result.error instanceof InvalidStoredBookmarkError) {
-            recovery = "Some saved data is invalid. The collection has not been removed.";
-          }
-          error.textContent = `Couldn't finish deleting. ${count} to Unsorted in this attempt. ${recovery}`;
-          error.hidden = false;
-          return;
-        }
-        message = result.status === "not-found"
-          ? "Collection was already removed. The library has been refreshed."
-          : `Collection deleted. ${count} to Unsorted.`;
-      } else {
-        await saveCollection(draft, id || undefined);
-        message = "Collection saved.";
-      }
+      const result = await saveCollection(draft, id);
       await refresh();
-      showFeedback(message);
-      dialog.close();
+      saved = result;
+      if (target) {
+        editing = undefined;
+        missingEdit = false;
+      } else {
+        name.value = "";
+      }
+      status.textContent = "Collection “" + saved.name + "” saved.";
+      showFeedback(status.textContent);
+      if (!getCollections() || !getBookmarks()) {
+        dialog.close();
+      }
     } catch (cause) {
       await refresh();
       if (cause instanceof MissingCollectionError) {
-        showMissingCollection();
+        missingEdit = true;
+        showMissingRename();
       } else if (cause instanceof InvalidStoredBookmarkError) {
-        error.textContent = "Some saved data is invalid. No collection change was confirmed.";
+        fieldError.textContent = "Some saved data is invalid. No collection change was confirmed.";
       } else if (cause instanceof StorageQuotaError) {
-        error.textContent = "Storage is full. Free some space, then retry. Drafts are kept.";
-      } else if (deleting) {
-        error.textContent = "Couldn't finish deleting. The library has been refreshed; retry to finish.";
+        fieldError.textContent = "Storage is full. Free some space, then retry. Drafts are kept.";
       } else if (cause instanceof TypeError) {
-        error.textContent = cause.message;
-        name.setAttribute("aria-invalid", "true");
+        fieldError.textContent = cause.message;
+        input.setAttribute("aria-invalid", "true");
       } else {
-        error.textContent = "Couldn't save the collection. The name draft is kept; try again.";
+        fieldError.textContent = "Couldn't save the collection. The name draft is kept. Try again.";
       }
-      error.hidden = false;
+      fieldError.hidden = false;
     } finally {
       setBusy(false);
-      status.textContent = "";
-      if (dialog.open) {
-        (deleting || missing ? cancel : name).focus({ preventScroll: true });
+      update();
+      if (!saved) {
+        status.textContent = "";
+      }
+      if (dialog.open && !deleteDialog.open) {
+        if (saved && target) {
+          focusRow(saved.id, "rename");
+        } else if (missingEdit && target) {
+          renameCancel.focus({ preventScroll: true });
+        } else {
+          input.focus({ preventScroll: true });
+        }
+      }
+    }
+  }
+
+  async function removeCollection(): Promise<void> {
+    if (busy || missingDelete || !deleting) {
+      return;
+    }
+    const id = deleting.id;
+    setBusy(true);
+    deleteError.hidden = true;
+    deleteStatus.textContent = "Deleting collection…";
+    try {
+      const result = await deleteCollection(id);
+      await refresh();
+      const count = result.moved + (result.moved === 1 ? " bookmark moved" : " bookmarks moved");
+      if (result.status === "failed") {
+        let recovery = "Try again to finish deleting. The collection is kept until all moves succeed.";
+        if (result.error instanceof StorageQuotaError) {
+          recovery = "Storage is full. Free some space, then retry to finish deleting.";
+        } else if (result.error instanceof InvalidStoredBookmarkError) {
+          recovery = "Some saved data is invalid. The collection has not been removed.";
+        }
+        deleteError.textContent = "Couldn't finish deleting. " + count + " to Unsorted in this attempt. " + recovery;
+        deleteError.hidden = false;
+        return;
+      }
+      if (editing?.id === id) {
+        editing = undefined;
+        missingEdit = false;
+      }
+      status.textContent = result.status === "not-found"
+        ? "Collection was already removed. The library has been refreshed."
+        : "Collection deleted. " + count + " to Unsorted.";
+      showFeedback(status.textContent);
+      deleteDialog.close();
+      if (!getCollections() || !getBookmarks()) {
+        dialog.close();
+      }
+    } catch (cause) {
+      await refresh();
+      if (cause instanceof InvalidStoredBookmarkError) {
+        deleteError.textContent = "Some saved data is invalid. No collection change was confirmed.";
+      } else if (cause instanceof StorageQuotaError) {
+        deleteError.textContent = "Storage is full. Free some space, then retry to finish deleting.";
+      } else {
+        deleteError.textContent = "Couldn't finish deleting. The library has been refreshed. Retry to finish.";
+      }
+      deleteError.hidden = false;
+    } finally {
+      setBusy(false);
+      update();
+      deleteStatus.textContent = "";
+      if (deleteDialog.open) {
+        deleteCancel.focus({ preventScroll: true });
       }
     }
   }
 
   form.addEventListener("submit", (event) => {
-    void save(event);
+    event.preventDefault();
+    void saveName(name);
+  });
+  renameForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (editing) {
+      void saveName(renameName, editing);
+    }
+  });
+  deleteForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    void removeCollection();
   });
   return { update };
 }

@@ -624,6 +624,7 @@ function clearManagementFeedback(): void {
 }
 
 const collectionManagement = initializeCollections({
+  getBookmarks: () => library,
   getCollections: () => library ? collections : undefined,
   refresh: refreshBookmarks,
   showFeedback: showManagementFeedback,

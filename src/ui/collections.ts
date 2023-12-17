@@ -1,7 +1,5 @@
 import type { Collection } from "../bookmarks/collections.js";
 
-type CollectionSelectMode = "assignment" | "management";
-
 function collectionGroup(collections: readonly Collection[]): HTMLOptGroupElement | undefined {
   if (collections.length === 0) {
     return undefined;
@@ -20,11 +18,9 @@ export function collectionOptions(
   select: HTMLSelectElement,
   collections: readonly Collection[],
   selected = "",
-  mode: CollectionSelectMode = "assignment",
 ): void {
   const options = document.createDocumentFragment();
-  const defaultLabel = mode === "management" ? "New collection" : "Unsorted";
-  options.appendChild(new Option(defaultLabel, ""));
+  options.appendChild(new Option("Unsorted", ""));
 
   const group = collectionGroup(collections);
   if (group) {
