@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 32" width="32" height="32">
+  <symbol id="brand-mark" viewBox="0 0 28 32">
+    <path d="M5 2h18v28l-9-5-9 5V2Zm9 5-5 12h3l1-3h3l1 3h3L15 7h-1Zm0 5 1 2h-2l1-2Z" fill-rule="evenodd" />
+  </symbol>
+  <use href="#brand-mark" fill="#315d3e" />
+</svg>
