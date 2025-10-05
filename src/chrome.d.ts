@@ -21,25 +21,20 @@ declare namespace chrome {
       url?: string;
     }
 
+    function query(queryInfo: { active?: boolean; currentWindow?: boolean }): Promise<Tab[]>;
+
     function query(
       queryInfo: { active?: boolean; currentWindow?: boolean },
       callback: (tabs: Tab[]) => void
     ): void;
 
-    function create(
-      createProperties: { url: string },
-      callback?: (tab: Tab) => void
-    ): void;
+    function create(createProperties: { url: string }): Promise<Tab>;
 
-    function update(
-      tabId: number,
-      updateProperties: { active: boolean },
-      callback: (tab?: Tab) => void
-    ): void;
+    function update(tabId: number, updateProperties: { active: boolean }): Promise<Tab | undefined>;
   }
 
   namespace windows {
-    function update(windowId: number, updateInfo: { focused: boolean }, callback: () => void): void;
+    function update(windowId: number, updateInfo: { focused: boolean }): Promise<unknown>;
   }
 
   namespace storage {

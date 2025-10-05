@@ -371,8 +371,7 @@ body[data-page="library"] {
 }
 
 .library-field label,
-#management-edit label,
-#collection-edit label {
+#management-edit label {
   display: block;
   margin-bottom: var(--library-space-1);
   color: var(--secondary);
