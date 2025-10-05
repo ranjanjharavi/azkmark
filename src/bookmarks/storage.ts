@@ -71,51 +71,27 @@ export class StorageQuotaError extends Error {
   }
 }
 
-function storageError(message?: string): Error {
-  const description = message || "Chrome storage operation failed.";
-  return /quota/i.test(description) ? new StorageQuotaError(description) : new Error(description);
+function rethrowStorageError(cause: unknown): never {
+  if (!(cause instanceof Error) || !cause.message) {
+    throw new Error("Chrome storage operation failed.");
+  }
+
+  if (/quota/i.test(cause.message)) {
+    throw new StorageQuotaError(cause.message);
+  }
+  throw cause;
 }
 
 function readStorage(keys: string | null): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(keys, (items) => {
-      const error = chrome.runtime.lastError;
-      if (error) {
-        reject(storageError(error.message));
-        return;
-      }
-
-      resolve(items);
-    });
-  });
+  return chrome.storage.local.get(keys).catch(rethrowStorageError);
 }
 
 function writeStorage(items: Record<string, unknown>): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set(items, () => {
-      const error = chrome.runtime.lastError;
-      if (error) {
-        reject(storageError(error.message));
-        return;
-      }
-
-      resolve();
-    });
-  });
+  return chrome.storage.local.set(items).catch(rethrowStorageError);
 }
 
 function removeStorage(key: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.remove(key, () => {
-      const error = chrome.runtime.lastError;
-      if (error) {
-        reject(storageError(error.message));
-        return;
-      }
-
-      resolve();
-    });
-  });
+  return chrome.storage.local.remove(key).catch(rethrowStorageError);
 }
 
 function bookmarkKey(url: string): string {
