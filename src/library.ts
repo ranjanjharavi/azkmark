@@ -27,6 +27,7 @@ import { initializeImport } from "./library/import.js";
 import { initializeManagement } from "./library/management.js";
 import { createRefreshScheduler } from "./library/refresh.js";
 import { initializeSavedDateRefresh } from "./library/saved-date-refresh.js";
+import { initializeSortPreference } from "./library/sort-preference.js";
 import { reconcileSelection } from "./library/selection.js";
 import type { ManagementAction, ManagementMode } from "./library/management.js";
 
@@ -825,17 +826,12 @@ retryButtonElement.addEventListener("click", () => {
   void refreshBookmarks();
 });
 
-window.azkmarkLibraryPreference<BookmarkSort>({
-  key: "azkmark.library.sort",
-  fallback: "newest",
-  values: ["oldest", "title-asc", "title-desc"],
-  apply: (next) => {
-    if (sortOrder !== next) {
-      sortOrder = next;
-      render();
-    }
-  },
-})([sortSelectElement]);
+initializeSortPreference(sortSelectElement, (next) => {
+  if (sortOrder !== next) {
+    sortOrder = next;
+    render();
+  }
+});
 
 function setFiltersOpen(open: boolean): void {
   if (!open && filtersElement.contains(document.activeElement)) {
