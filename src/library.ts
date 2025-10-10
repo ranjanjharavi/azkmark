@@ -29,7 +29,9 @@ import { createRefreshScheduler } from "./library/refresh.js";
 import { initializeSavedDateRefresh } from "./library/saved-date-refresh.js";
 import { initializeSortPreference } from "./library/sort-preference.js";
 import { reconcileSelection } from "./library/selection.js";
-import type { ManagementAction, ManagementMode } from "./library/management.js";
+import { focusBookmarkRow, focusDetailAction } from "./library/focus.js";
+import type { FocusSnapshot } from "./library/focus.js";
+import type { ManagementAction } from "./library/management.js";
 
 const backupHelpButtonElement = requireElement<HTMLButtonElement>("#open-backup-help");
 const backupDialogElement = requireElement<HTMLDialogElement>("#backup-dialog");
@@ -66,30 +68,6 @@ const workspaceElement = requireElement<HTMLDivElement>("#bookmark-workspace");
 const bookmarksListElement = requireElement<HTMLUListElement>("#bookmarks");
 const bookmarkDetailsElement = requireElement<HTMLElement>("#bookmark-details");
 const selectionFeedbackElement = requireElement<HTMLParagraphElement>("#selection-feedback");
-
-type FocusTarget =
-  | "list"
-  | "details"
-  | "search"
-  | "domain"
-  | "collection"
-  | "manage-collections"
-  | "saved-date"
-  | "view-status"
-  | "tag"
-  | "sort"
-  | "filters"
-  | "reset"
-  | "retry"
-  | "other";
-type BookmarkAction = ManagementMode | "viewed";
-
-interface FocusSnapshot {
-  target: FocusTarget;
-  collectionScope?: string;
-  bookmarkUrl?: string;
-  bookmarkAction?: BookmarkAction;
-}
 
 let library: Bookmark[] | undefined;
 let collections: Collection[] = [];
@@ -169,49 +147,8 @@ function focusHeading(): void {
   libraryHeadingElement.focus({ preventScroll: true });
 }
 
-function focusBookmarkRow(url: string | undefined): boolean {
-  const buttons = bookmarksListElement.querySelectorAll<HTMLButtonElement>(".bookmark-select");
-  for (let index = 0; index < buttons.length; index++) {
-    const button = buttons[index];
-    if (button.getAttribute("data-bookmark-url") === url) {
-      button.focus({ preventScroll: true });
-      const listBounds = bookmarksListElement.getBoundingClientRect();
-      const rowBounds = button.getBoundingClientRect();
-      const listHeight = bookmarksListElement.clientHeight;
-      const visibleTop = listBounds.top + bookmarksListElement.clientTop;
-      const visibleBottom = visibleTop + listHeight;
-      if (rowBounds.top <= visibleTop && rowBounds.bottom >= visibleBottom) {
-        return true;
-      }
-      if (rowBounds.top < visibleTop || rowBounds.height > listHeight) {
-        bookmarksListElement.scrollTop += rowBounds.top - visibleTop;
-      } else if (rowBounds.bottom > visibleBottom) {
-        bookmarksListElement.scrollTop += rowBounds.bottom - visibleBottom;
-      }
-      return true;
-    }
-  }
-  return false;
-}
-
-function focusDetailAction(url: string | undefined, action: BookmarkAction | undefined): boolean {
-  const buttons = bookmarkDetailsElement.querySelectorAll<HTMLButtonElement>(".bookmark-action");
-  for (let index = 0; index < buttons.length; index++) {
-    const button = buttons[index];
-    if (
-      button.getAttribute("data-bookmark-url") === url
-      && button.getAttribute("data-action") === action
-      && !button.disabled
-    ) {
-      button.focus({ preventScroll: true });
-      return true;
-    }
-  }
-  return false;
-}
-
 function focusSelectedBookmark(): void {
-  if (focusBookmarkRow(selectedUrl)) {
+  if (focusBookmarkRow(bookmarksListElement, selectedUrl)) {
     return;
   }
   if (library?.length) {
@@ -248,11 +185,11 @@ function restoreFocus(focus: FocusSnapshot): void {
     manageCollectionsButton.focus({ preventScroll: true });
     return;
   }
-  if (focus.target === "list" && focusBookmarkRow(focus.bookmarkUrl)) {
+  if (focus.target === "list" && focusBookmarkRow(bookmarksListElement, focus.bookmarkUrl)) {
     return;
   }
   if (focus.target === "details" && focus.bookmarkUrl === selectedUrl) {
-    if (focusDetailAction(focus.bookmarkUrl, focus.bookmarkAction)) {
+    if (focusDetailAction(bookmarkDetailsElement, focus.bookmarkUrl, focus.bookmarkAction)) {
       return;
     }
     if (!focus.bookmarkAction) {
@@ -310,7 +247,7 @@ function restoreManagementFocus(action: ManagementAction): void {
     return;
   }
 
-  if (focusDetailAction(action.url, action.mode)) {
+  if (focusDetailAction(bookmarkDetailsElement, action.url, action.mode)) {
     return;
   }
   focusSelectedBookmark();
