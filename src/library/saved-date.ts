@@ -10,20 +10,29 @@ function calendarDay(date: Date): number {
   return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MILLISECONDS_PER_DAY;
 }
 
-export function formatSavedDate(savedAt: number, now = Date.now()): SavedDate {
-  const saved = new Date(savedAt);
-  if (Number.isNaN(saved.getTime())) {
-    const fallback = `Timestamp ${savedAt}`;
-    return { full: fallback, age: fallback };
-  }
-
-  const full = saved.toLocaleString(undefined, {
+export function createSavedDateFormatter(): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat(undefined, {
     year: "numeric",
     month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+export function formatSavedDate(
+  savedAt: number,
+  now = Date.now(),
+  formatter?: Intl.DateTimeFormat,
+): SavedDate {
+  const saved = new Date(savedAt);
+  if (Number.isNaN(saved.getTime())) {
+    const fallback = `Timestamp ${savedAt}`;
+    return { full: fallback, age: fallback };
+  }
+
+  const fullFormatter = formatter ?? createSavedDateFormatter();
+  const full = fullFormatter.format(saved);
   const days = calendarDay(new Date(now)) - calendarDay(saved);
   let age = full;
   

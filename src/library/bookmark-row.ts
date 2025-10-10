@@ -2,7 +2,12 @@ import type { Bookmark } from "../bookmarks/model.js";
 import { bookmarkDomain } from "../bookmarks/domains.js";
 import { formatSavedDate } from "./saved-date.js";
 
-export function bookmarkRow(bookmark: Bookmark, selected: boolean, now: number): HTMLLIElement {
+export function bookmarkRow(
+  bookmark: Bookmark,
+  selected: boolean,
+  now: number,
+  dateFormatter: Intl.DateTimeFormat,
+): HTMLLIElement {
   const row = document.createElement("li");
   row.className = "bookmark-row";
 
@@ -25,7 +30,7 @@ export function bookmarkRow(bookmark: Bookmark, selected: boolean, now: number):
   status.className = "bookmark-row-status";
   status.textContent = bookmark.viewed ? "Viewed" : "To view";
 
-  const savedDate = formatSavedDate(bookmark.savedAt, now);
+  const savedDate = formatSavedDate(bookmark.savedAt, now, dateFormatter);
   const age = document.createElement(savedDate.dateTime ? "time" : "span");
   age.className = "bookmark-row-age";
   age.textContent = savedDate.age;

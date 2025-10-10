@@ -27,6 +27,7 @@ import { initializeImport } from "./library/import.js";
 import { initializeManagement } from "./library/management.js";
 import { createRefreshScheduler } from "./library/refresh.js";
 import { initializeSavedDateRefresh } from "./library/saved-date-refresh.js";
+import { createSavedDateFormatter } from "./library/saved-date.js";
 import { initializeSortPreference } from "./library/sort-preference.js";
 import { reconcileSelection } from "./library/selection.js";
 import { focusBookmarkRow, focusDetailAction } from "./library/focus.js";
@@ -389,9 +390,13 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   const selectedBookmark = reconcileSelection(matches, library, selectedUrl, previousUrls);
   selectedUrl = selectedBookmark?.url;
   const rows = document.createDocumentFragment();
-  matches.forEach((bookmark) => {
-    rows.appendChild(bookmarkRow(bookmark, bookmark.url === selectedUrl, now));
-  });
+  if (matches.length > 0) {
+    const dateFormatter = createSavedDateFormatter();
+    matches.forEach((bookmark) => {
+      const row = bookmarkRow(bookmark, bookmark.url === selectedUrl, now, dateFormatter);
+      rows.appendChild(row);
+    });
+  }
   bookmarkPreviews.clear();
   bookmarksListElement.replaceChildren(rows);
   bookmarkDetailsElement.replaceChildren();
