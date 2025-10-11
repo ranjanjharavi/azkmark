@@ -78,6 +78,7 @@ let viewStatusSelection: ViewStatusSelection = "all";
 let tagSelection = "";
 let sortOrder: BookmarkSort = "newest";
 let selectedUrl: string | undefined;
+let renderedDetailsKey: string | undefined;
 const pendingViewed = new Set<string>();
 let revision = 0;
 let hasLoaded = false;
@@ -364,6 +365,28 @@ function updateFilterControls(savedDate: SavedDateSelection): number {
   return active;
 }
 
+function renderBookmarkDetails(
+  bookmark: Bookmark | undefined,
+  dateFormat: Intl.ResolvedDateTimeFormatOptions | undefined,
+): void {
+  const savingViewStatus = bookmark !== undefined && pendingViewed.has(bookmark.url);
+  const key = JSON.stringify([bookmark?.url, savingViewStatus, dateFormat]);
+  if (bookmark && key === renderedDetailsKey) {
+    return;
+  }
+
+  bookmarkPreviews.clear();
+  bookmarkDetailsElement.replaceChildren();
+  renderedDetailsKey = undefined;
+  if (!bookmark) {
+    return;
+  }
+
+  const details = bookmarkDetails(bookmark, collections, savingViewStatus);
+  bookmarkDetailsElement.appendChild(details);
+  renderedDetailsKey = key;
+}
+
 function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.now()): void {
   if (!library) {
     return;
@@ -390,21 +413,17 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
   const selectedBookmark = reconcileSelection(matches, library, selectedUrl, previousUrls);
   selectedUrl = selectedBookmark?.url;
   const rows = document.createDocumentFragment();
+  let dateFormat: Intl.ResolvedDateTimeFormatOptions | undefined;
   if (matches.length > 0) {
     const dateFormatter = createSavedDateFormatter();
+    dateFormat = dateFormatter.resolvedOptions();
     matches.forEach((bookmark) => {
       const row = bookmarkRow(bookmark, bookmark.url === selectedUrl, now, dateFormatter);
       rows.appendChild(row);
     });
   }
-  bookmarkPreviews.clear();
   bookmarksListElement.replaceChildren(rows);
-  bookmarkDetailsElement.replaceChildren();
-  if (selectedBookmark) {
-    const savingViewStatus = pendingViewed.has(selectedBookmark.url);
-    const details = bookmarkDetails(selectedBookmark, collections, savingViewStatus);
-    bookmarkDetailsElement.appendChild(details);
-  }
+  renderBookmarkDetails(selectedBookmark, dateFormat);
   selectionFeedbackElement.textContent = "";
 
   const isEmpty = library.length === 0;
@@ -476,6 +495,8 @@ async function readAndRenderBookmarks(): Promise<void> {
     const focus = captureFocus();
     library = data.bookmarks;
     collections = data.collections;
+    // A fresh snapshot may change any detail field or its collection name.
+    renderedDetailsKey = undefined;
     const notices = [updateDomainOptions(library), updateCollectionNavigation(library)].filter(Boolean);
     updateTagOptions(library);
     management.updateTarget();
@@ -499,6 +520,7 @@ async function readAndRenderBookmarks(): Promise<void> {
     console.error("Could not read saved bookmarks.", error);
     library = undefined;
     selectedUrl = undefined;
+    renderedDetailsKey = undefined;
     libraryTotalElement.hidden = true;
     bookmarkPreviews.clear();
     savedDateRefresh.update(false);
@@ -639,6 +661,9 @@ async function setBookmarkViewed(button: HTMLButtonElement, url: string): Promis
         && (activeElement.getAttribute("data-action") === "viewed"
           || activeElement.classList.contains("bookmark-select")))
     );
+    // Failed writes may keep this node instead of rebuilding its actions
+    button.disabled = false;
+    button.setAttribute("aria-busy", "false");
     render("", recoverActionFocus ? focus : captureFocus());
     if (recoverActionFocus && !library) {
       retryButtonElement.focus({ preventScroll: true });
