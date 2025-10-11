@@ -1,6 +1,6 @@
 import { createBookmark, isBookmark } from "./model.js";
 import type { Bookmark } from "./model.js";
-import { mergeBookmarks, snapshotLibrary } from "./backup.js";
+import { deduplicateBookmarks, snapshotLibrary } from "./backup.js";
 import type { LibraryData } from "./backup.js";
 import {
   collectionNameKey,
@@ -327,7 +327,7 @@ export async function importBookmarkRecords(
   // Validate and snapshot the complete file before any storage access, including
   // references on duplicate records that will lose and empty collections
   const snapshot = snapshotLibrary(bookmarks, collections);
-  const incoming = mergeBookmarks([], snapshot.bookmarks);
+  const incoming = deduplicateBookmarks(snapshot.bookmarks);
   let added = 0;
   let skipped = incoming.skipped;
   let collectionsAdded = 0;

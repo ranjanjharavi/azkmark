@@ -140,41 +140,24 @@ export function parseBackup(json: string): LibraryData {
   return snapshotLibrary(bookmarks, collections);
 }
 
-export interface BookmarkMergeResult {
+interface BookmarkDeduplicationResult {
   bookmarks: Bookmark[];
-  added: number;
   skipped: number;
 }
 
-export function mergeBookmarks(
-  existing: readonly Bookmark[],
-  incoming: readonly Bookmark[],
-): BookmarkMergeResult {
-  const savedBookmarks = snapshotBookmarks(existing);
-  const incomingBookmarks = snapshotBookmarks(incoming);
-  const merged = new Map<string, Bookmark>();
+export function deduplicateBookmarks(incoming: readonly Bookmark[]): BookmarkDeduplicationResult {
+  const records = snapshotBookmarks(incoming);
+  const byUrl = new Map<string, Bookmark>();
 
-  for (let index = 0; index < savedBookmarks.length; index++) {
-    const bookmark = savedBookmarks[index];
-    if (merged.has(bookmark.url)) {
-      throw new TypeError("Duplicate existing bookmark URL.");
-    }
-    merged.set(bookmark.url, bookmark);
-  }
-
-  let added = 0;
-  for (let index = 0; index < incomingBookmarks.length; index++) {
-    const bookmark = incomingBookmarks[index];
-    if (merged.has(bookmark.url)) {
+  for (const bookmark of records) {
+    if (byUrl.has(bookmark.url)) {
       continue;
     }
-    merged.set(bookmark.url, bookmark);
-    added++;
+    byUrl.set(bookmark.url, bookmark);
   }
 
   return {
-    bookmarks: Array.from(merged.values()),
-    added,
-    skipped: incomingBookmarks.length - added,
+    bookmarks: Array.from(byUrl.values()),
+    skipped: records.length - byUrl.size,
   };
 }
