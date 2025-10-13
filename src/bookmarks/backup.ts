@@ -1,5 +1,5 @@
-import { createBookmark, isBookmark } from "./model.js";
-import type { Bookmark } from "./model.js";
+import { snapshotBookmarks, snapshotLibrary } from "./model.js";
+import type { Bookmark, LibraryData } from "./model.js";
 import { snapshotCollections } from "./collections.js";
 import type { Collection } from "./collections.js";
 
@@ -8,33 +8,10 @@ const BACKUP_VERSION = 3;
 
 type BackupVersion = 1 | 2 | 3;
 
-export interface LibraryData {
-  bookmarks: Bookmark[];
-  collections: Collection[];
-}
-
 interface BackupEnvelope {
   version: BackupVersion;
   bookmarks: unknown;
   collections?: unknown;
-}
-
-function snapshotBookmarks(value: unknown): Bookmark[] {
-  if (!Array.isArray(value)) {
-    throw new TypeError("Invalid bookmark collection.");
-  }
-
-  const records: Bookmark[] = [];
-  for (let index = 0; index < value.length; index++) {
-    const bookmark: unknown = value[index];
-    if (!isBookmark(bookmark)) {
-      throw new TypeError("Invalid bookmark collection.");
-    }
-
-    records.push(createBookmark(bookmark, bookmark.savedAt));
-  }
-
-  return records;
 }
 
 function snapshotBackupBookmarks(value: unknown, version: BackupVersion): Bookmark[] {
@@ -49,21 +26,6 @@ function snapshotBackupBookmarks(value: unknown, version: BackupVersion): Bookma
   }
   
   return bookmarks;
-}
-
-export function snapshotLibrary(
-  bookmarks: readonly Bookmark[],
-  collections: readonly Collection[],
-): LibraryData {
-  const records = snapshotBookmarks(bookmarks);
-  const definitions = snapshotCollections(collections);
-  const ids = new Set(definitions.map((collection) => collection.id));
-  
-  if (records.some((bookmark) => bookmark.collectionId !== undefined && !ids.has(bookmark.collectionId))) {
-    throw new TypeError("Unknown bookmark collection.");
-  }
-  
-  return { bookmarks: records, collections: definitions };
 }
 
 export function serializeBackup(
@@ -138,26 +100,4 @@ export function parseBackup(json: string): LibraryData {
     ? snapshotCollections(envelope.collections)
     : [];
   return snapshotLibrary(bookmarks, collections);
-}
-
-interface BookmarkDeduplicationResult {
-  bookmarks: Bookmark[];
-  skipped: number;
-}
-
-export function deduplicateBookmarks(incoming: readonly Bookmark[]): BookmarkDeduplicationResult {
-  const records = snapshotBookmarks(incoming);
-  const byUrl = new Map<string, Bookmark>();
-
-  for (const bookmark of records) {
-    if (byUrl.has(bookmark.url)) {
-      continue;
-    }
-    byUrl.set(bookmark.url, bookmark);
-  }
-
-  return {
-    bookmarks: Array.from(byUrl.values()),
-    skipped: records.length - byUrl.size,
-  };
 }

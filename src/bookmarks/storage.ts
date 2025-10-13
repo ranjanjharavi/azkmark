@@ -1,7 +1,10 @@
-import { createBookmark, isBookmark } from "./model.js";
-import type { Bookmark } from "./model.js";
-import { deduplicateBookmarks, snapshotLibrary } from "./backup.js";
-import type { LibraryData } from "./backup.js";
+import {
+  createBookmark,
+  deduplicateBookmarks,
+  isBookmark,
+  snapshotLibrary,
+} from "./model.js";
+import type { Bookmark, LibraryData } from "./model.js";
 import {
   collectionNameKey,
   isCollectionId,

@@ -1,5 +1,5 @@
 import { parseBackup, UnsupportedBackupVersionError } from "../bookmarks/backup.js";
-import type { LibraryData } from "../bookmarks/backup.js";
+import type { LibraryData } from "../bookmarks/model.js";
 import { parseChromeBookmarks } from "../bookmarks/chrome-bookmarks.js";
 import type { ImportBookmarksResult } from "../bookmarks/storage.js";
 import {

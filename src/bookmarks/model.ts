@@ -1,5 +1,6 @@
 import { parseWebUrl } from "../urls.js";
-import { isCollectionId } from "./collections.js";
+import { isCollectionId, snapshotCollections } from "./collections.js";
+import type { Collection } from "./collections.js";
 import { isTags, snapshotTags } from "./tags.js";
 
 export interface Bookmark {
@@ -10,6 +11,11 @@ export interface Bookmark {
   viewed?: boolean;
   collectionId?: string;
   tags?: string[];
+}
+
+export interface LibraryData {
+  bookmarks: Bookmark[];
+  collections: Collection[];
 }
 
 export type BookmarkDetails = Pick<Bookmark, "url" | "title"> & {
@@ -103,4 +109,60 @@ export function createBookmark(details: BookmarkDetails, savedAt = Date.now()): 
   }
 
   return record;
+}
+
+export function snapshotBookmarks(value: unknown): Bookmark[] {
+  if (!Array.isArray(value)) {
+    throw new TypeError("Invalid bookmark collection.");
+  }
+
+  const records: Bookmark[] = [];
+  for (let index = 0; index < value.length; index++) {
+    const bookmark: unknown = value[index];
+    if (!isBookmark(bookmark)) {
+      throw new TypeError("Invalid bookmark collection.");
+    }
+
+    records.push(createBookmark(bookmark, bookmark.savedAt));
+  }
+
+  return records;
+}
+
+export function snapshotLibrary(
+  bookmarks: readonly Bookmark[],
+  collections: readonly Collection[],
+): LibraryData {
+  const records = snapshotBookmarks(bookmarks);
+  const definitions = snapshotCollections(collections);
+  const ids = new Set(definitions.map((collection) => collection.id));
+
+  if (records.some((bookmark) => bookmark.collectionId !== undefined && !ids.has(bookmark.collectionId))) {
+    throw new TypeError("Unknown bookmark collection.");
+  }
+
+  return { bookmarks: records, collections: definitions };
+}
+
+interface BookmarkDeduplicationResult {
+  bookmarks: Bookmark[];
+  skipped: number;
+}
+
+export function deduplicateBookmarks(incoming: readonly Bookmark[]): BookmarkDeduplicationResult {
+  const records = snapshotBookmarks(incoming);
+  const byUrl = new Map<string, Bookmark>();
+
+  for (const bookmark of records) {
+    if (byUrl.has(bookmark.url)) {
+      continue;
+    }
+    
+    byUrl.set(bookmark.url, bookmark);
+  }
+
+  return {
+    bookmarks: Array.from(byUrl.values()),
+    skipped: records.length - byUrl.size,
+  };
 }
