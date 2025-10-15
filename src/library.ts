@@ -80,7 +80,6 @@ let sortOrder: BookmarkSort = "newest";
 let selectedUrl: string | undefined;
 let renderedDetailsKey: string | undefined;
 const pendingViewed = new Set<string>();
-let revision = 0;
 let hasLoaded = false;
 
 function captureFocus(): FocusSnapshot {
@@ -482,16 +481,11 @@ function render(notice = "", focus: FocusSnapshot = captureFocus(), now = Date.n
 }
 
 async function readAndRenderBookmarks(): Promise<void> {
-  const currentRevision = ++revision;
   bookmarksListElement.setAttribute("aria-busy", "true");
   libraryStatusElement.textContent = hasLoaded ? "Updating bookmarks…" : "Loading your bookmarks…";
 
   try {
     const data = await readLibrary();
-    if (currentRevision !== revision) {
-      return;
-    }
-
     const focus = captureFocus();
     library = data.bookmarks;
     collections = data.collections;
@@ -512,10 +506,6 @@ async function readAndRenderBookmarks(): Promise<void> {
     hasLoaded = true;
     render(notices.join(" "), focus);
   } catch (error) {
-    if (currentRevision !== revision) {
-      return;
-    }
-
     const focus = captureFocus();
     console.error("Could not read saved bookmarks.", error);
     library = undefined;
