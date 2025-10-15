@@ -3,6 +3,7 @@ import {
   deduplicateBookmarks,
   isBookmark,
   snapshotLibrary,
+  validateCollectionReferences,
 } from "./model.js";
 import type { Bookmark, LibraryData } from "./model.js";
 import {
@@ -169,7 +170,8 @@ export async function readLibrary(): Promise<LibraryData> {
   }
 
   try {
-    return snapshotLibrary(bookmarks, collections);
+    validateCollectionReferences(bookmarks, collections);
+    return { bookmarks, collections };
   } catch {
     throw new InvalidStoredBookmarkError();
   }

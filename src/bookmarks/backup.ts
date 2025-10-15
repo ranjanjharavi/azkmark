@@ -1,6 +1,5 @@
-import { snapshotBookmarks, snapshotLibrary } from "./model.js";
+import { snapshotLibrary } from "./model.js";
 import type { Bookmark, LibraryData } from "./model.js";
-import { snapshotCollections } from "./collections.js";
 import type { Collection } from "./collections.js";
 
 const BACKUP_FORMAT = "azkmark";
@@ -10,22 +9,29 @@ type BackupVersion = 1 | 2 | 3;
 
 interface BackupEnvelope {
   version: BackupVersion;
-  bookmarks: unknown;
+  bookmarks: unknown[];
   collections?: unknown;
 }
 
-function snapshotBackupBookmarks(value: unknown, version: BackupVersion): Bookmark[] {
-  const bookmarks = snapshotBookmarks(value);
-
-  if (version !== BACKUP_VERSION && bookmarks.some((bookmark) => (
-    Object.hasOwn(bookmark, "collectionId")
-    || Object.hasOwn(bookmark, "tags")
-    || (version === 1 && Object.hasOwn(bookmark, "viewed"))
-  ))) {
-    throw new TypeError("Invalid bookmark collection.");
+function validateLegacyBookmarkFields(bookmarks: readonly unknown[], version: BackupVersion): void {
+  if (version === BACKUP_VERSION) {
+    return;
   }
-  
-  return bookmarks;
+
+  // Legacy fields must fail before the shared validator checks references
+  for (const bookmark of bookmarks) {
+    if (bookmark === null || typeof bookmark !== "object") {
+      continue;
+    }
+
+    if (
+      Object.hasOwn(bookmark, "collectionId")
+      || Object.hasOwn(bookmark, "tags")
+      || (version === 1 && Object.hasOwn(bookmark, "viewed"))
+    ) {
+      throw new TypeError("Invalid bookmark collection.");
+    }
+  }
 }
 
 export function serializeBackup(
@@ -94,10 +100,8 @@ function parseEnvelope(json: string): BackupEnvelope {
 
 export function parseBackup(json: string): LibraryData {
   const envelope = parseEnvelope(json);
-  const bookmarks = snapshotBackupBookmarks(envelope.bookmarks, envelope.version);
+  validateLegacyBookmarkFields(envelope.bookmarks, envelope.version);
 
-  const collections = envelope.version === BACKUP_VERSION
-    ? snapshotCollections(envelope.collections)
-    : [];
-  return snapshotLibrary(bookmarks, collections);
+  const collections = envelope.version === BACKUP_VERSION ? envelope.collections : [];
+  return snapshotLibrary(envelope.bookmarks, collections);
 }

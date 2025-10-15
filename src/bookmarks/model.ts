@@ -129,18 +129,25 @@ export function snapshotBookmarks(value: unknown): Bookmark[] {
   return records;
 }
 
-export function snapshotLibrary(
+// Reference-only check for data already validated by the snapshot paths
+export function validateCollectionReferences(
   bookmarks: readonly Bookmark[],
   collections: readonly Collection[],
+): void {
+  const ids = new Set(collections.map((collection) => collection.id));
+
+  if (bookmarks.some((bookmark) => bookmark.collectionId !== undefined && !ids.has(bookmark.collectionId))) {
+    throw new TypeError("Unknown bookmark collection.");
+  }
+}
+
+export function snapshotLibrary(
+  bookmarks: unknown,
+  collections: unknown,
 ): LibraryData {
   const records = snapshotBookmarks(bookmarks);
   const definitions = snapshotCollections(collections);
-  const ids = new Set(definitions.map((collection) => collection.id));
-
-  if (records.some((bookmark) => bookmark.collectionId !== undefined && !ids.has(bookmark.collectionId))) {
-    throw new TypeError("Unknown bookmark collection.");
-  }
-
+  validateCollectionReferences(records, definitions);
   return { bookmarks: records, collections: definitions };
 }
 
