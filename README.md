@@ -28,3 +28,5 @@ npm run build
 3. Optionally pin **azkmark** from the Extensions menu.
 
 Typecheck: `npm run typecheck`.
+
+Tests: `npm test` builds first, then runs Node's built-in test runner.
