@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   COLLECTIONS_KEY,
   LAST_COLLECTION_KEY,
+  StorageQuotaError,
   deleteBookmark,
   deleteCollection,
   importBookmarkRecords,
@@ -74,7 +75,17 @@ function useStorageHarness(t, initial = {}) {
     });
   }
 
-  return { data, reads, writes, requests, locks };
+  return { data, reads, writes, requests, locks, local };
+}
+
+function rejectWrite(t, local, key, cause) {
+  const write = local.set;
+  return t.mock.method(local, "set", async (items) => {
+    if (Object.hasOwn(items, key)) {
+      throw cause;
+    }
+    await write(items);
+  });
 }
 
 function deferred() {
@@ -352,3 +363,220 @@ test("collection deletion takes the outer collection lock and separate member UR
   assert.deepEqual(harness.data[unrelatedKey], unrelated);
   await readLibrary();
 });
+
+test("partial import retains definitions and counts only confirmed records across retries", async (t) => {
+  const existing = bookmark("existing", { collectionId: reading.id, tags: ["saved"], viewed: true });
+  const first = bookmark("partial-first", { collectionId: work.id, tags: ["first"] });
+  const second = bookmark("partial-second", { collectionId: work.id });
+  const firstKey = bookmarkKey(first.url);
+  const secondKey = bookmarkKey(second.url);
+  const harness = useStorageHarness(t, {
+    [COLLECTIONS_KEY]: [reading],
+    [bookmarkKey(existing.url)]: existing,
+  });
+  const records = [
+    { ...existing, title: "Losing existing title", collectionId: work.id },
+    first,
+    { ...first, title: "Losing duplicate title", tags: ["losing"] },
+    second,
+  ];
+  const definitions = [reading, work];
+  const submitted = structuredClone({ bookmarks: records, collections: definitions });
+  const cause = new Error("Second record write failed.");
+  const fault = rejectWrite(t, harness.local, secondKey, cause);
+
+  const failed = await importBookmarkRecords(records, definitions);
+  assert.deepEqual(failed, { status: "failed", added: 1, skipped: 2, collectionsAdded: 1, error: cause });
+  assert.equal(failed.error, cause);
+  assert.deepEqual(await readLibrary(), { bookmarks: [existing, first], collections: definitions });
+  assert.equal(harness.data[secondKey], undefined);
+  assert.deepEqual({ bookmarks: records, collections: definitions }, submitted);
+
+  fault.mock.restore();
+  const retry = await importBookmarkRecords(records, definitions);
+  assert.deepEqual(retry, { status: "imported", added: 1, skipped: 3, collectionsAdded: 0 });
+  assert.deepEqual(await readLibrary(), { bookmarks: [existing, first, second], collections: definitions });
+  assert.deepEqual(harness.writes.map((write) => write.keys), [[COLLECTIONS_KEY], [firstKey], [secondKey]]);
+
+  const repeated = await importBookmarkRecords(records, definitions);
+  assert.deepEqual(repeated, { status: "imported", added: 0, skipped: 4, collectionsAdded: 0 });
+  assert.equal(harness.writes.length, 3);
+});
+
+test("a failed definition write reports no import progress and starts no member writes", async (t) => {
+  const harness = useStorageHarness(t);
+  const record = bookmark("definition-failure", { collectionId: reading.id });
+  const cause = new Error("Definition write failed.");
+  const fault = rejectWrite(t, harness.local, COLLECTIONS_KEY, cause);
+
+  const failed = await importBookmarkRecords([record], [reading]);
+  assert.deepEqual(failed, { status: "failed", added: 0, skipped: 0, collectionsAdded: 0, error: cause });
+  assert.deepEqual(harness.data, {});
+  assert.deepEqual(harness.writes, []);
+  assert.deepEqual(harness.requests, [COLLECTIONS_KEY]);
+  assert.deepEqual(await readLibrary(), { bookmarks: [], collections: [] });
+
+  fault.mock.restore();
+  const retry = await importBookmarkRecords([record], [reading]);
+  assert.deepEqual(retry, { status: "imported", added: 1, skipped: 0, collectionsAdded: 1 });
+  assert.deepEqual(await readLibrary(), { bookmarks: [record], collections: [reading] });
+});
+
+test("an applied but unacknowledged import write is not counted or duplicated on retry", async (t) => {
+  const harness = useStorageHarness(t);
+  const record = bookmark("unacknowledged", { collectionId: reading.id, tags: ["keep"] });
+  const key = bookmarkKey(record.url);
+  const cause = new Error("Write acknowledgement lost.");
+  const write = harness.local.set;
+  // Model acknowledgement ambiguity, not native Chrome failure atomicity.
+  const fault = t.mock.method(harness.local, "set", async (items) => {
+    await write(items);
+    if (Object.hasOwn(items, key)) {
+      throw cause;
+    }
+  });
+
+  const failed = await importBookmarkRecords([record], [reading]);
+  assert.deepEqual(failed, { status: "failed", added: 0, skipped: 0, collectionsAdded: 1, error: cause });
+  assert.deepEqual(await readLibrary(), { bookmarks: [record], collections: [reading] });
+  assert.equal(harness.writes.length, 2);
+
+  fault.mock.restore();
+  const retry = await importBookmarkRecords([record], [reading]);
+  assert.deepEqual(retry, { status: "imported", added: 0, skipped: 1, collectionsAdded: 0 });
+  assert.equal(harness.writes.length, 2);
+});
+
+const deletionFailures = [
+  { name: "member move", atDefinition: false, moved: 1, secondCollectionId: reading.id },
+  { name: "definition removal", atDefinition: true, moved: 2, secondCollectionId: undefined },
+];
+for (const scenario of deletionFailures) {
+  test(`failed collection ${scenario.name} retains a valid definition and completes on retry`, async (t) => {
+    const first = bookmark("retry-first", { collectionId: reading.id, tags: ["keep"] });
+    const second = bookmark("retry-second", { collectionId: reading.id, viewed: true });
+    const unrelated = bookmark("retry-unrelated", { collectionId: work.id });
+    const firstKey = bookmarkKey(first.url);
+    const secondKey = bookmarkKey(second.url);
+    const unrelatedKey = bookmarkKey(unrelated.url);
+    const harness = useStorageHarness(t, {
+      [COLLECTIONS_KEY]: [reading, work],
+      [firstKey]: first,
+      [secondKey]: second,
+      [unrelatedKey]: unrelated,
+    });
+    const cause = new Error("Collection write failed.");
+    const failingKey = scenario.atDefinition ? COLLECTIONS_KEY : secondKey;
+    const fault = rejectWrite(t, harness.local, failingKey, cause);
+
+    const failed = await deleteCollection(reading.id);
+    assert.deepEqual(failed, { status: "failed", moved: scenario.moved, error: cause });
+    assert.equal(failed.error, cause);
+    assert.equal(harness.data[firstKey].collectionId, undefined);
+    assert.equal(harness.data[secondKey].collectionId, scenario.secondCollectionId);
+    assert.deepEqual(harness.data[COLLECTIONS_KEY], [reading, work]);
+    await readLibrary();
+
+    fault.mock.restore();
+    const retry = await deleteCollection(reading.id);
+    assert.deepEqual(retry, { status: "deleted", moved: 2 - scenario.moved });
+    assert.deepEqual(harness.writes.map((write) => write.keys), [[firstKey], [secondKey], [COLLECTIONS_KEY]]);
+    assert.deepEqual(harness.data[COLLECTIONS_KEY], [work]);
+    assert.equal(harness.data[secondKey].collectionId, undefined);
+    assert.deepEqual({ ...harness.data[firstKey], collectionId: reading.id }, first);
+    assert.deepEqual({ ...harness.data[secondKey], collectionId: reading.id }, second);
+    assert.deepEqual(harness.data[unrelatedKey], unrelated);
+    await readLibrary();
+
+    assert.deepEqual(await deleteCollection(reading.id), { status: "not-found", moved: 0 });
+    assert.equal(harness.writes.length, 3);
+  });
+}
+
+const quotaCause = new Error("QUOTA_BYTES exceeded.");
+const ordinaryCause = new TypeError("Storage unavailable.");
+const genericStorageMessage = "Chrome storage operation failed.";
+const storageFailures = [
+  { name: "quota", cause: quotaCause, type: StorageQuotaError, message: quotaCause.message },
+  { name: "ordinary", cause: ordinaryCause, type: TypeError, message: ordinaryCause.message, preserve: true },
+  { name: "empty Error", cause: new Error(""), type: Error, message: genericStorageMessage },
+  { name: "non-Error", cause: "quota exceeded", type: Error, message: genericStorageMessage },
+];
+const storageOperations = [
+  { name: "read", method: "get", run: readLibrary },
+  { name: "write", method: "set", run: updateBookmark, status: "updated" },
+  { name: "remove", method: "remove", run: deleteBookmark, status: "deleted" },
+];
+for (const operation of storageOperations) {
+  for (const failure of storageFailures) {
+    test(`${operation.name} ${failure.name} failure preserves data and permits retry`, async (t) => {
+      const record = bookmark("error-retry", { collectionId: reading.id, tags: ["saved"] });
+      const key = bookmarkKey(record.url);
+      const initial = { [COLLECTIONS_KEY]: [reading, work], [key]: record };
+      const harness = useStorageHarness(t, initial);
+      const draft = { title: "  Draft title  ", collectionId: work.id, tags: ["draft"] };
+      const submitted = structuredClone(draft);
+      const fault = t.mock.method(harness.local, operation.method, async () => {
+        throw failure.cause;
+      });
+
+      await assert.rejects(operation.run(record.url, draft), (error) => {
+        assert.equal(error.constructor, failure.type);
+        assert.equal(error.message, failure.message);
+        if (failure.preserve) {
+          assert.equal(error, failure.cause);
+        }
+        return true;
+      });
+      assert.deepEqual(harness.data, initial);
+      assert.deepEqual(harness.writes, []);
+      assert.deepEqual(draft, submitted);
+
+      fault.mock.restore();
+      const retry = await operation.run(record.url, draft);
+      if (operation.method === "get") {
+        assert.deepEqual(retry, { bookmarks: [record], collections: [reading, work] });
+        return;
+      }
+      assert.equal(retry.status, operation.status);
+    });
+  }
+}
+
+const validImport = bookmark("validation");
+const rejectedImports = [
+  {
+    name: "invalid losing duplicate tags",
+    records: [validImport, { ...validImport, tags: ["UPPERCASE"] }],
+    collections: [],
+  },
+  {
+    name: "orphan reference on a losing duplicate",
+    records: [validImport, { ...validImport, collectionId: "missing" }],
+    collections: [reading],
+  },
+  {
+    name: "file orphan despite a matching stored definition",
+    records: [validImport, bookmark("orphan", { collectionId: reading.id })],
+    collections: [],
+  },
+  {
+    name: "invalid unused collection definition",
+    records: [validImport],
+    collections: [{ ...work, name: " Work " }],
+  },
+];
+for (const scenario of rejectedImports) {
+  test(`${scenario.name} is rejected before locks or storage access`, async (t) => {
+    const initial = { [COLLECTIONS_KEY]: [reading], [bookmarkKey(validImport.url)]: validImport };
+    const harness = useStorageHarness(t, initial);
+    const write = t.mock.method(harness.local, "set");
+
+    await assert.rejects(importBookmarkRecords(scenario.records, scenario.collections), TypeError);
+    assert.deepEqual(harness.reads, []);
+    assert.deepEqual(harness.requests, []);
+    assert.deepEqual(harness.writes, []);
+    assert.equal(write.mock.callCount(), 0);
+    assert.deepEqual(harness.data, initial);
+  });
+}
