@@ -1,4 +1,4 @@
-import { parseWebUrl } from "../urls.js";
+import { parseWebUrl } from "../shared/urls.js";
 import { isCollectionId, snapshotCollections } from "./collections.js";
 import type { Collection } from "./collections.js";
 import { isTags, snapshotTags } from "./tags.js";

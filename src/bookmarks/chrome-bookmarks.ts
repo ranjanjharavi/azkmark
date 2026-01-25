@@ -1,6 +1,6 @@
 import { createBookmark } from "./model.js";
 import type { Bookmark } from "./model.js";
-import { parseWebUrl } from "../urls.js";
+import { parseWebUrl } from "../shared/urls.js";
 
 const NETSCAPE_BOOKMARK_MARKER = /^\s*<!DOCTYPE NETSCAPE-Bookmark-file-1\s*>/i;
 

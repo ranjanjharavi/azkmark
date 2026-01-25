@@ -1,8 +1,8 @@
 import type { Bookmark } from "../bookmarks/model.js";
 import type { Collection } from "../bookmarks/collections.js";
 import { availableTags, sameTags } from "../bookmarks/tags.js";
-import { initializeTagInput } from "../ui/tags.js";
-import { collectionOptions } from "../ui/collections.js";
+import { initializeTagInput } from "../ui/tag-input.js";
+import { collectionOptions } from "../ui/collection-options.js";
 import { requireElement } from "../ui/dom.js";
 import {
   deleteBookmark,

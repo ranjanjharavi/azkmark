@@ -132,7 +132,7 @@ export function initializeTagInput(prefix: string): TagInput {
       vocabulary = tags.slice();
       updateSuggestions();
     },
-    
+
     setDisabled: (value) => {
       disabled = value;
       input.readOnly = value;

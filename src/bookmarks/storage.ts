@@ -15,7 +15,7 @@ import {
 } from "./collections.js";
 import type { Collection } from "./collections.js";
 import { sameTags, snapshotTags } from "./tags.js";
-import { parseWebUrl } from "../urls.js";
+import { parseWebUrl } from "../shared/urls.js";
 
 const BOOKMARK_KEY_PREFIX = "azkmark:bookmark:";
 export const COLLECTIONS_KEY = "azkmark:collections";

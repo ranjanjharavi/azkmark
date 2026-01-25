@@ -25,7 +25,7 @@ import { initializeBookmarkPreviews } from "./library/bookmark-preview.js";
 import { initializeExport } from "./library/export.js";
 import { initializeImport } from "./library/import.js";
 import { initializeManagement } from "./library/management.js";
-import { createRefreshScheduler } from "./library/refresh.js";
+import { createRefreshScheduler } from "./shared/refresh-scheduler.js";
 import { initializeSavedDateRefresh } from "./library/saved-date-refresh.js";
 import { createSavedDateFormatter } from "./library/saved-date.js";
 import { initializeSortPreference } from "./library/sort-preference.js";

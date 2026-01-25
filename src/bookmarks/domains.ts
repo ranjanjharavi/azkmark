@@ -1,5 +1,5 @@
 import type { Bookmark } from "./model.js";
-import { parseWebUrl } from "../urls.js";
+import { parseWebUrl } from "../shared/urls.js";
 
 export interface DomainGroups {
   domains: Map<string, Bookmark[]>;

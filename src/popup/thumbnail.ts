@@ -1,5 +1,5 @@
 import type { CurrentPage } from "./page-capture.js";
-import { parseWebUrl, youtubeVideoId } from "./urls.js";
+import { parseWebUrl } from "../shared/urls.js";
 
 export const METADATA_TIMEOUT_MS = 750;
 
@@ -8,6 +8,30 @@ interface ThumbnailMetadata {
   baseUrl: string;
   canonicalUrl: string | null;
   imageUrls: string[];
+}
+
+// Video identity detects stale previews. It never rewrites the saved URL.
+function youtubeVideoId(url: URL): string | undefined {
+  const hostname = url.hostname.replace(/^www\./, "");
+  const parts = url.pathname.split("/");
+
+  if (hostname === "youtu.be") {
+    return parts[1] || undefined;
+  }
+
+  if (hostname !== "youtube.com" && hostname !== "m.youtube.com") {
+    return undefined;
+  }
+
+  if (url.pathname === "/watch") {
+    return url.searchParams.get("v") || undefined;
+  }
+
+  if (parts[1] === "shorts" || parts[1] === "embed" || parts[1] === "live") {
+    return parts[2] || undefined;
+  }
+
+  return undefined;
 }
 
 function canonicalMatchesPage(current: URL, canonical: URL): boolean {
@@ -88,7 +112,7 @@ export function captureThumbnail(page: CurrentPage, callback: ThumbnailCallback)
     if (timeout !== undefined) {
       window.clearTimeout(timeout);
     }
-    
+
     callback(thumbnailUrl);
   };
 

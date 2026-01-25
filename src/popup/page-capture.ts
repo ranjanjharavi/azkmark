@@ -1,4 +1,4 @@
-import { parseWebUrl } from "./urls.js";
+import { parseWebUrl } from "../shared/urls.js";
 
 export interface CurrentPage {
   tabId: number;
@@ -41,7 +41,7 @@ export function captureCurrentPage(callback: PageCaptureCallback): void {
         status: "unsupported",
         message: "This page isn't supported. Open an HTTP or HTTPS page to preview it.",
       });
-      
+
       return;
     }
 
