@@ -1,6 +1,6 @@
-import type { Bookmark } from "../bookmarks/model.js";
-import { bookmarkDomain } from "../bookmarks/domains.js";
-import { formatSavedDate } from "./saved-date.js";
+import type { Bookmark } from "../../bookmarks/model.js";
+import { bookmarkDomain } from "../../bookmarks/domains.js";
+import { formatSavedDate } from "../saved-date.js";
 
 export function bookmarkRow(
   bookmark: Bookmark,

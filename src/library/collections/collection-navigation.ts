@@ -1,5 +1,5 @@
-import type { Collection } from "../bookmarks/collections.js";
-import type { Bookmark } from "../bookmarks/model.js";
+import type { Collection } from "../../bookmarks/collections.js";
+import type { Bookmark } from "../../bookmarks/model.js";
 import { countCollectionBookmarks } from "./collection-counts.js";
 
 function collectionButton(scope: string, label: string, count: number, selected: string): HTMLButtonElement {

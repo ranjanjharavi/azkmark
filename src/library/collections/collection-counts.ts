@@ -1,4 +1,4 @@
-import type { Bookmark } from "../bookmarks/model.js";
+import type { Bookmark } from "../../bookmarks/model.js";
 
 export function countCollectionBookmarks(bookmarks: readonly Bookmark[]): Map<string | undefined, number> {
   const counts = new Map<string | undefined, number>();

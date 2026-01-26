@@ -1,5 +1,5 @@
-import { serializeBackup } from "../bookmarks/backup.js";
-import { InvalidStoredBookmarkError, readLibrary } from "../bookmarks/storage.js";
+import { serializeBackup } from "../../bookmarks/backup.js";
+import { InvalidStoredBookmarkError, readLibrary } from "../../bookmarks/storage.js";
 
 export function initializeExport(): void {
   const button = document.querySelector<HTMLButtonElement>("#export-backup");
@@ -67,7 +67,7 @@ export function initializeExport(): void {
       exporting = false;
       exportButton.disabled = false;
       exportButton.setAttribute("aria-busy", "false");
-      
+
       if (restoreButtonFocus && document.activeElement === document.body) {
         exportButton.focus({ preventScroll: true });
       }

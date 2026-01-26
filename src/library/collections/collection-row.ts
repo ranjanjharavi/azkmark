@@ -1,4 +1,4 @@
-import type { Collection } from "../bookmarks/collections.js";
+import type { Collection } from "../../bookmarks/collections.js";
 
 function collectionAction(action: "rename" | "delete", collection: Collection): HTMLButtonElement {
   const button = document.createElement("button");

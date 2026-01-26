@@ -1,4 +1,4 @@
-import type { Bookmark } from "../bookmarks/model.js";
+import type { Bookmark } from "../../bookmarks/model.js";
 
 export function reconcileSelection(
   matches: readonly Bookmark[],

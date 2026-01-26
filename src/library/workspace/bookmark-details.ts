@@ -1,9 +1,9 @@
-import type { Bookmark } from "../bookmarks/model.js";
-import type { Collection } from "../bookmarks/collections.js";
-import { bookmarkDomain } from "../bookmarks/domains.js";
+import type { Bookmark } from "../../bookmarks/model.js";
+import type { Collection } from "../../bookmarks/collections.js";
+import { bookmarkDomain } from "../../bookmarks/domains.js";
 import { bookmarkActions } from "./bookmark-actions.js";
 import { bookmarkPreview } from "./bookmark-preview.js";
-import { formatSavedDate } from "./saved-date.js";
+import { formatSavedDate } from "../saved-date.js";
 
 function appendMetadata(list: HTMLDListElement, label: string, value: string | HTMLElement): void {
   const term = document.createElement("dt");

@@ -1,12 +1,12 @@
-import { parseBackup, UnsupportedBackupVersionError } from "../bookmarks/backup.js";
-import type { LibraryData } from "../bookmarks/model.js";
-import { parseChromeBookmarks } from "../bookmarks/chrome-bookmarks.js";
-import type { ImportBookmarksResult } from "../bookmarks/storage.js";
+import { parseBackup, UnsupportedBackupVersionError } from "../../bookmarks/backup.js";
+import type { LibraryData } from "../../bookmarks/model.js";
+import { parseChromeBookmarks } from "../../bookmarks/chrome-html.js";
+import type { ImportBookmarksResult } from "../../bookmarks/storage.js";
 import {
   importBookmarkRecords,
   InvalidStoredBookmarkError,
   StorageQuotaError,
-} from "../bookmarks/storage.js";
+} from "../../bookmarks/storage.js";
 
 interface ImportCallbacks {
   refresh: () => Promise<void>;

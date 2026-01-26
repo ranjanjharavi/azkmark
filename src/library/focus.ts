@@ -1,4 +1,4 @@
-import type { ManagementMode } from "./management.js";
+import type { ManagementMode } from "./workspace/bookmark-dialog.js";
 
 type FocusTarget =
   | "list"

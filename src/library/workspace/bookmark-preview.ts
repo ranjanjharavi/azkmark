@@ -1,4 +1,4 @@
-import { requireElement } from "../ui/dom.js";
+import { requireElement } from "../../ui/dom.js";
 
 const PREVIEW_TIMEOUT_MS = 10000;
 // Keep each bookmark's random artwork stable across library rerenders

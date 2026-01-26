@@ -1,13 +1,13 @@
-import type { Bookmark } from "../bookmarks/model.js";
-import type { Collection } from "../bookmarks/collections.js";
+import type { Bookmark } from "../../bookmarks/model.js";
+import type { Collection } from "../../bookmarks/collections.js";
 import {
   deleteCollection,
   InvalidStoredBookmarkError,
   MissingCollectionError,
   saveCollection,
   StorageQuotaError,
-} from "../bookmarks/storage.js";
-import { requireElement } from "../ui/dom.js";
+} from "../../bookmarks/storage.js";
+import { requireElement } from "../../ui/dom.js";
 import { countCollectionBookmarks } from "./collection-counts.js";
 import { collectionRow } from "./collection-row.js";
 

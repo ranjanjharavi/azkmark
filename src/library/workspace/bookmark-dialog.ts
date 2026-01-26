@@ -1,16 +1,16 @@
-import type { Bookmark } from "../bookmarks/model.js";
-import type { Collection } from "../bookmarks/collections.js";
-import { availableTags, sameTags } from "../bookmarks/tags.js";
-import { initializeTagInput } from "../ui/tag-input.js";
-import { collectionOptions } from "../ui/collection-options.js";
-import { requireElement } from "../ui/dom.js";
+import type { Bookmark } from "../../bookmarks/model.js";
+import type { Collection } from "../../bookmarks/collections.js";
+import { availableTags, sameTags } from "../../bookmarks/tags.js";
+import { initializeTagInput } from "../../ui/tag-input.js";
+import { collectionOptions } from "../../ui/collection-options.js";
+import { requireElement } from "../../ui/dom.js";
 import {
   deleteBookmark,
   InvalidStoredBookmarkError,
   StorageQuotaError,
   MissingCollectionError,
   updateBookmark,
-} from "../bookmarks/storage.js";
+} from "../../bookmarks/storage.js";
 
 export type ManagementMode = "edit" | "delete";
 
@@ -103,13 +103,13 @@ export function initializeManagement({
     if (mode === "delete") {
       submitButtonElement.classList.add("destructive");
     }
-    
+
     cancelButtonElement.textContent = "Cancel";
     cancelButtonElement.disabled = false;
     formElement.setAttribute("aria-busy", "false");
 
     dialogElement.showModal();
-    
+
     if (mode === "edit") {
       titleInputElement.focus();
       titleInputElement.select();
