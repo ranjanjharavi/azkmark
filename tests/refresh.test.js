@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { setImmediate } from "node:timers/promises";
 import test from "node:test";
-import { createRefreshScheduler } from "../dist/library/refresh.js";
+import { createRefreshScheduler } from "../dist/shared/refresh-scheduler.js";
 
 function useTestClock(t) {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");

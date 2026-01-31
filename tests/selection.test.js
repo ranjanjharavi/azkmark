@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { reconcileSelection } from "../dist/library/selection.js";
+import { reconcileSelection } from "../dist/library/workspace/selection.js";
 
 function bookmark(url) {
   return Object.freeze({ url, title: "Saved page", savedAt: 1 });
