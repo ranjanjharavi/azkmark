@@ -10,41 +10,57 @@
     <script type="module" src="popup.js"></script>
   </head>
   <body data-page="popup">
-    <main>
-      <h1>azkmark</h1>
-      <p id="page-status" role="status">Reading the current page…</p>
+    <main class="popup-shell">
+      <header class="popup-header">
+        <h1>
+          <svg class="popup-brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 32" aria-hidden="true" focusable="false">
+            <path d="M5 2h18v28l-9-5-9 5V2Zm9 5-5 12h3l1-3h3l1 3h3L15 7h-1Zm0 5 1 2h-2l1-2Z" fill-rule="evenodd" />
+          </svg>
+          azkmark
+        </h1>
+        <button id="open-library" type="button" aria-label="Open library" title="Open library">
+          <svg class="popup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 4h4v16H4zM11 4h4v16h-4zM18 4l3 16" />
+          </svg>
+          Library
+        </button>
+      </header>
       <form id="save-form" novalidate>
+        <p id="page-status" role="status">Reading the current page…</p>
         <section id="page-details" aria-label="Current page" hidden>
-          <label for="page-title">Title</label>
-          <textarea id="page-title" name="title" rows="2" required aria-describedby="title-error"></textarea>
-          <p id="title-error" role="alert" hidden>Enter a title</p>
-          <a id="page-url" target="_blank" rel="noopener noreferrer"></a>
           <img id="page-image" alt="" referrerpolicy="no-referrer" hidden />
           <p id="preview-status" role="status">Checking for a thumbnail…</p>
-          <label for="save-to">Save to</label>
-          <select id="save-to" class="collection-select" aria-describedby="save-to-error" disabled><option value="">Unsorted</option></select>
-          <p id="save-to-error" role="alert" hidden></p>
-          <div class="tag-entry">
-            <label for="page-tag">Tags (optional)</label>
-            <div class="tag-input-row">
-              <input id="page-tag" type="text" list="page-tag-options" autocomplete="off" spellcheck="false" aria-describedby="page-tag-help page-tag-error" placeholder="Add a tag" />
-              <button id="page-tag-add" type="button">Add tag</button>
+          <div class="page-summary">
+            <a id="page-url" target="_blank" rel="noopener noreferrer"></a>
+            <label for="page-title">Title</label>
+            <textarea id="page-title" name="title" rows="2" required aria-describedby="title-error"></textarea>
+            <p id="title-error" role="alert" hidden>Enter a title</p>
+          </div>
+          <div class="popup-fields">
+            <label for="save-to">Save to</label>
+            <select id="save-to" class="collection-select" aria-describedby="save-to-error" disabled><option value="">Unsorted</option></select>
+            <p id="save-to-error" role="alert" hidden></p>
+            <div class="tag-entry">
+              <label for="page-tag">Tags (optional)</label>
+              <div class="tag-input-row">
+                <input id="page-tag" type="text" list="page-tag-options" autocomplete="off" spellcheck="false" aria-describedby="page-tag-help page-tag-error" placeholder="Add a tag" />
+                <button id="page-tag-add" type="button">Add tag</button>
+              </div>
+              <datalist id="page-tag-options"></datalist>
+              <p id="page-tag-help" class="tag-help">Up to 32 tags, 80 characters each. Labels are lowercased; whitespace collapses. Commas stay inside a tag. Save includes pending text.</p>
+              <p id="page-tag-error" class="tag-error" role="alert" hidden></p>
+              <ul id="page-tags" class="tag-drafts" aria-label="Draft tags" hidden></ul>
+              <p id="page-tag-status" class="visually-hidden" role="status" aria-atomic="true"></p>
             </div>
-            <datalist id="page-tag-options"></datalist>
-            <p id="page-tag-help" class="tag-help">Up to 32 tags, 80 characters each. Labels are lowercased; whitespace collapses. Commas stay inside a tag. Save includes pending text.</p>
-            <p id="page-tag-error" class="tag-error" role="alert" hidden></p>
-            <ul id="page-tags" class="tag-drafts" aria-label="Draft tags" hidden></ul>
-            <p id="page-tag-status" class="visually-hidden" role="status" aria-atomic="true"></p>
           </div>
         </section>
-        <div class="popup-actions">
-          <button id="save" type="submit" disabled>Save</button>
-          <button id="open-library" type="button">Open library</button>
-        </div>
       </form>
-      <p id="save-status" role="status" aria-atomic="true"></p>
-      <p id="save-error" role="alert" hidden></p>
-      <p id="feedback" role="alert" hidden></p>
+      <footer class="popup-footer">
+        <button id="save" type="submit" form="save-form" disabled>Save</button>
+        <p id="save-status" role="status" aria-atomic="true"></p>
+        <p id="save-error" role="alert" hidden></p>
+        <p id="feedback" role="alert" hidden></p>
+      </footer>
     </main>
   </body>
 </html>
