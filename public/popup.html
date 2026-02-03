@@ -33,7 +33,7 @@
           <div class="page-summary">
             <a id="page-url" target="_blank" rel="noopener noreferrer"></a>
             <label for="page-title">Title</label>
-            <textarea id="page-title" name="title" rows="2" required aria-describedby="title-error"></textarea>
+            <textarea id="page-title" name="title" rows="1" required aria-describedby="title-error"></textarea>
             <p id="title-error" role="alert" hidden>Enter a title</p>
           </div>
           <div class="popup-fields">
@@ -41,22 +41,25 @@
             <select id="save-to" class="collection-select" aria-describedby="save-to-error" disabled><option value="">Unsorted</option></select>
             <p id="save-to-error" role="alert" hidden></p>
             <div class="tag-entry">
-              <label for="page-tag">Tags (optional)</label>
+              <label for="page-tag">Tags <span class="optional">(optional)</span></label>
+              <ul id="page-tags" class="tag-drafts" aria-label="Draft tags" hidden></ul>
               <div class="tag-input-row">
                 <input id="page-tag" type="text" list="page-tag-options" autocomplete="off" spellcheck="false" aria-describedby="page-tag-help page-tag-error" placeholder="Add a tag" />
-                <button id="page-tag-add" type="button">Add tag</button>
+                <button id="page-tag-add" type="button" aria-label="Add tag">Add</button>
               </div>
               <datalist id="page-tag-options"></datalist>
-              <p id="page-tag-help" class="tag-help">Up to 32 tags, 80 characters each. Labels are lowercased; whitespace collapses. Commas stay inside a tag. Save includes pending text.</p>
               <p id="page-tag-error" class="tag-error" role="alert" hidden></p>
-              <ul id="page-tags" class="tag-drafts" aria-label="Draft tags" hidden></ul>
+              <details class="tag-tips">
+                <summary>Tag tips</summary>
+                <p id="page-tag-help" class="tag-help">Click Add or just hit Save. Max 32 tags, 80 characters each.</p>
+              </details>
               <p id="page-tag-status" class="visually-hidden" role="status" aria-atomic="true"></p>
             </div>
           </div>
         </section>
       </form>
       <footer class="popup-footer">
-        <button id="save" type="submit" form="save-form" disabled>Save</button>
+        <button id="save" type="submit" form="save-form" disabled>Save bookmark</button>
         <p id="save-status" role="status" aria-atomic="true"></p>
         <p id="save-error" role="alert" hidden></p>
         <p id="feedback" role="alert" hidden></p>

@@ -232,7 +232,7 @@ export function initializePopup(): void {
       pageTitleElement.readOnly = completed;
 
       if (!completed) {
-        saveButtonElement.textContent = "Save";
+        saveButtonElement.textContent = "Save bookmark";
       }
 
       // Disabling a focused submit can move Chrome's focus to BODY
@@ -251,8 +251,10 @@ export function initializePopup(): void {
 
       currentPage = result.page;
       pageTitleElement.value = result.page.title;
-      pageUrlElement.textContent = result.page.url;
+      pageUrlElement.textContent = new URL(result.page.url).hostname;
       pageUrlElement.href = result.page.url;
+      pageUrlElement.title = result.page.url;
+      pageUrlElement.setAttribute("aria-label", `Open current page: ${result.page.url}`);
       pageDetailsElement.hidden = false;
       pageStatusElement.hidden = true;
       updateSaveControls();
