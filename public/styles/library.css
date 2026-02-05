@@ -1,4 +1,11 @@
+/* Library layout and spacing. */
 body[data-page="library"] {
+  --library-space-1: 4px;
+  --library-space-2: 8px;
+  --library-space-3: 12px;
+  --library-space-4: 16px;
+  --library-space-6: 24px;
+  --library-space-8: 32px;
   max-width: none;
   min-height: 100vh;
   margin: 0;
@@ -96,6 +103,19 @@ body[data-page="library"] {
   overflow-wrap: anywhere;
 }
 
+.library-control-icon {
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Collection navigation. */
 .collection-navigation {
   display: flex;
   flex-wrap: wrap;
@@ -141,6 +161,7 @@ body[data-page="library"] {
   font-variant-numeric: tabular-nums;
 }
 
+/* Import and export controls and feedback. */
 .backup-tools {
   display: flex;
   flex-wrap: wrap;
@@ -155,8 +176,7 @@ body[data-page="library"] {
   font-size: var(--font-size-small);
 }
 
-.backup-icon,
-.library-control-icon {
+.backup-icon {
   display: block;
   flex: none;
   width: 18px;
@@ -226,6 +246,7 @@ body[data-page="library"] {
   overflow-wrap: anywhere;
 }
 
+/* Search, filters, and sorting. */
 .library-controls {
   margin: 0;
 }
@@ -370,8 +391,7 @@ body[data-page="library"] {
   min-width: 0;
 }
 
-.library-field label,
-#management-edit label {
+.library-field label {
   display: block;
   margin-bottom: var(--library-space-1);
   color: var(--secondary);
@@ -424,8 +444,7 @@ body[data-page="library"] {
   opacity: 1;
 }
 
-#reset-filters,
-#clear-collection {
+#reset-filters {
   box-sizing: border-box;
   min-height: var(--control-height);
   margin-top: var(--library-space-4);
@@ -435,13 +454,13 @@ body[data-page="library"] {
   font-weight: 500;
 }
 
-#reset-filters:hover:not(:disabled),
-#clear-collection:hover:not(:disabled) {
+#reset-filters:hover:not(:disabled) {
   border-color: transparent;
   background: var(--control);
   color: var(--accent-hover);
 }
 
+/* Bookmark workspace. */
 .bookmark-workspace {
   display: grid;
   grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.2fr);
@@ -630,8 +649,7 @@ body[data-page="library"] {
   color: var(--accent-hover);
 }
 
-.bookmark-action::before,
-.collection-row-action::before {
+.bookmark-action::before {
   content: "";
   flex: none;
   width: 18px;
@@ -767,6 +785,7 @@ body[data-page="library"] {
 
 }
 
+/* Page empty and error states. */
 #library-empty,
 #collection-empty,
 #no-matches,
@@ -794,13 +813,29 @@ body[data-page="library"] {
   color: var(--secondary);
 }
 
+#clear-collection {
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  margin-top: var(--library-space-4);
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  font-weight: 500;
+}
+
+#clear-collection:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--control);
+  color: var(--accent-hover);
+}
+
 #read-error {
   margin: 0 0 var(--library-space-4);
   color: var(--danger);
   overflow-wrap: anywhere;
 }
 
-#management-feedback,
+/* Viewed-status feedback. */
 #viewed-feedback {
   margin: 0 0 var(--library-space-4);
   color: var(--accent);
@@ -818,6 +853,7 @@ body[data-page="library"] {
   overflow-wrap: anywhere;
 }
 
+/* Shared dialog defaults; feature overrides follow. */
 #bookmark-dialog,
 #collection-dialog,
 #collection-delete-dialog,
@@ -851,6 +887,13 @@ body[data-page="library"] {
   overflow-wrap: anywhere;
 }
 
+/* Bookmark dialog content and feedback. */
+#management-feedback {
+  margin: 0 0 var(--library-space-4);
+  color: var(--accent);
+  font-size: var(--font-size-small);
+}
+
 #management-target {
   margin: 0 0 var(--library-space-2);
   color: var(--ink);
@@ -863,6 +906,14 @@ body[data-page="library"] {
   color: var(--tertiary);
   font-size: var(--font-size-small);
   overflow-wrap: anywhere;
+}
+
+#management-edit label {
+  display: block;
+  margin-bottom: var(--library-space-1);
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+  font-weight: 500;
 }
 
 #bookmark-title {
@@ -895,31 +946,26 @@ body[data-page="library"] {
   margin-top: var(--library-space-4);
 }
 
-#management-delete,
-#collection-confirm {
+#management-delete {
   margin: 0 0 var(--library-space-4);
   color: var(--secondary);
 }
 
-#management-error,
-#collection-error,
-#collection-rename-error,
-#collection-delete-error {
+#management-error {
   margin: var(--library-space-3) 0 0;
   color: var(--danger);
   font-size: var(--font-size-small);
   overflow-wrap: anywhere;
 }
 
-#management-status,
-#collection-status,
-#collection-delete-status {
+#management-status {
   min-height: 1.5em;
   margin: var(--library-space-2) 0 0;
   color: var(--secondary);
   font-size: var(--font-size-small);
 }
 
+/* Shared dialog action layout and button states. */
 .management-actions {
   display: flex;
   flex-wrap: wrap;
@@ -957,6 +1003,7 @@ body[data-page="library"] {
   background: var(--danger-hover);
 }
 
+/* Collection manager overrides and feedback. */
 #collection-dialog {
   max-width: 560px;
   padding: 0;
@@ -969,6 +1016,28 @@ body[data-page="library"] {
 #collection-heading {
   margin-bottom: var(--library-space-3);
   font: 500 28px/1.2 var(--display-font);
+}
+
+#collection-confirm {
+  margin: 0 0 var(--library-space-4);
+  color: var(--secondary);
+}
+
+#collection-error,
+#collection-rename-error,
+#collection-delete-error {
+  margin: var(--library-space-3) 0 0;
+  color: var(--danger);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+#collection-status,
+#collection-delete-status {
+  min-height: 1.5em;
+  margin: var(--library-space-2) 0 0;
+  color: var(--secondary);
+  font-size: var(--font-size-small);
 }
 
 #collection-description,
@@ -1068,6 +1137,16 @@ body[data-page="library"] {
   border-color: transparent;
   background: var(--control);
   color: var(--ink);
+}
+
+.collection-row-action::before {
+  content: "";
+  flex: none;
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  pointer-events: none;
 }
 
 .collection-row-action[data-collection-action="rename"] {
