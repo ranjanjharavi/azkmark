@@ -1,0 +1,92 @@
+/* Import and export controls and feedback. */
+.backup-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--library-space-2);
+  max-width: 100%;
+  margin-left: auto;
+}
+
+.backup-tools button {
+  font-size: var(--font-size-small);
+}
+
+.backup-icon {
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#open-backup-help,
+#open-import {
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  border-color: transparent;
+  background: transparent;
+  color: var(--secondary);
+  font-size: var(--font-size-small);
+  font-weight: 500;
+}
+
+#open-backup-help:hover:not(:disabled),
+#open-import:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--control);
+  color: var(--ink);
+}
+
+#open-import,
+#export-backup {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--library-space-2);
+  min-height: var(--control-height);
+}
+
+#export-backup:not(:disabled) {
+  border-color: var(--control-rule);
+  background: transparent;
+  color: var(--ink);
+}
+
+#export-backup:hover:not(:disabled) {
+  background: var(--control);
+}
+
+#export-status,
+#import-status {
+  margin: 0 0 var(--library-space-2);
+  color: var(--accent);
+  font-size: var(--font-size-small);
+}
+
+#export-status:empty,
+#import-status:empty {
+  display: none;
+}
+
+#export-error,
+#import-error {
+  margin: 0 0 var(--library-space-4);
+  color: var(--danger);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .backup-tools {
+    justify-content: flex-start;
+    width: 100%;
+    margin-left: 0;
+  }
+}
