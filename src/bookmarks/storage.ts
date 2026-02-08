@@ -16,6 +16,9 @@ import {
 import type { Collection } from "./collections.js";
 import { sameTags, snapshotTags } from "./tags.js";
 import { parseWebUrl } from "../shared/urls.js";
+import { readStorage, removeStorage, watchStorage, writeStorage } from "../local/chrome-storage.js";
+
+export { StorageQuotaError } from "../local/chrome-storage.js";
 
 const BOOKMARK_KEY_PREFIX = "azkmark:bookmark:";
 export const COLLECTIONS_KEY = "azkmark:collections";
@@ -66,36 +69,6 @@ export class InvalidStoredBookmarkError extends TypeError {
     super("Invalid stored bookmark.");
     this.name = "InvalidStoredBookmarkError";
   }
-}
-
-export class StorageQuotaError extends Error {
-  constructor(message = "Bookmark storage quota exceeded.") {
-    super(message);
-    this.name = "StorageQuotaError";
-  }
-}
-
-function rethrowStorageError(cause: unknown): never {
-  if (!(cause instanceof Error) || !cause.message) {
-    throw new Error("Chrome storage operation failed.");
-  }
-
-  if (/quota/i.test(cause.message)) {
-    throw new StorageQuotaError(cause.message);
-  }
-  throw cause;
-}
-
-function readStorage(keys: string | null): Promise<Record<string, unknown>> {
-  return chrome.storage.local.get(keys).catch(rethrowStorageError);
-}
-
-function writeStorage(items: Record<string, unknown>): Promise<void> {
-  return chrome.storage.local.set(items).catch(rethrowStorageError);
-}
-
-function removeStorage(key: string): Promise<void> {
-  return chrome.storage.local.remove(key).catch(rethrowStorageError);
 }
 
 function bookmarkKey(url: string): string {
@@ -178,12 +151,8 @@ export async function readLibrary(): Promise<LibraryData> {
 }
 
 export function watchBookmarks(onChange: () => void): void {
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== "local") {
-      return;
-    }
-
-    if (Object.keys(changes).some((key) => key.startsWith(BOOKMARK_KEY_PREFIX) || key === COLLECTIONS_KEY)) {
+  watchStorage((keys) => {
+    if (keys.some((key) => key.startsWith(BOOKMARK_KEY_PREFIX) || key === COLLECTIONS_KEY)) {
       onChange();
     }
   });

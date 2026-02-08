@@ -9,10 +9,14 @@ import {
   deleteBookmark,
   deleteCollection,
   importBookmarkRecords,
+  readCollections,
+  readLastCollection,
   readLibrary,
   saveBookmark,
+  saveCollection,
   updateBookmark,
   updateBookmarkViewed,
+  watchBookmarks,
 } from "../dist/bookmarks/storage.js";
 
 // Only the storage and exclusive-lock APIs used by these tests are modeled.
@@ -22,6 +26,7 @@ function useStorageHarness(t, initial = {}) {
   const reads = [];
   const writes = [];
   const requests = [];
+  const changeListeners = [];
   const heldLocks = new AsyncLocalStorage();
   const tails = new Map();
   t.after(() => heldLocks.disable());
@@ -62,7 +67,12 @@ function useStorageHarness(t, initial = {}) {
     },
   };
 
-  const globals = { chrome: { storage: { local } }, navigator: { locks } };
+  const onChanged = {
+    addListener(listener) {
+      changeListeners.push(listener);
+    },
+  };
+  const globals = { chrome: { storage: { local, onChanged } }, navigator: { locks } };
   for (const [name, value] of Object.entries(globals)) {
     const previous = Object.getOwnPropertyDescriptor(globalThis, name);
     Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
@@ -75,7 +85,7 @@ function useStorageHarness(t, initial = {}) {
     });
   }
 
-  return { data, reads, writes, requests, locks, local };
+  return { data, reads, writes, requests, changeListeners, locks, local };
 }
 
 function rejectWrite(t, local, key, cause) {
@@ -111,6 +121,70 @@ function bookmarkKey(url) {
 
 const reading = Object.freeze({ id: "reading", name: "Reading" });
 const work = Object.freeze({ id: "work", name: "Work" });
+
+test("library reads preserve exact URL keys and ignore unrelated Chrome storage", async (t) => {
+  const record = bookmark("page/?q=one#part", {
+    collectionId: reading.id,
+    thumbnailUrl: "https://images.example.com/preview.png",
+    tags: ["keep"],
+    viewed: true,
+  });
+  const initial = {
+    [bookmarkKey(record.url)]: record,
+    [COLLECTIONS_KEY]: [reading, work],
+    [LAST_COLLECTION_KEY]: reading.id,
+    unrelated: { invalidBookmark: true },
+  };
+  const harness = useStorageHarness(t, initial);
+
+  assert.deepEqual(await readLibrary(), { bookmarks: [record], collections: [reading, work] });
+  assert.deepEqual(await readCollections(), [reading, work]);
+  assert.equal(await readLastCollection(), reading.id);
+  assert.deepEqual(harness.data, initial);
+  assert.deepEqual(harness.writes, []);
+});
+
+test("bookmark watchers report only managed changes in local storage", (t) => {
+  const harness = useStorageHarness(t);
+  let notifications = 0;
+  watchBookmarks(() => {
+    notifications++;
+  });
+  assert.equal(harness.changeListeners.length, 1);
+  const [notify] = harness.changeListeners;
+  const key = bookmarkKey("https://example.com/watched");
+
+  notify({ [key]: {} }, "sync");
+  notify({ [COLLECTIONS_KEY]: {} }, "session");
+  notify({ [LAST_COLLECTION_KEY]: {}, unrelated: {} }, "local");
+  notify({}, "local");
+  assert.equal(notifications, 0);
+
+  notify({ [key]: {} }, "local");
+  assert.equal(notifications, 1);
+  notify({ [COLLECTIONS_KEY]: {} }, "local");
+  assert.equal(notifications, 2);
+  notify({ [key]: {}, [COLLECTIONS_KEY]: {} }, "local");
+  assert.equal(notifications, 3);
+  assert.deepEqual(harness.reads, []);
+  assert.deepEqual(harness.writes, []);
+});
+
+test("unchanged bookmark and collection edits avoid persistence writes", async (t) => {
+  const record = bookmark("unchanged", { collectionId: reading.id, tags: ["keep"], viewed: true });
+  const initial = { [COLLECTIONS_KEY]: [reading], [bookmarkKey(record.url)]: record };
+  const harness = useStorageHarness(t, initial);
+
+  assert.deepEqual(await updateBookmark(record.url, {
+    title: `  ${record.title}  `,
+    collectionId: reading.id,
+    tags: ["keep"],
+  }), { status: "unchanged", bookmark: record });
+  assert.deepEqual(await updateBookmarkViewed(record.url, true), { status: "updated", bookmark: record });
+  assert.deepEqual(await saveCollection("  Reading  ", reading.id), reading);
+  assert.deepEqual(harness.writes, []);
+  assert.deepEqual(harness.data, initial);
+});
 
 test("concurrent same-URL saves write once and retain the first winner's details", async (t) => {
   const harness = useStorageHarness(t);
