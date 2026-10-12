@@ -10,7 +10,13 @@
     "test": "npm run build && node --test"
   },
   "devDependencies": {
+    "jsdom": "30.1.2",
     "typescript": "5.9.3"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "dompurify": "3.4.17",
+    "lucide": "1.55.0",
+    "marked": "18.1.1"
+  }
 }
