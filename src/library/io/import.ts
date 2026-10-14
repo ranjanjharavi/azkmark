@@ -103,7 +103,7 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
       if (readingFile) {
         errorElement.textContent = "Couldn't read the selected file. Use Import to try again or choose another file.";
       } else if (cause instanceof UnsupportedBackupVersionError) {
-        errorElement.textContent = "This backup version isn't supported. Choose an azkmark version 1, 2 or 3 backup.";
+        errorElement.textContent = "This backup version isn't supported. Choose an azkmark version 1, 2, 3 or 4 backup.";
       } else {
         errorElement.textContent = "This isn't a valid azkmark JSON backup or Chrome HTML export. No bookmarks or collections were changed.";
       }

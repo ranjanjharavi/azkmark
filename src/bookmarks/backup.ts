@@ -3,9 +3,9 @@ import type { Bookmark, LibraryData } from "./model.js";
 import type { Collection } from "./collections.js";
 
 const BACKUP_FORMAT = "azkmark";
-const BACKUP_VERSION = 3;
+const BACKUP_VERSION = 4;
 
-type BackupVersion = 1 | 2 | 3;
+type BackupVersion = 1 | 2 | 3 | 4;
 
 interface BackupEnvelope {
   version: BackupVersion;
@@ -25,8 +25,8 @@ function validateLegacyBookmarkFields(bookmarks: readonly unknown[], version: Ba
     }
 
     if (
-      Object.hasOwn(bookmark, "collectionId")
-      || Object.hasOwn(bookmark, "tags")
+      Object.hasOwn(bookmark, "notes")
+      || (version < 3 && (Object.hasOwn(bookmark, "collectionId") || Object.hasOwn(bookmark, "tags")))
       || (version === 1 && Object.hasOwn(bookmark, "viewed"))
     ) {
       throw new TypeError("Invalid bookmark collection.");
@@ -81,11 +81,11 @@ function parseEnvelope(json: string): BackupEnvelope {
     throw new TypeError("Invalid bookmark backup.");
   }
 
-  if (version !== 1 && version !== 2 && version !== BACKUP_VERSION) {
+  if (version !== 1 && version !== 2 && version !== 3 && version !== BACKUP_VERSION) {
     throw new UnsupportedBackupVersionError();
   }
 
-  const fields = version === BACKUP_VERSION
+  const fields = version >= 3
     ? ["format", "version", "bookmarks", "collections"]
     : ["format", "version", "bookmarks"];
   if (
@@ -102,6 +102,6 @@ export function parseBackup(json: string): LibraryData {
   const envelope = parseEnvelope(json);
   validateLegacyBookmarkFields(envelope.bookmarks, envelope.version);
 
-  const collections = envelope.version === BACKUP_VERSION ? envelope.collections : [];
+  const collections = envelope.version >= 3 ? envelope.collections : [];
   return snapshotLibrary(envelope.bookmarks, collections);
 }
