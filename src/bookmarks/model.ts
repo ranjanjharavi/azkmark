@@ -2,6 +2,8 @@ import { parseWebUrl } from "../shared/urls.js";
 import { isCollectionId, snapshotCollections } from "./collections.js";
 import type { Collection } from "./collections.js";
 import { isTags, snapshotTags } from "./tags.js";
+import { isNotes, snapshotNotes } from "./notes.js";
+import type { BookmarkNote } from "./notes.js";
 
 export interface Bookmark {
   url: string;
@@ -11,6 +13,7 @@ export interface Bookmark {
   viewed?: boolean;
   collectionId?: string;
   tags?: string[];
+  notes?: BookmarkNote[];
 }
 
 export interface LibraryData {
@@ -23,10 +26,11 @@ export type BookmarkDetails = Pick<Bookmark, "url" | "title"> & {
   viewed?: boolean | undefined;
   collectionId?: string | undefined;
   tags?: readonly string[] | undefined;
+  notes?: readonly BookmarkNote[] | undefined;
 };
 
 const BOOKMARK_FIELDS = new Set([
-  "url", "title", "savedAt", "thumbnailUrl", "viewed", "collectionId", "tags",
+  "url", "title", "savedAt", "thumbnailUrl", "viewed", "collectionId", "tags", "notes",
 ]);
 
 export function isBookmark(value: unknown): value is Bookmark {
@@ -84,6 +88,10 @@ export function isBookmark(value: unknown): value is Bookmark {
       return false;
     }
 
+    if (Object.hasOwn(fields, "notes") && !isNotes(fields["notes"].value)) {
+      return false;
+    }
+
     if (!Object.hasOwn(fields, "thumbnailUrl")) return true;
 
     const thumbnail = parseWebUrl(fields["thumbnailUrl"].value);
@@ -94,6 +102,7 @@ export function isBookmark(value: unknown): value is Bookmark {
 }
 
 export function createBookmark(details: BookmarkDetails, savedAt = Date.now()): Bookmark {
+  const notes = details?.notes === undefined ? undefined : snapshotNotes(details.notes);
   const record = {
     url: details?.url,
     title: details?.title,
@@ -102,6 +111,7 @@ export function createBookmark(details: BookmarkDetails, savedAt = Date.now()): 
     ...(details?.viewed === undefined ? {} : { viewed: details.viewed }),
     ...(details?.collectionId === undefined ? {} : { collectionId: details.collectionId }),
     ...(details?.tags === undefined ? {} : { tags: snapshotTags(details.tags) }),
+    ...(notes?.length ? { notes } : {}),
   };
 
   if (!isBookmark(record)) {
