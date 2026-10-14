@@ -15,6 +15,8 @@ import {
 } from "./collections.js";
 import type { Collection } from "./collections.js";
 import { sameTags, snapshotTags } from "./tags.js";
+import { isNoteBody, sameNote, snapshotNotes } from "./notes.js";
+import type { BookmarkNote } from "./notes.js";
 import { parseWebUrl } from "../shared/urls.js";
 import { readStorage, removeStorage, watchStorage, writeStorage } from "../local/chrome-storage.js";
 
@@ -48,6 +50,11 @@ export type UpdateBookmarkViewedResult =
 export type DeleteBookmarkResult =
   | { status: "deleted" }
   | { status: "not-found" };
+
+export type NoteMutationResult =
+  | { status: "updated" | "unchanged"; bookmark: Bookmark }
+  | { status: "not-found" | "note-not-found" }
+  | { status: "conflict"; bookmark: Bookmark; note: BookmarkNote };
 
 export type ImportBookmarksResult =
   | { status: "imported"; added: number; skipped: number; collectionsAdded: number }
@@ -249,6 +256,56 @@ export async function updateBookmarkViewed(
     const updated = createBookmark({ ...existing, viewed }, existing.savedAt);
     await writeStorage({ [key]: updated });
     return { status: "updated", bookmark: updated };
+  });
+}
+
+async function mutateNotes(
+  url: string,
+  change: (bookmark: Bookmark) => BookmarkNote[] | NoteMutationResult,
+): Promise<NoteMutationResult> {
+  const key = bookmarkKey(url);
+  return navigator.locks.request(key, async () => {
+    const existing = await readStoredBookmark(key);
+    if (!existing) return { status: "not-found" };
+    const result = change(existing);
+    if (!Array.isArray(result)) return result;
+    const updated = createBookmark({ ...existing, notes: result }, existing.savedAt);
+    await writeStorage({ [key]: updated });
+    return { status: "updated", bookmark: updated };
+  });
+}
+
+export async function addBookmarkNote(url: string, note: BookmarkNote): Promise<NoteMutationResult> {
+  const submitted = snapshotNotes([note])[0];
+  return mutateNotes(url, (bookmark) => {
+    const current = bookmark.notes?.find((entry) => entry.id === submitted.id);
+    if (current) return sameNote(current, submitted)
+      ? { status: "unchanged", bookmark }
+      : { status: "conflict", bookmark, note: current };
+    return [...(bookmark.notes ?? []), submitted];
+  });
+}
+
+export async function updateBookmarkNote(url: string, original: BookmarkNote, body: string): Promise<NoteMutationResult> {
+  const baseline = snapshotNotes([original])[0];
+  if (!isNoteBody(body)) throw new TypeError("Enter a note within the character limit.");
+  return mutateNotes(url, (bookmark) => {
+    const current = bookmark.notes?.find((entry) => entry.id === baseline.id);
+    if (!current) return { status: "note-not-found" };
+    if (!sameNote(current, baseline)) return { status: "conflict", bookmark, note: current };
+    if (current.body === body) return { status: "unchanged", bookmark };
+    const updatedAt = Math.max(Date.now(), (current.updatedAt ?? current.createdAt) + 1);
+    return bookmark.notes!.map((entry) => entry.id === baseline.id ? { ...entry, body, updatedAt } : entry);
+  });
+}
+
+export async function deleteBookmarkNote(url: string, original: BookmarkNote): Promise<NoteMutationResult> {
+  const baseline = snapshotNotes([original])[0];
+  return mutateNotes(url, (bookmark) => {
+    const current = bookmark.notes?.find((entry) => entry.id === baseline.id);
+    if (!current) return { status: "note-not-found" };
+    if (!sameNote(current, baseline)) return { status: "conflict", bookmark, note: current };
+    return bookmark.notes!.filter((entry) => entry.id !== baseline.id);
   });
 }
 

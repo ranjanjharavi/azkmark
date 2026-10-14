@@ -16,6 +16,9 @@ import {
   saveCollection,
   updateBookmark,
   updateBookmarkViewed,
+  addBookmarkNote,
+  updateBookmarkNote,
+  deleteBookmarkNote,
   watchBookmarks,
 } from "../dist/bookmarks/storage.js";
 
@@ -121,6 +124,91 @@ function bookmarkKey(url) {
 
 const reading = Object.freeze({ id: "reading", name: "Reading" });
 const work = Object.freeze({ id: "work", name: "Work" });
+
+const note = (id, body = "**Research**") => ({ id, body, createdAt: 10 });
+
+test("concurrent note additions and metadata edits preserve all locked fields", async (t) => {
+  const record = bookmark("journal", { tags: ["keep"], thumbnailUrl: "https://example.com/image.png" });
+  const key = bookmarkKey(record.url);
+  const harness = useStorageHarness(t, { [key]: record });
+  await Promise.all([
+    addBookmarkNote(record.url, note("first")),
+    addBookmarkNote(record.url, note("second")),
+    updateBookmark(record.url, { title: "Updated" }),
+    updateBookmarkViewed(record.url, true),
+  ]);
+  assert.deepEqual(harness.data[key].notes, [note("first"), note("second")]);
+  assert.equal(harness.data[key].title, "Updated");
+  assert.equal(harness.data[key].viewed, true);
+  assert.equal(harness.data[key].savedAt, record.savedAt);
+  assert.deepEqual(harness.data[key].tags, ["keep"]);
+  assert.equal(harness.data[key].thumbnailUrl, record.thumbnailUrl);
+  assert.ok(harness.writes.every((write) => write.locks.includes(key)));
+});
+
+test("note additions snapshot input before locks and retries do not duplicate entries", async (t) => {
+  const record = bookmark("retry-note");
+  const key = bookmarkKey(record.url);
+  const harness = useStorageHarness(t, { [key]: record });
+  const original = note("stable");
+  const pending = addBookmarkNote(record.url, original);
+  original.body = "changed by caller";
+  assert.equal((await pending).status, "updated");
+  assert.equal((await addBookmarkNote(record.url, note("stable"))).status, "unchanged");
+  assert.equal(harness.data[key].notes.length, 1);
+  assert.equal(harness.writes.length, 1);
+  assert.equal((await addBookmarkNote(record.url, note("stable", "different"))).status, "conflict");
+});
+
+test("stale edits and deletes conflict while different entries remain independent", async (t) => {
+  const first = note("first");
+  const second = note("second");
+  const record = bookmark("conflicts", { notes: [first, second] });
+  const key = bookmarkKey(record.url);
+  const harness = useStorageHarness(t, { [key]: record });
+  const results = await Promise.all([
+    updateBookmarkNote(record.url, first, "first edit"),
+    updateBookmarkNote(record.url, first, "stale edit"),
+    updateBookmarkNote(record.url, second, "independent edit"),
+  ]);
+  assert.deepEqual(results.map(({ status }) => status), ["updated", "conflict", "updated"]);
+  assert.equal((await deleteBookmarkNote(record.url, first)).status, "conflict");
+  assert.deepEqual(harness.data[key].notes.map(({ body }) => body), ["first edit", "independent edit"]);
+  assert.equal(harness.data[key].notes[0].createdAt, first.createdAt);
+});
+
+test("deleting the last note omits the field and missing targets are never recreated", async (t) => {
+  const original = note("only");
+  const record = bookmark("remove-notes", { notes: [original] });
+  const key = bookmarkKey(record.url);
+  const harness = useStorageHarness(t, { [key]: record });
+  assert.equal((await deleteBookmarkNote(record.url, original)).status, "updated");
+  assert.equal(Object.hasOwn(harness.data[key], "notes"), false);
+  assert.equal((await updateBookmarkNote(record.url, original, "gone")).status, "note-not-found");
+  await deleteBookmark(record.url);
+  assert.equal((await addBookmarkNote(record.url, note("new"))).status, "not-found");
+  assert.equal(Object.hasOwn(harness.data, key), false);
+});
+
+test("failed note writes preserve saved data and permit an idempotent retry", async (t) => {
+  const record = bookmark("quota-note");
+  const key = bookmarkKey(record.url);
+  const harness = useStorageHarness(t, { [key]: record });
+  const failure = rejectWrite(t, harness.local, key, new Error("QUOTA_BYTES exceeded"));
+  await assert.rejects(addBookmarkNote(record.url, note("retry")), StorageQuotaError);
+  assert.deepEqual(harness.data[key], record);
+  failure.mock.restore();
+  assert.equal((await addBookmarkNote(record.url, note("retry"))).status, "updated");
+});
+
+test("imports skip duplicate URLs without replacing existing notes", async (t) => {
+  const record = bookmark("import-notes", { notes: [note("existing")] });
+  const key = bookmarkKey(record.url);
+  const harness = useStorageHarness(t, { [key]: record });
+  const result = await importBookmarkRecords([{ ...record, notes: [note("incoming")] }]);
+  assert.equal(result.skipped, 1);
+  assert.deepEqual(harness.data[key].notes, record.notes);
+});
 
 test("library reads preserve exact URL keys and ignore unrelated Chrome storage", async (t) => {
   const record = bookmark("page/?q=one#part", {
