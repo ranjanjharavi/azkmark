@@ -114,7 +114,8 @@ export function filterBookmarks(
     return !term
       || bookmark.title.toLowerCase().includes(term)
       || bookmark.url.toLowerCase().includes(term)
-      || tags.some((label) => label.includes(term));
+      || tags.some((label) => label.includes(term))
+      || bookmark.notes?.some((note) => note.body.toLowerCase().includes(term)) === true;
   });
 
   matches.sort((left, right) => compareBookmarks(left, right, sort));

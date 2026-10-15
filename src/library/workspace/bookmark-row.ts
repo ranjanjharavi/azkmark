@@ -42,6 +42,12 @@ export function bookmarkRow(
   const metadata = document.createElement("span");
   metadata.className = "bookmark-row-meta";
   metadata.appendChild(status);
+  if (bookmark.notes?.length) {
+    const count = document.createElement("span");
+    count.className = "bookmark-note-count";
+    count.textContent = `${bookmark.notes.length} ${bookmark.notes.length === 1 ? "note" : "notes"}`;
+    metadata.appendChild(count);
+  }
   metadata.appendChild(age);
 
   button.appendChild(domain);

@@ -94,6 +94,9 @@ export function initializeManagement({
     titleErrorElement.hidden = true;
     editFieldsElement.hidden = mode !== "edit";
     deleteCopyElement.hidden = mode !== "delete";
+    deleteCopyElement.textContent = bookmark.notes?.length
+      ? `This permanently deletes this bookmark and its ${bookmark.notes.length} notes. It can't be undone.`
+      : "This permanently deletes this bookmark from your azkmark library. It can't be undone.";
     errorElement.hidden = true;
     statusElement.textContent = "";
     submitButtonElement.textContent = mode === "edit" ? "Save changes" : "Delete bookmark";
