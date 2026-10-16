@@ -24,6 +24,7 @@ export function bookmarkDetails(
   bookmark: Bookmark,
   collections: readonly Collection[],
   savingViewStatus = false,
+  notesPanel?: HTMLElement,
 ): HTMLDivElement {
   const details = document.createElement("div");
   details.className = "bookmark-detail-content";
@@ -56,11 +57,6 @@ export function bookmarkDetails(
   title.textContent = bookmark.title;
   details.appendChild(title);
 
-  const url = document.createElement("p");
-  url.className = "bookmark-url";
-  url.textContent = bookmark.url;
-  details.appendChild(url);
-
   const link = document.createElement("a");
   link.className = "bookmark-open";
   link.href = bookmark.url;
@@ -78,8 +74,15 @@ export function bookmarkDetails(
   arrowPath.setAttribute("d", "M7 17 17 7M7 7h10v10");
   arrow.appendChild(arrowPath);
   link.appendChild(arrow);
-  details.appendChild(link);
+  const toolbar = document.createElement("div");
+  toolbar.className = "bookmark-open-row";
+  toolbar.append(link, bookmarkActions(bookmark, savingViewStatus));
+  details.append(toolbar);
+  details.append(notesPanel ?? bookmarkMetadata(bookmark, collections));
+  return details;
+}
 
+export function bookmarkMetadata(bookmark: Bookmark, collections: readonly Collection[]): HTMLDListElement {
   const metadata = document.createElement("dl");
   metadata.className = "bookmark-detail-metadata";
   if (bookmark.tags?.length) {
@@ -95,7 +98,6 @@ export function bookmarkDetails(
   }
   const collectionName = collections.find(({ id }) => id === bookmark.collectionId)?.name ?? "Unsorted";
   appendMetadata(metadata, "Collection", collectionName);
-  details.appendChild(metadata);
-  details.appendChild(bookmarkActions(bookmark, savingViewStatus));
-  return details;
+  appendMetadata(metadata, "URL", bookmark.url);
+  return metadata;
 }
