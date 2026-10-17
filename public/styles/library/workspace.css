@@ -320,6 +320,24 @@
   overflow-wrap: anywhere;
 }
 
+@media (min-width: 761px) {
+  .bookmark-workspace {
+    box-sizing: border-box;
+    grid-template-rows: minmax(0, 1fr);
+    height: max(484px, var(--workspace-height, calc(100dvh - 400px)));
+  }
+
+  #bookmarks,
+  #bookmark-details {
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
+  }
+}
+
 @media (max-width: 860px) {
   .bookmark-workspace {
     grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1fr);
@@ -334,7 +352,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .bookmark-workspace {
     grid-template-columns: minmax(0, 1fr);
   }

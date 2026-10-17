@@ -3,7 +3,9 @@ import type { Collection } from "../bookmarks/collections.js";
 import type { LibraryFilters } from "./filters.js";
 import { requireElement } from "../ui/dom.js";
 import { bookmarkRow } from "./workspace/bookmark-row.js";
-import { bookmarkDetails } from "./workspace/bookmark-details.js";
+import { bookmarkDetails, bookmarkMetadata } from "./workspace/bookmark-details.js";
+import { initializeNotesPanel } from "./workspace/notes-panel.js";
+import { renderNoteIcons } from "../ui/markdown.js";
 import { initializeBookmarkPreviews } from "./workspace/bookmark-preview.js";
 import { initializeSavedDateRefresh } from "./saved-date-refresh.js";
 import { createSavedDateFormatter } from "./saved-date.js";
@@ -20,7 +22,7 @@ interface LibraryViewState {
   now: number;
 }
 
-export function initializeLibraryView(onDateChange: (now: number) => void) {
+export function initializeLibraryView(onDateChange: (now: number) => void, refresh: () => Promise<void>) {
   const collectionEmpty = requireElement<HTMLElement>("#collection-empty");
   const collectionEmptyTitle = requireElement<HTMLHeadingElement>("#collection-empty-title");
   const collectionEmptyCopy = requireElement<HTMLParagraphElement>("#collection-empty-copy");
@@ -39,6 +41,31 @@ export function initializeLibraryView(onDateChange: (now: number) => void) {
   const bookmarkDetailsElement = requireElement<HTMLElement>("#bookmark-details");
   const selectionFeedbackElement = requireElement<HTMLParagraphElement>("#selection-feedback");
   let renderedDetailsKey: string | undefined;
+  let renderedDetailsUrl: string | undefined;
+  const notesPanel = initializeNotesPanel(refresh);
+
+  function sizeWorkspace(): void {
+    if (workspaceElement.hidden) return;
+    const main = workspaceElement.parentElement!;
+    const bottomInset = [
+      window.getComputedStyle(main).paddingBottom,
+      window.getComputedStyle(document.body).paddingBottom,
+      window.getComputedStyle(main.parentElement!).borderBottomWidth,
+    ].reduce((total, value) => total + (Number.parseFloat(value) || 0), 0);
+    const top = workspaceElement.getBoundingClientRect().top + window.scrollY;
+    const height = `${Math.floor(window.innerHeight - top - bottomInset)}px`;
+    if (workspaceElement.style.getPropertyValue("--workspace-height") !== height) {
+      workspaceElement.style.setProperty("--workspace-height", height);
+    }
+  }
+
+  const layoutObserver = new ResizeObserver(sizeWorkspace);
+  const main = workspaceElement.parentElement!;
+  for (const child of main.children) {
+    if (child !== workspaceElement) layoutObserver.observe(child);
+  }
+  layoutObserver.observe(requireElement<HTMLElement>(".library-app-header"));
+  window.addEventListener("resize", sizeWorkspace);
 
   function bookmarkCount(count: number): string {
     return `${count} ${count === 1 ? "bookmark" : "bookmarks"}`;
@@ -55,6 +82,8 @@ export function initializeLibraryView(onDateChange: (now: number) => void) {
       return;
     }
 
+    const scrollTop = bookmark?.url === renderedDetailsUrl ? bookmarkDetailsElement.scrollTop : 0;
+    renderedDetailsUrl = bookmark?.url;
     bookmarkPreviews.clear();
     bookmarkDetailsElement.replaceChildren();
     renderedDetailsKey = undefined;
@@ -62,8 +91,11 @@ export function initializeLibraryView(onDateChange: (now: number) => void) {
       return;
     }
 
-    const details = bookmarkDetails(bookmark, collections, savingViewStatus);
+    const panel = notesPanel.render(bookmark, bookmarkMetadata(bookmark, collections));
+    const details = bookmarkDetails(bookmark, collections, savingViewStatus, panel);
     bookmarkDetailsElement.appendChild(details);
+    renderNoteIcons(details);
+    bookmarkDetailsElement.scrollTop = scrollTop;
     renderedDetailsKey = key;
   }
 
@@ -143,6 +175,7 @@ export function initializeLibraryView(onDateChange: (now: number) => void) {
     bookmarksListElement.setAttribute("aria-busy", "false");
     libraryErrorElement.hidden = true;
 
+    sizeWorkspace();
     bookmarkPreviews.observe();
     savedDateRefresh.update(!isEmpty, now);
   }
@@ -154,6 +187,7 @@ export function initializeLibraryView(onDateChange: (now: number) => void) {
 
   function showError(): void {
     renderedDetailsKey = undefined;
+    renderedDetailsUrl = undefined;
     libraryTotalElement.hidden = true;
     bookmarkPreviews.clear();
     savedDateRefresh.update(false);

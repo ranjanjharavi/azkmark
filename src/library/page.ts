@@ -26,7 +26,7 @@ export function initializeLibrary(): void {
     onReset: () => focus.reset(),
     isAvailable: () => library !== undefined,
   });
-  const view = initializeLibraryView((now) => render("", focus.capture(), now));
+  const view = initializeLibraryView((now) => render("", focus.capture(), now), () => refresh());
   const focus = initializeLibraryFocus({ ...filters.elements, ...view.elements }, () => ({
     library,
     selectedUrl,
@@ -77,6 +77,8 @@ export function initializeLibrary(): void {
     const matches = filterBookmarks(library, { ...filterState, now }).filter(inScope);
     const selectedBookmark = reconcileSelection(matches, library, selectedUrl, view.previousUrls());
     selectedUrl = selectedBookmark?.url;
+    const active = document.activeElement;
+    const noteFocus = active instanceof HTMLElement && active.closest(".bookmark-notes") ? active : undefined;
     view.render({
       library,
       collections,
@@ -88,7 +90,8 @@ export function initializeLibrary(): void {
       notice,
       now,
     });
-    focus.restore(previousFocus);
+    if (noteFocus?.isConnected) noteFocus.focus({ preventScroll: true });
+    else focus.restore(previousFocus);
   }
 
   async function readAndRenderBookmarks(): Promise<void> {

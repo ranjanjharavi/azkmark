@@ -10,9 +10,13 @@
     <link rel="stylesheet" href="styles/library/layout.css" />
     <link rel="stylesheet" href="styles/library/controls.css" />
     <link rel="stylesheet" href="styles/library/workspace.css" />
+    <link rel="stylesheet" href="styles/library/notes.css" />
     <link rel="stylesheet" href="styles/library/dialogs.css" />
     <link rel="stylesheet" href="styles/library/collections.css" />
     <link rel="stylesheet" href="styles/library/io.css" />
+    <script defer src="vendor/marked.js"></script>
+    <script defer src="vendor/purify.js"></script>
+    <script defer src="vendor/lucide.js"></script>
     <script type="module" src="library.js"></script>
   </head>
   <body data-page="library">
@@ -65,7 +69,7 @@
                 <path d="m16 16 5 5" />
               </svg>
               <span class="visually-hidden">Search bookmarks</span>
-              <input id="search" name="query" type="search" placeholder="Search titles, URLs, or tags…" autocomplete="off" spellcheck="false" disabled />
+              <input id="search" name="query" type="search" placeholder="Search titles, URLs, tags, or notes..." autocomplete="off" spellcheck="false" disabled />
             </label>
             <button id="toggle-filters" type="button" aria-expanded="false" aria-controls="library-filters" disabled>
               <svg class="library-control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -193,7 +197,8 @@
     <dialog id="backup-dialog" aria-labelledby="backup-heading">
       <h2 id="backup-heading">About backups</h2>
       <p>What's exported: Your entire library and all collections, bypassing any active filters.</p>
-      <p>Data included: URLs, titles, dates, statuses, tags, collection assignments, and thumbnail links.</p>
+      <p>Data included: URLs, titles, dates, statuses, tags, collection assignments, thumbnail links, and dated Markdown notes.</p>
+      <p>Version 4 JSON backups preserve note histories. Versions 1, 2, and 3 remain importable. Chrome HTML imports do not include azkmark notes. Duplicate URLs keep their existing details and notes.</p>
       <p>Import: use Import in the header to choose an azkmark JSON backup or Chrome HTML export.</p>
       <form method="dialog" class="management-actions">
         <button type="submit" autofocus>Close</button>
