@@ -36,11 +36,11 @@ export type UpdateBookmarkResult =
   | { status: "not-found" };
 
 export interface BookmarkChanges {
-  title?: string | undefined;
+  title?: string;
   // Undefined preserves the current assignment; null explicitly means Unsorted.
-  collectionId?: string | null | undefined;
+  collectionId?: string | null;
   // Undefined preserves the latest tags; an empty array explicitly clears them.
-  tags?: readonly string[] | undefined;
+  tags?: readonly string[];
 }
 
 export type UpdateBookmarkViewedResult =
@@ -483,7 +483,7 @@ export async function deleteCollection(id: string): Promise<DeleteCollectionResu
         const changed = await navigator.locks.request(key, async (): Promise<boolean> => {
           const current = await readStoredBookmark(key);
 
-          if (!current || current.collectionId !== id) {
+          if (current?.collectionId !== id) {
             return false;
           }
 

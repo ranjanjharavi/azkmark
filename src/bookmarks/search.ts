@@ -58,11 +58,11 @@ export function savedDateRange(
   }
 
   const currentDate = new Date(now);
-  const startDate = new Date(currentDate.getTime());
+  const startDate = new Date(currentDate);
   startDate.setDate(startDate.getDate() - days + 1);
   startDate.setHours(0, 0, 0, 0);
 
-  const endDate = new Date(currentDate.getTime());
+  const endDate = new Date(currentDate);
   endDate.setDate(endDate.getDate() + 1);
   endDate.setHours(0, 0, 0, 0);
 

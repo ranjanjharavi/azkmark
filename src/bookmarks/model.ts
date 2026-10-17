@@ -22,16 +22,36 @@ export interface LibraryData {
 }
 
 export type BookmarkDetails = Pick<Bookmark, "url" | "title"> & {
-  thumbnailUrl?: string | undefined;
-  viewed?: boolean | undefined;
-  collectionId?: string | undefined;
-  tags?: readonly string[] | undefined;
-  notes?: readonly BookmarkNote[] | undefined;
+  thumbnailUrl?: string;
+  viewed?: boolean;
+  collectionId?: string;
+  tags?: readonly string[];
+  notes?: readonly BookmarkNote[];
 };
 
 const BOOKMARK_FIELDS = new Set([
   "url", "title", "savedAt", "thumbnailUrl", "viewed", "collectionId", "tags", "notes",
 ]);
+
+function bookmarkFields(value: object): PropertyDescriptorMap | undefined {
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) {
+    return undefined;
+  }
+
+  const fields = Object.getOwnPropertyDescriptors(value);
+  for (const key of Reflect.ownKeys(fields)) {
+    if (typeof key !== "string" || !BOOKMARK_FIELDS.has(key)) {
+      return undefined;
+    }
+
+    const field = fields[key];
+    if (!field.enumerable || !Object.hasOwn(field, "value")) {
+      return undefined;
+    }
+  }
+  return fields;
+}
 
 export function isBookmark(value: unknown): value is Bookmark {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -39,25 +59,10 @@ export function isBookmark(value: unknown): value is Bookmark {
   }
 
   try {
-    const prototype = Object.getPrototypeOf(value);
-    if (prototype !== Object.prototype && prototype !== null) {
-      return false;
-    }
-
-    const fields = Object.getOwnPropertyDescriptors(value);
-    for (const key of Reflect.ownKeys(fields)) {
-      if (typeof key !== "string" || !BOOKMARK_FIELDS.has(key)) {
-        return false;
-      }
-
-      const field = fields[key];
-      if (!field.enumerable || !Object.hasOwn(field, "value")) {
-        return false;
-      }
-    }
-
+    const fields = bookmarkFields(value);
     if (
-      !Object.hasOwn(fields, "url")
+      !fields
+      || !Object.hasOwn(fields, "url")
       || !Object.hasOwn(fields, "title")
       || !Object.hasOwn(fields, "savedAt")
     ) {
@@ -127,8 +132,7 @@ export function snapshotBookmarks(value: unknown): Bookmark[] {
   }
 
   const records: Bookmark[] = [];
-  for (let index = 0; index < value.length; index++) {
-    const bookmark: unknown = value[index];
+  for (const bookmark of value) {
     if (!isBookmark(bookmark)) {
       throw new TypeError("Invalid bookmark collection.");
     }
