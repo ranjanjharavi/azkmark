@@ -11,9 +11,14 @@ body {
   display: none !important;
 }
 
-p {
+p,
+output {
   margin: 0 0 16px;
   color: var(--secondary);
+}
+
+output {
+  display: block;
 }
 
 button {

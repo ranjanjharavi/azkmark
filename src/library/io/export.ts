@@ -3,7 +3,7 @@ import { InvalidStoredBookmarkError, readLibrary } from "../../bookmarks/storage
 
 export function initializeExport(): void {
   const button = document.querySelector<HTMLButtonElement>("#export-backup");
-  const status = document.querySelector<HTMLParagraphElement>("#export-status");
+  const status = document.querySelector<HTMLOutputElement>("#export-status");
   const error = document.querySelector<HTMLParagraphElement>("#export-error");
 
   if (!button || !status || !error) {

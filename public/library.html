@@ -38,6 +38,7 @@
             </svg>
             Import
           </button>
+          <label for="backup-file" class="visually-hidden">Import bookmark backup</label>
           <input id="backup-file" type="file" accept=".json,.html,.htm,application/json,text/html" hidden />
           <button id="export-backup" type="button">
             <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -57,9 +58,9 @@
           <button class="collection-tab" type="button" value="unsorted" aria-pressed="false" aria-controls="bookmarks" disabled>Unsorted</button>
           <button id="manage-collections" class="collection-tab" type="button" aria-haspopup="dialog" aria-controls="collection-dialog" disabled>Manage collections</button>
         </nav>
-        <p id="export-status" role="status" aria-atomic="true"></p>
+        <output id="export-status" aria-atomic="true"></output>
         <p id="export-error" role="alert" hidden></p>
-        <p id="import-status" role="status" aria-atomic="true"></p>
+        <output id="import-status" aria-atomic="true"></output>
         <p id="import-error" role="alert" hidden></p>
         <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
           <div class="library-search-row">
@@ -113,7 +114,7 @@
           </div>
         </form>
         <div class="library-toolbar">
-          <p id="library-status" role="status" aria-atomic="true">Loading bookmarks…</p>
+          <output id="library-status" aria-atomic="true">Loading bookmarks…</output>
           <div id="library-display-controls" class="library-display-controls" hidden>
             <div class="library-sort">
               <label for="sort-by">Sort by</label>
@@ -126,8 +127,8 @@
             </div>
           </div>
         </div>
-        <p id="management-feedback" role="status" aria-atomic="true" hidden></p>
-        <p id="viewed-feedback" role="status" aria-atomic="true"></p>
+        <output id="management-feedback" aria-atomic="true" hidden></output>
+        <output id="viewed-feedback" aria-atomic="true"></output>
         <p id="viewed-error" role="alert" hidden></p>
         <section id="library-empty" aria-labelledby="empty-title" hidden>
           <h2 id="empty-title">No bookmarks yet</h2>
@@ -147,7 +148,7 @@
           <p id="read-error" role="alert"></p>
           <button id="retry" type="button">Try again</button>
         </div>
-        <p id="selection-feedback" class="visually-hidden" role="status" aria-atomic="true"></p>
+        <output id="selection-feedback" class="visually-hidden" aria-atomic="true"></output>
         <div id="bookmark-workspace" class="bookmark-workspace" hidden>
           <ul id="bookmarks" aria-label="Saved bookmarks" aria-busy="true"></ul>
           <article id="bookmark-details" aria-label="Selected bookmark details"></article>
@@ -225,12 +226,12 @@
             <p id="bookmark-tag-help" class="tag-help">Up to 32 tags, 80 characters each. Labels are lowercased; whitespace collapses. Commas stay inside a tag. Save includes pending text.</p>
             <p id="bookmark-tag-error" class="tag-error" role="alert" hidden></p>
             <ul id="bookmark-tags" class="tag-drafts" aria-label="Draft tags" hidden></ul>
-            <p id="bookmark-tag-status" class="visually-hidden" role="status" aria-atomic="true"></p>
+            <output id="bookmark-tag-status" class="visually-hidden" aria-atomic="true"></output>
           </div>
         </div>
         <p id="management-delete" hidden>This permanently deletes this bookmark from your azkmark library. It can't be undone.</p>
         <p id="management-error" role="alert" hidden></p>
-        <p id="management-status" role="status" aria-atomic="true"></p>
+        <output id="management-status" aria-atomic="true"></output>
         <div class="management-actions">
           <button id="management-cancel" type="button">Cancel</button>
           <button id="management-submit" type="submit">Save changes</button>
@@ -261,7 +262,7 @@
           <button id="collection-submit" type="submit">Add collection</button>
         </form>
         <p id="collection-error" role="alert" hidden></p>
-        <p id="collection-status" role="status" aria-atomic="true"></p>
+        <output id="collection-status" aria-atomic="true"></output>
       </div>
       <footer class="collection-dialog-footer">
         <p id="collection-unsorted"></p>
@@ -272,7 +273,7 @@
       <h2 id="collection-delete-heading">Delete collection?</h2>
       <p id="collection-confirm"></p>
       <p id="collection-delete-error" role="alert" hidden></p>
-      <p id="collection-delete-status" role="status" aria-atomic="true"></p>
+      <output id="collection-delete-status" aria-atomic="true"></output>
       <form id="collection-delete-form" novalidate>
         <div class="management-actions">
           <button id="collection-delete-cancel" class="collection-quiet-button" type="button" autofocus>Keep collection</button>

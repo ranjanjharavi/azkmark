@@ -16,7 +16,7 @@ export function initializeTagInput(prefix: string): TagInput {
   const list = requireElement<HTMLUListElement>(`#${prefix}-tags`);
   const suggestions = requireElement<HTMLDataListElement>(`#${prefix}-tag-options`);
   const error = requireElement<HTMLParagraphElement>(`#${prefix}-tag-error`);
-  const status = requireElement<HTMLParagraphElement>(`#${prefix}-tag-status`);
+  const status = requireElement<HTMLElement>(`#${prefix}-tag-status`);
   let draft: string[] = [];
   let vocabulary: readonly string[] = [];
   let disabled = false;
