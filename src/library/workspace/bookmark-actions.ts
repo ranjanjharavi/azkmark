@@ -16,15 +16,15 @@ export function bookmarkActions(bookmark: Bookmark, savingViewStatus = false): H
     const button = document.createElement("button");
     button.type = "button";
     button.className = "bookmark-action";
-    button.setAttribute("data-action", action);
-    button.setAttribute("data-bookmark-url", bookmark.url);
+    button.dataset.action = action;
+    button.dataset.bookmarkUrl = bookmark.url;
 
     let label: string;
     switch (action) {
       case "viewed":
         label = bookmark.viewed ? "Mark to view" : "Mark viewed";
         button.setAttribute("aria-pressed", String(Boolean(bookmark.viewed)));
-        button.setAttribute("data-viewed", String(!bookmark.viewed));
+        button.dataset.viewed = String(!bookmark.viewed);
         button.classList.toggle("is-viewed", Boolean(bookmark.viewed));
         button.setAttribute("aria-busy", String(savingViewStatus));
         button.disabled = savingViewStatus;

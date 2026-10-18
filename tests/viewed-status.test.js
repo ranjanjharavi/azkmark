@@ -11,6 +11,7 @@ function useViewedHarness(t) {
   const error = { hidden: true, textContent: "" };
   const button = {
     disabled: false,
+    dataset: { viewed: "true" },
     attributes: { "data-viewed": "true" },
     getAttribute(name) { return this.attributes[name] ?? null; },
     setAttribute(name, value) { this.attributes[name] = value; },

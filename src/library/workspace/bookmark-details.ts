@@ -62,7 +62,7 @@ export function bookmarkDetails(
   link.href = bookmark.url;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
-  link.setAttribute("data-bookmark-url", bookmark.url);
+  link.dataset.bookmarkUrl = bookmark.url;
   link.textContent = "Open page";
   const svgNamespace = "http://www.w3.org/2000/svg";
   const arrow = document.createElementNS(svgNamespace, "svg");

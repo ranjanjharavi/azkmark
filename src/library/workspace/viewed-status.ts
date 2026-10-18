@@ -13,12 +13,12 @@ interface ViewedStatusCallbacks {
 }
 
 export function initializeViewedStatus({ refresh, render, focus }: ViewedStatusCallbacks) {
-  const viewedFeedbackElement = requireElement<HTMLParagraphElement>("#viewed-feedback");
+  const viewedFeedbackElement = requireElement<HTMLOutputElement>("#viewed-feedback");
   const viewedErrorElement = requireElement<HTMLParagraphElement>("#viewed-error");
   const pendingViewed = new Set<string>();
 
   async function setBookmarkViewed(button: HTMLButtonElement, url: string): Promise<void> {
-    const targetStatus = button.getAttribute("data-viewed");
+    const targetStatus = button.dataset.viewed;
     if ((targetStatus !== "true" && targetStatus !== "false") || pendingViewed.has(url)) {
       return;
     }

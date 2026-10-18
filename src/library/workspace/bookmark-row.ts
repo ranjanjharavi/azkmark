@@ -14,7 +14,7 @@ export function bookmarkRow(
   const button = document.createElement("button");
   button.type = "button";
   button.className = "bookmark-select";
-  button.setAttribute("data-bookmark-url", bookmark.url);
+  button.dataset.bookmarkUrl = bookmark.url;
   button.setAttribute("aria-pressed", String(selected));
   button.setAttribute("aria-controls", "bookmark-details");
 
