@@ -22,13 +22,17 @@ interface LibraryViewState {
   now: number;
 }
 
+function bookmarkCount(count: number): string {
+  return `${count} ${count === 1 ? "bookmark" : "bookmarks"}`;
+}
+
 export function initializeLibraryView(onDateChange: (now: number) => void, refresh: () => Promise<void>) {
   const collectionEmpty = requireElement<HTMLElement>("#collection-empty");
   const collectionEmptyTitle = requireElement<HTMLHeadingElement>("#collection-empty-title");
   const collectionEmptyCopy = requireElement<HTMLParagraphElement>("#collection-empty-copy");
   const libraryHeadingElement = requireElement<HTMLHeadingElement>("#library-heading");
   const libraryTotalElement = requireElement<HTMLParagraphElement>("#library-total");
-  const libraryStatusElement = requireElement<HTMLParagraphElement>("#library-status");
+  const libraryStatusElement = requireElement<HTMLOutputElement>("#library-status");
   const libraryControlsElement = requireElement<HTMLFormElement>("#library-controls");
   const libraryDisplayControlsElement = requireElement<HTMLDivElement>("#library-display-controls");
   const emptyStateElement = requireElement<HTMLElement>("#library-empty");
@@ -39,7 +43,7 @@ export function initializeLibraryView(onDateChange: (now: number) => void, refre
   const workspaceElement = requireElement<HTMLDivElement>("#bookmark-workspace");
   const bookmarksListElement = requireElement<HTMLUListElement>("#bookmarks");
   const bookmarkDetailsElement = requireElement<HTMLElement>("#bookmark-details");
-  const selectionFeedbackElement = requireElement<HTMLParagraphElement>("#selection-feedback");
+  const selectionFeedbackElement = requireElement<HTMLOutputElement>("#selection-feedback");
   let renderedDetailsKey: string | undefined;
   let renderedDetailsUrl: string | undefined;
   const notesPanel = initializeNotesPanel(refresh);
@@ -66,10 +70,6 @@ export function initializeLibraryView(onDateChange: (now: number) => void, refre
   }
   layoutObserver.observe(requireElement<HTMLElement>(".library-app-header"));
   window.addEventListener("resize", sizeWorkspace);
-
-  function bookmarkCount(count: number): string {
-    return `${count} ${count === 1 ? "bookmark" : "bookmarks"}`;
-  }
 
   function renderBookmarkDetails(
     bookmark: Bookmark | undefined,
@@ -218,7 +218,7 @@ export function initializeLibraryView(onDateChange: (now: number) => void, refre
 
   function previousUrls(): string[] {
     const buttons = bookmarksListElement.querySelectorAll<HTMLButtonElement>(".bookmark-select");
-    return Array.from(buttons, (button) => button.getAttribute("data-bookmark-url") ?? "");
+    return Array.from(buttons, (button) => button.dataset.bookmarkUrl ?? "");
   }
 
   function invalidateDetails(): void {

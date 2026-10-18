@@ -38,7 +38,7 @@ export function initializeLibrary(): void {
     render: (snapshot) => render("", snapshot),
     focus,
   });
-  const managementFeedbackElement = requireElement<HTMLParagraphElement>("#management-feedback");
+  const managementFeedbackElement = requireElement<HTMLOutputElement>("#management-feedback");
 
   function showManagementFeedback(message: string): void {
     managementFeedbackElement.textContent = message;
@@ -138,7 +138,7 @@ export function initializeLibrary(): void {
     if (!button || button.disabled || !bookmarksListElement.contains(button)) {
       return;
     }
-    const url = button.getAttribute("data-bookmark-url");
+    const url = button.dataset.bookmarkUrl;
     const bookmark = library.find((record) => record.url === url);
     if (!bookmark || selectedUrl === bookmark.url) {
       return;
@@ -156,8 +156,8 @@ export function initializeLibrary(): void {
     if (!button || button.disabled || !bookmarkDetailsElement.contains(button)) {
       return;
     }
-    const url = button.getAttribute("data-bookmark-url");
-    const mode = button.getAttribute("data-action");
+    const url = button.dataset.bookmarkUrl;
+    const mode = button.dataset.action;
     if (!url || url !== selectedUrl) {
       return;
     }

@@ -93,7 +93,7 @@ export function initializeLibraryFilters({ onChange, onReset, isAvailable }: Fil
     const options = document.createDocumentFragment();
     options.appendChild(new Option(`All bookmarks (${bookmarks.length})`, "all"));
     options.appendChild(new Option(`General (${groups.general.length})`, "general"));
-    const domains = Array.from(groups.domains.keys()).sort();
+    const domains = Array.from(groups.domains.keys()).sort((left, right) => left.localeCompare(right));
     domains.forEach((domain) => {
       const members = groups.domains.get(domain) ?? [];
       options.appendChild(new Option(`${domain} (${members.length})`, `domain:${domain}`));
@@ -177,12 +177,12 @@ export function initializeLibraryFilters({ onChange, onReset, isAvailable }: Fil
       [tagSelect, state.tag !== ""],
     ];
     states.forEach(([control, selected]) => {
-      control.setAttribute("data-active", String(selected));
+      control.dataset.active = String(selected);
     });
     filterCountElement.textContent = String(state.activeCount);
     filterCountElement.hidden = state.activeCount === 0;
     toggleFiltersElement.setAttribute("aria-label", state.activeCount ? `Filters, ${state.activeCount} active` : "Filters");
-    toggleFiltersElement.setAttribute("data-active", String(state.activeCount > 0));
+    toggleFiltersElement.dataset.active = String(state.activeCount > 0);
     return state;
   }
 
