@@ -35,7 +35,7 @@ export function initializeCollections({
   const form = requireElement<HTMLFormElement>("#collection-form");
   const name = requireElement<HTMLInputElement>("#collection-name");
   const error = requireElement<HTMLParagraphElement>("#collection-error");
-  const status = requireElement<HTMLParagraphElement>("#collection-status");
+  const status = requireElement<HTMLOutputElement>("#collection-status");
   const close = requireElement<HTMLButtonElement>("#collection-cancel");
   const renameForm = requireElement<HTMLFormElement>("#collection-rename-form");
   const renameName = requireElement<HTMLInputElement>("#collection-rename-name");
@@ -47,7 +47,7 @@ export function initializeCollections({
   const deleteForm = requireElement<HTMLFormElement>("#collection-delete-form");
   const confirm = requireElement<HTMLParagraphElement>("#collection-confirm");
   const deleteError = requireElement<HTMLParagraphElement>("#collection-delete-error");
-  const deleteStatus = requireElement<HTMLParagraphElement>("#collection-delete-status");
+  const deleteStatus = requireElement<HTMLOutputElement>("#collection-delete-status");
   const deleteCancel = requireElement<HTMLButtonElement>("#collection-delete-cancel");
   const deleteSubmit = requireElement<HTMLButtonElement>("#collection-delete-submit");
   const retry = requireElement<HTMLButtonElement>("#retry");
@@ -59,8 +59,7 @@ export function initializeCollections({
 
   function focusRow(id: string | undefined, action: "rename" | "delete", options: FocusOptions = {}): void {
     const buttons = list.querySelectorAll<HTMLButtonElement>("button[data-collection-action]");
-    for (let index = 0; index < buttons.length; index++) {
-      const button = buttons[index];
+    for (const button of buttons) {
       const row = button.closest<HTMLLIElement>("li[data-collection-id]");
       if (
         row?.dataset.collectionId !== id
@@ -136,6 +135,22 @@ export function initializeCollections({
     }
   }
 
+  function updateDeleteConfirmation(collections: readonly Collection[], counts: ReadonlyMap<string | undefined, number>, wasMissing: boolean): void {
+    if (!deleting) return;
+    const current = collections.find(({ id }) => id === deleting?.id) ?? deleting;
+    deleteHeading.textContent = "Delete “" + current.name + "”?";
+    const members = counts.get(deleting.id) ?? 0;
+    const memberUnit = members === 1 ? "bookmark" : "bookmarks";
+    confirm.textContent = members + " " + memberUnit + " will move to Unsorted. No bookmarks will be deleted.";
+    if (missingDelete && !wasMissing) {
+      const previous = deleteError.hidden ? "" : deleteError.textContent + " ";
+      deleteError.textContent = previous + "This collection was removed. Close this confirmation to continue.";
+      deleteError.hidden = false;
+    } else if (!missingDelete && wasMissing) {
+      deleteError.hidden = true;
+    }
+  }
+
   function update(): void {
     if (!dialog.open || busy) {
       return;
@@ -162,20 +177,7 @@ export function initializeCollections({
     } else if (!missingEdit && wasMissingEdit) {
       renameError.hidden = true;
     }
-    if (deleting) {
-      const current = collections.find(({ id }) => id === deleting?.id) ?? deleting;
-      deleteHeading.textContent = "Delete “" + current.name + "”?";
-      const members = counts.get(deleting.id) ?? 0;
-      const memberUnit = members === 1 ? "bookmark" : "bookmarks";
-      confirm.textContent = members + " " + memberUnit + " will move to Unsorted. No bookmarks will be deleted.";
-      if (missingDelete && !wasMissingDelete) {
-        const previous = deleteError.hidden ? "" : deleteError.textContent + " ";
-        deleteError.textContent = previous + "This collection was removed. Close this confirmation to continue.";
-        deleteError.hidden = false;
-      } else if (!missingDelete && wasMissingDelete) {
-        deleteError.hidden = true;
-      }
-    }
+    updateDeleteConfirmation(collections, counts, wasMissingDelete);
     setBusy(false);
   }
 
@@ -290,6 +292,34 @@ export function initializeCollections({
     }
   });
 
+  function showSaveFailure(cause: unknown, input: HTMLInputElement, fieldError: HTMLParagraphElement): void {
+    if (cause instanceof MissingCollectionError) {
+      missingEdit = true;
+      showMissingRename();
+    } else if (cause instanceof InvalidStoredBookmarkError) {
+      fieldError.textContent = "Some saved data is invalid. No collection change was confirmed.";
+    } else if (cause instanceof StorageQuotaError) {
+      fieldError.textContent = "Storage is full. Free some space, then retry. Drafts are kept.";
+    } else if (cause instanceof TypeError) {
+      fieldError.textContent = cause.message;
+      input.setAttribute("aria-invalid", "true");
+    } else {
+      fieldError.textContent = "Couldn't save the collection. The name draft is kept. Try again.";
+    }
+    fieldError.hidden = false;
+  }
+
+  function restoreNameFocus(input: HTMLInputElement, target: Collection | undefined, saved: Collection | undefined): void {
+    if (!dialog.open || deleteDialog.open) return;
+    if (saved && target) {
+      focusRow(saved.id, "rename");
+    } else if (missingEdit && target) {
+      renameCancel.focus({ preventScroll: true });
+    } else {
+      input.focus({ preventScroll: true });
+    }
+  }
+
   async function saveName(input: HTMLInputElement, target?: Collection): Promise<void> {
     if (busy || deleteDialog.open || (target && missingEdit)) {
       return;
@@ -319,35 +349,14 @@ export function initializeCollections({
       }
     } catch (cause) {
       await refresh();
-      if (cause instanceof MissingCollectionError) {
-        missingEdit = true;
-        showMissingRename();
-      } else if (cause instanceof InvalidStoredBookmarkError) {
-        fieldError.textContent = "Some saved data is invalid. No collection change was confirmed.";
-      } else if (cause instanceof StorageQuotaError) {
-        fieldError.textContent = "Storage is full. Free some space, then retry. Drafts are kept.";
-      } else if (cause instanceof TypeError) {
-        fieldError.textContent = cause.message;
-        input.setAttribute("aria-invalid", "true");
-      } else {
-        fieldError.textContent = "Couldn't save the collection. The name draft is kept. Try again.";
-      }
-      fieldError.hidden = false;
+      showSaveFailure(cause, input, fieldError);
     } finally {
       setBusy(false);
       update();
       if (!saved) {
         status.textContent = "";
       }
-      if (dialog.open && !deleteDialog.open) {
-        if (saved && target) {
-          focusRow(saved.id, "rename");
-        } else if (missingEdit && target) {
-          renameCancel.focus({ preventScroll: true });
-        } else {
-          input.focus({ preventScroll: true });
-        }
-      }
+      restoreNameFocus(input, target, saved);
     }
   }
 

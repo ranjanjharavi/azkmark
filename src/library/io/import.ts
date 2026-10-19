@@ -12,9 +12,26 @@ interface ImportCallbacks {
   refresh: () => Promise<void>;
 }
 
+function importSummary(result: ImportBookmarksResult): string {
+  const bookmarksLabel = result.added === 1 ? "bookmark" : "bookmarks";
+  const collectionsLabel = result.collectionsAdded === 1 ? "collection" : "collections";
+  return `${result.added} ${bookmarksLabel} and ${result.collectionsAdded} ${collectionsLabel} added; ${result.skipped} duplicate URLs skipped.`;
+}
+
+function failureMessage(cause: unknown, summary: string): string {
+  const counts = `Confirmed this attempt: ${summary} Existing bookmarks were kept.`;
+  if (cause instanceof InvalidStoredBookmarkError) {
+    return `Some saved data is invalid. ${counts} Repair the library, then choose this file again.`;
+  }
+  if (cause instanceof StorageQuotaError) {
+    return `Storage is full. ${counts} Free some space, then choose this file again to continue.`;
+  }
+  return `Couldn't finish importing. ${counts} Choose the same file again to continue.`;
+}
+
 export function initializeImport({ refresh }: ImportCallbacks): void {
   const fileInput = document.querySelector<HTMLInputElement>("#backup-file");
-  const status = document.querySelector<HTMLParagraphElement>("#import-status");
+  const status = document.querySelector<HTMLOutputElement>("#import-status");
   const error = document.querySelector<HTMLParagraphElement>("#import-error");
   const openImport = document.querySelector<HTMLButtonElement>("#open-import");
 
@@ -34,23 +51,6 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
       fileInputElement.click();
     }
   });
-
-  function importSummary(result: ImportBookmarksResult): string {
-    const bookmarksLabel = result.added === 1 ? "bookmark" : "bookmarks";
-    const collectionsLabel = result.collectionsAdded === 1 ? "collection" : "collections";
-    return `${result.added} ${bookmarksLabel} and ${result.collectionsAdded} ${collectionsLabel} added; ${result.skipped} duplicate URLs skipped.`;
-  }
-
-  function failureMessage(cause: unknown, summary: string): string {
-    const counts = `Confirmed this attempt: ${summary} Existing bookmarks were kept.`;
-    if (cause instanceof InvalidStoredBookmarkError) {
-      return `Some saved data is invalid. ${counts} Repair the library, then choose this file again.`;
-    }
-    if (cause instanceof StorageQuotaError) {
-      return `Storage is full. ${counts} Free some space, then choose this file again to continue.`;
-    }
-    return `Couldn't finish importing. ${counts} Choose the same file again to continue.`;
-  }
 
   async function importSelectedFile(): Promise<void> {
     const file = fileInputElement.files?.[0];

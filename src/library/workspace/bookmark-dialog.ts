@@ -11,6 +11,7 @@ import {
   MissingCollectionError,
   updateBookmark,
 } from "../../bookmarks/storage.js";
+import type { BookmarkChanges } from "../../bookmarks/storage.js";
 
 export type ManagementMode = "edit" | "delete";
 
@@ -26,6 +27,22 @@ interface ManagementCallbacks {
   restoreFocus: (action: ManagementAction) => void;
   showFeedback: (message: string) => void;
   clearFeedback: () => void;
+}
+
+function failureMessage(cause: unknown, mode: ManagementMode): string {
+  if (cause instanceof MissingCollectionError) {
+    return cause.message;
+  }
+  if (cause instanceof InvalidStoredBookmarkError) {
+    return "This bookmark's saved data is invalid. It hasn't been changed.";
+  }
+  if (cause instanceof StorageQuotaError) {
+    return "Bookmark storage is full. Free some space, then try again.";
+  }
+  if (mode === "edit") {
+    return "Couldn't save changes. Your drafts are kept; try again.";
+  }
+  return "Couldn't delete the bookmark. No deletion was confirmed; try again.";
 }
 
 export function initializeManagement({
@@ -50,7 +67,7 @@ export function initializeManagement({
   const collectionSelectElement = requireElement<HTMLSelectElement>("#bookmark-collection");
   const deleteCopyElement = requireElement<HTMLParagraphElement>("#management-delete");
   const errorElement = requireElement<HTMLParagraphElement>("#management-error");
-  const statusElement = requireElement<HTMLParagraphElement>("#management-status");
+  const statusElement = requireElement<HTMLOutputElement>("#management-status");
   const cancelButtonElement = requireElement<HTMLButtonElement>("#management-cancel");
   const submitButtonElement = requireElement<HTMLButtonElement>("#management-submit");
 
@@ -152,33 +169,10 @@ export function initializeManagement({
     }
   }
 
-  function failureMessage(cause: unknown, mode: ManagementMode): string {
-    if (cause instanceof MissingCollectionError) {
-      return cause.message;
-    }
-    if (cause instanceof InvalidStoredBookmarkError) {
-      return "This bookmark's saved data is invalid. It hasn't been changed.";
-    }
-    if (cause instanceof StorageQuotaError) {
-      return "Bookmark storage is full. Free some space, then try again.";
-    }
-    if (mode === "edit") {
-      return "Couldn't save changes. Your drafts are kept; try again.";
-    }
-    return "Couldn't delete the bookmark. No deletion was confirmed; try again.";
-  }
-
-  async function submit(event: Event): Promise<void> {
-    event.preventDefault();
-    if (!action || submitting || targetMissing) {
-      return;
-    }
-
-    const currentAction = action;
+  function readChanges(): BookmarkChanges | undefined {
     const draftTitle = titleInputElement.value;
     const title = draftTitle.trim();
-    const titleChanged = draftTitle !== originalTitle;
-    if (currentAction.mode === "edit" && !title) {
+    if (!title) {
       titleErrorElement.hidden = false;
       titleInputElement.setAttribute("aria-invalid", "true");
       titleInputElement.focus();
@@ -188,59 +182,63 @@ export function initializeManagement({
     const collection = collectionSelectElement.value;
     const collectionChanged = collection !== originalCollection;
     const collectionMissing = Boolean(collection) && !getCollections().some(({ id }) => id === collection);
-    if (currentAction.mode === "edit" && collectionChanged && collectionMissing) {
+    if (collectionChanged && collectionMissing) {
       errorElement.textContent = "This collection is no longer available. Choose another collection or Unsorted.";
       errorElement.hidden = false;
       collectionSelectElement.focus();
       return;
     }
 
-    const tags = currentAction.mode === "edit" ? tagInput.read() : [];
+    const tags = tagInput.read();
     if (!tags) {
       return;
     }
-    const tagsChanged = !sameTags(tags, originalTags);
 
-    submitting = true;
-    tagInput.setDisabled(true);
-    titleInputElement.readOnly = true;
-    collectionSelectElement.disabled = true;
-    cancelButtonElement.disabled = true;
-    submitButtonElement.disabled = true;
-    formElement.setAttribute("aria-busy", "true");
+    return {
+      title: draftTitle !== originalTitle ? title : undefined,
+      collectionId: collectionChanged ? collection || null : undefined,
+      tags: sameTags(tags, originalTags) ? undefined : tags,
+    };
+  }
+
+  function setSubmitting(next: boolean): void {
+    submitting = next;
+    tagInput.setDisabled(next);
+    titleInputElement.readOnly = next;
+    collectionSelectElement.disabled = next;
+    cancelButtonElement.disabled = next;
+    submitButtonElement.disabled = next || targetMissing;
+    formElement.setAttribute("aria-busy", String(next));
+  }
+
+  async function persistAction(currentAction: ManagementAction, changes: BookmarkChanges): Promise<string | undefined> {
+    const result = currentAction.mode === "edit"
+      ? await updateBookmark(currentAction.url, changes)
+      : await deleteBookmark(currentAction.url);
+    if (result.status === "not-found") {
+      showMissingTarget();
+      await refresh();
+      return;
+    }
+    if (currentAction.mode === "delete") return "Bookmark deleted.";
+    if (result.status === "unchanged") return "No changes made. Kept the latest saved details.";
+    return "Bookmark changes saved.";
+  }
+
+  async function submit(event: Event): Promise<void> {
+    event.preventDefault();
+    if (!action || submitting || targetMissing) return;
+    const currentAction = action;
+    const changes = currentAction.mode === "edit" ? readChanges() : {};
+    if (!changes) return;
+
+    setSubmitting(true);
     errorElement.hidden = true;
     statusElement.textContent = currentAction.mode === "edit" ? "Saving changes…" : "Deleting bookmark…";
 
     try {
-      let feedbackMessage: string;
-      if (currentAction.mode === "edit") {
-        let collectionId: string | null | undefined;
-        if (collectionChanged) {
-          collectionId = collection || null;
-        }
-        const result = await updateBookmark(currentAction.url, {
-          title: titleChanged ? title : undefined,
-          collectionId,
-          tags: tagsChanged ? tags : undefined,
-        });
-        if (result.status === "not-found") {
-          showMissingTarget();
-          await refresh();
-          return;
-        }
-        feedbackMessage = result.status === "unchanged"
-          ? "No changes made. Kept the latest saved details."
-          : "Bookmark changes saved.";
-      } else {
-        const result = await deleteBookmark(currentAction.url);
-        if (result.status === "not-found") {
-          showMissingTarget();
-          await refresh();
-          return;
-        }
-        feedbackMessage = "Bookmark deleted.";
-      }
-
+      const feedbackMessage = await persistAction(currentAction, changes);
+      if (feedbackMessage === undefined) return;
       await refresh();
       showFeedback(feedbackMessage);
       dialogElement.close();
@@ -253,21 +251,12 @@ export function initializeManagement({
         errorElement.hidden = false;
       }
     } finally {
-      submitting = false;
-      tagInput.setDisabled(false);
-      titleInputElement.readOnly = false;
-      collectionSelectElement.disabled = false;
-      cancelButtonElement.disabled = false;
-      submitButtonElement.disabled = targetMissing;
-      formElement.setAttribute("aria-busy", "false");
+      setSubmitting(false);
       statusElement.textContent = "";
 
       if (dialogElement.open) {
-        if (targetMissing) {
-          cancelButtonElement.focus({ preventScroll: true });
-        } else {
-          submitButtonElement.focus({ preventScroll: true });
-        }
+        const target = targetMissing ? cancelButtonElement : submitButtonElement;
+        target.focus({ preventScroll: true });
       }
     }
   }

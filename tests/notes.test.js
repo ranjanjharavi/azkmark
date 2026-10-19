@@ -10,6 +10,9 @@ import { renderMarkdown } from "../dist/ui/markdown.js";
 import { initializeNotesPanel } from "../dist/library/workspace/notes-panel.js";
 import { initializeNoteEditor } from "../dist/library/workspace/note-editor.js";
 import { initializeLibraryView } from "../dist/library/view.js";
+import { initializeManagement } from "../dist/library/workspace/bookmark-dialog.js";
+import { initializeCollections } from "../dist/library/collections/collection-manager.js";
+import { initializeLibraryFilters } from "../dist/library/filters.js";
 import { filterBookmarks } from "../dist/bookmarks/search.js";
 
 const note = (fields = {}) => ({ id: "entry-1", body: "  **Keep** indentation\n", createdAt: 10, ...fields });
@@ -106,9 +109,13 @@ function useNotesDom(t, record = bookmark({ notes: [note()] })) {
   const local = {
     async get(name) { return structuredClone(name === null ? data : Object.hasOwn(data, name) ? { [name]: data[name] } : {}); },
     async set(items) { Object.assign(data, structuredClone(items)); },
+    async remove(name) { delete data[name]; },
   };
   const globals = {
     window, document: window.document, Element: window.Element, HTMLElement: window.HTMLElement,
+    HTMLButtonElement: window.HTMLButtonElement,
+    Option: window.Option,
+    localStorage: window.localStorage,
     marked: window.marked, DOMPurify: window.DOMPurify, lucide: window.lucide,
     IntersectionObserver: class { observe() {} unobserve() {} disconnect() {} },
     ResizeObserver: class { observe() {} disconnect() {} },
@@ -126,6 +133,41 @@ function useNotesDom(t, record = bookmark({ notes: [note()] })) {
   t.after(() => window.close());
   return { window, document: window.document, data, key, local };
 }
+
+function useLibraryDom(t, record) {
+  const harness = useNotesDom(t, record);
+  const fixture = new harness.window.DOMParser().parseFromString(readFileSync(new URL("../public/library.html", import.meta.url), "utf8"), "text/html");
+  harness.document.body.replaceChildren(...fixture.body.childNodes);
+  return harness;
+}
+
+test("library markup labels the import picker and uses native status outputs", (t) => {
+  const dom = new JSDOM(readFileSync(new URL("../public/library.html", import.meta.url), "utf8"));
+  t.after(() => dom.window.close());
+  const { document } = dom.window;
+  assert.equal(document.querySelector("#backup-file").labels[0].textContent, "Import bookmark backup");
+  const statuses = document.querySelectorAll("output[aria-atomic='true']");
+  assert.equal(statuses.length, 10);
+  assert.equal(document.querySelector("[role='status']"), null);
+});
+
+test("filter controls sort domains and expose active selections through dataset", (t) => {
+  const { document } = useLibraryDom(t);
+  const filters = initializeLibraryFilters({ onChange: () => {}, onReset: () => {}, isAvailable: () => true });
+  const records = ["zebra", "alpha"].flatMap((domain) => [1, 2].map((index) => bookmark({ url: `https://${domain}.example/${index}`, tags: ["saved"] })));
+  filters.update(records, []);
+  filters.setDisabled(false);
+  const domain = document.querySelector("#domain");
+  assert.deepEqual([...domain.options].map((option) => option.value), ["all", "general", "domain:alpha.example", "domain:zebra.example"]);
+  domain.value = "domain:zebra.example";
+  document.querySelector("#tag-filter").value = "saved";
+  const state = filters.render();
+  assert.equal(state.activeCount, 2);
+  assert.equal(domain.dataset.active, "true");
+  assert.equal(document.querySelector("#tag-filter").dataset.active, "true");
+  assert.equal(document.querySelector("#toggle-filters").dataset.active, "true");
+  assert.deepEqual(state.selection, { kind: "domain", domain: "zebra.example" });
+});
 
 test("production Markdown renders formatting without executable HTML or remote resources", (t) => {
   const { document } = useNotesDom(t);
@@ -167,9 +209,7 @@ test("panel refreshes, tabs, and bookmark switches retain the same draft textare
 });
 
 test("detail scrolling survives refreshes and resets when the selected bookmark changes", (t) => {
-  const { window, document } = useNotesDom(t);
-  const fixture = new window.DOMParser().parseFromString(readFileSync(new URL("../public/library.html", import.meta.url), "utf8"), "text/html");
-  document.body.replaceChildren(...fixture.body.childNodes);
+  const { window } = useLibraryDom(t);
   const view = initializeLibraryView(() => {}, async () => {});
   const first = bookmark({ notes: [note()] });
   const second = bookmark({ url: "https://example.com/second", notes: [note()] });
@@ -200,6 +240,111 @@ test("detail scrolling survives refreshes and resets when the selected bookmark 
   view.showError();
   view.render({ ...state, selectedBookmark: second });
   assert.equal(details.scrollTop, 0);
+});
+
+test("bookmark dialog validates drafts, preserves failed edits, and retries without dropping notes", async (t) => {
+  const record = bookmark({ notes: [note()], tags: ["keep"] });
+  const { window, document, data, key, local } = useLibraryDom(t, record);
+  const feedback = [];
+  const manager = initializeManagement({ getBookmarks: () => [data[key]], getCollections: () => [], refresh: async () => {}, restoreFocus: () => {}, showFeedback: (message) => feedback.push(message), clearFeedback: () => {} });
+  manager.open(record.url, "edit");
+  const form = document.querySelector("#management-form");
+  const title = document.querySelector("#bookmark-title");
+  title.value = " ";
+  form.dispatchEvent(new window.Event("submit", { cancelable: true }));
+  assert.equal(title.getAttribute("aria-invalid"), "true");
+  title.value = "  Revised title  ";
+  const write = local.set;
+  local.set = async () => { throw new Error("QUOTA_BYTES exceeded"); };
+  form.dispatchEvent(new window.Event("submit", { cancelable: true }));
+  await setImmediate();
+  assert.match(document.querySelector("#management-error").textContent, /storage is full/);
+  assert.equal(title.value, "  Revised title  ");
+  assert.equal(title.readOnly, false);
+  assert.equal(document.querySelector("#bookmark-dialog").open, true);
+  let finish;
+  const gate = new Promise((resolve) => { finish = resolve; });
+  let writes = 0;
+  local.set = async (items) => { writes++; await gate; await write(items); };
+  form.dispatchEvent(new window.Event("submit", { cancelable: true }));
+  form.dispatchEvent(new window.Event("submit", { cancelable: true }));
+  await setImmediate();
+  assert.equal(writes, 1);
+  assert.equal(document.querySelector("#management-submit").disabled, true);
+  finish();
+  await setImmediate();
+  assert.equal(data[key].title, "Revised title");
+  assert.deepEqual(data[key].notes, record.notes);
+  assert.deepEqual(data[key].tags, record.tags);
+  assert.equal(data[key].savedAt, record.savedAt);
+  assert.equal(document.querySelector("#bookmark-dialog").open, false);
+  assert.deepEqual(feedback, ["Bookmark changes saved."]);
+});
+
+test("bookmark dialog handles a missing delete target without recreating it", async (t) => {
+  const record = bookmark({ notes: [note()] });
+  const { window, document, data, key } = useLibraryDom(t, record);
+  const manager = initializeManagement({ getBookmarks: () => Object.values(data), getCollections: () => [], refresh: async () => {}, restoreFocus: () => {}, showFeedback: () => {}, clearFeedback: () => {} });
+  manager.open(record.url, "delete");
+  delete data[key];
+  document.querySelector("#management-form").dispatchEvent(new window.Event("submit", { cancelable: true }));
+  await setImmediate();
+  assert.equal(Object.hasOwn(data, key), false);
+  assert.equal(document.querySelector("#management-submit").disabled, true);
+  assert.equal(document.activeElement, document.querySelector("#management-cancel"));
+  assert.match(document.querySelector("#management-error").textContent, /no longer saved/);
+});
+
+test("collection rename retains drafts through quota failures and missing-target refreshes", async (t) => {
+  const record = bookmark({ notes: [note()] });
+  const { window, document, data, key, local } = useLibraryDom(t, record);
+  const collectionKey = "azkmark:collections";
+  const collections = [{ id: "reading", name: "Reading" }];
+  data[collectionKey] = structuredClone(collections);
+  const manager = initializeCollections({ getBookmarks: () => [data[key]], getCollections: () => data[collectionKey], refresh: async () => {}, showFeedback: () => {}, clearFeedback: () => {} });
+  const open = document.querySelector("#manage-collections");
+  open.disabled = false;
+  open.click();
+  document.querySelector('[data-collection-action="rename"]').click();
+  const input = document.querySelector("#collection-rename-name");
+  const form = document.querySelector("#collection-rename-form");
+  input.value = "Research";
+  const write = local.set;
+  local.set = async () => { throw new Error("QUOTA_BYTES exceeded"); };
+  form.dispatchEvent(new window.Event("submit", { cancelable: true }));
+  await setImmediate();
+  assert.equal(input.value, "Research");
+  assert.match(document.querySelector("#collection-rename-error").textContent, /Storage is full/);
+  assert.equal(input.readOnly, false);
+  data[collectionKey] = [];
+  manager.update();
+  assert.equal(input.value, "Research");
+  assert.equal(document.querySelector("#collection-rename-save").disabled, true);
+  assert.match(document.querySelector("#collection-rename-error").textContent, /was removed/);
+  data[collectionKey] = structuredClone(collections);
+  manager.update();
+  local.set = write;
+  form.dispatchEvent(new window.Event("submit", { cancelable: true }));
+  await setImmediate();
+  assert.equal(data[collectionKey][0].name, "Research");
+  assert.equal(form.hidden, true);
+  assert.deepEqual(data[key].notes, record.notes);
+});
+
+test("collection delete confirmation becomes read-only when its target disappears", (t) => {
+  const { document, data, key } = useLibraryDom(t, bookmark());
+  const collectionKey = "azkmark:collections";
+  data[collectionKey] = [{ id: "reading", name: "Reading" }];
+  const manager = initializeCollections({ getBookmarks: () => [data[key]], getCollections: () => data[collectionKey], refresh: async () => {}, showFeedback: () => {}, clearFeedback: () => {} });
+  const open = document.querySelector("#manage-collections");
+  open.disabled = false;
+  open.click();
+  document.querySelector('[data-collection-action="delete"]').click();
+  data[collectionKey] = [];
+  manager.update();
+  assert.equal(document.querySelector("#collection-delete-submit").disabled, true);
+  assert.equal(document.querySelector("#collection-delete-cancel").textContent, "Close");
+  assert.match(document.querySelector("#collection-delete-error").textContent, /was removed/);
 });
 
 test("composer preserves failed drafts, blocks duplicates, and retries a stable addition", async (t) => {
