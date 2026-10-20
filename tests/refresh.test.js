@@ -17,13 +17,13 @@ function useTestClock(t) {
     },
     clearTimeout(id) {
       timers.delete(id);
-    },
+    }
   };
 
   Object.defineProperty(globalThis, "window", {
     configurable: true,
     writable: true,
-    value: window,
+    value: window
   });
   t.after(() => {
     timers.clear();
@@ -47,7 +47,7 @@ function useTestClock(t) {
     },
     get pendingCount() {
       return timers.size;
-    },
+    }
   };
 }
 
@@ -69,7 +69,7 @@ function createReader() {
       const read = deferred();
       reads.push(read);
       return read.promise;
-    },
+    }
   };
 }
 

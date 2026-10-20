@@ -3,7 +3,11 @@ import { orderedNotes } from "../../bookmarks/notes.js";
 import { noteIcon, renderMarkdown, renderNoteIcons } from "../../ui/markdown.js";
 import { initializeNoteEditor } from "./note-editor.js";
 
-function element<Tag extends keyof HTMLElementTagNameMap>(tag: Tag, className = "", text = ""): HTMLElementTagNameMap[Tag] {
+function element<Tag extends keyof HTMLElementTagNameMap>(
+  tag: Tag,
+  className = "",
+  text = ""
+): HTMLElementTagNameMap[Tag] {
   const node = document.createElement(tag);
   node.className = className;
   node.textContent = text;
@@ -50,7 +54,10 @@ export function initializeNotesPanel(refresh: () => Promise<void>) {
     const metadata = element("section", "notes-metadata");
     notes.id = "notes-content";
     metadata.id = "notes-metadata";
-    for (const [tab, content] of [[notesTab, notes], [detailsTab, metadata]] as const) {
+    for (const [tab, content] of [
+      [notesTab, notes],
+      [detailsTab, metadata]
+    ] as const) {
       tab.setAttribute("role", "tab");
       tab.setAttribute("aria-controls", content.id);
       content.setAttribute("role", "tabpanel");
@@ -105,7 +112,10 @@ export function initializeNotesPanel(refresh: () => Promise<void>) {
         header.append(edited);
       }
       const actions = element("div", "note-entry-actions");
-      for (const [action, label, icon] of [["edit", "Edit note", "pencil"], ["delete", "Delete note", "trash-2"]]) {
+      for (const [action, label, icon] of [
+        ["edit", "Edit note", "pencil"],
+        ["delete", "Delete note", "trash-2"]
+      ]) {
         const button = element("button", "note-icon-button");
         button.type = "button";
         button.id = `note-${action}-${note.id}`;

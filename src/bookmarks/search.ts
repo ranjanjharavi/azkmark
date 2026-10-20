@@ -1,10 +1,7 @@
 import type { Bookmark } from "./model.js";
 import { groupBookmarks } from "./domains.js";
 
-export type BookmarkSelection =
-  | { kind: "all" }
-  | { kind: "general" }
-  | { kind: "domain"; domain: string };
+export type BookmarkSelection = { kind: "all" } | { kind: "general" } | { kind: "domain"; domain: string };
 
 export type SavedDateSelection = "all" | "today" | "7-days" | "30-days";
 export type ViewStatusSelection = "all" | "to-view" | "viewed";
@@ -36,10 +33,7 @@ function compareBookmarks(left: Bookmark, right: Bookmark, sort: BookmarkSort): 
   return right.savedAt - left.savedAt;
 }
 
-export function savedDateRange(
-  selection: SavedDateSelection,
-  now: number,
-): { start: number; end: number } | undefined {
+export function savedDateRange(selection: SavedDateSelection, now: number): { start: number; end: number } | undefined {
   let days: number;
   switch (selection) {
     case "all":
@@ -78,30 +72,25 @@ export function filterBookmarks(
     viewStatus = "all",
     tag = "",
     sort = "newest",
-    now = Date.now(),
-  }: BookmarkFilterOptions = {},
+    now = Date.now()
+  }: BookmarkFilterOptions = {}
 ): Bookmark[] {
   let source: readonly Bookmark[] = library;
 
   if (selection.kind !== "all") {
     const groups = groupBookmarks(library);
-    source = selection.kind === "general"
-      ? groups.general
-      : groups.domains.get(selection.domain) ?? [];
+    source = selection.kind === "general" ? groups.general : (groups.domains.get(selection.domain) ?? []);
   }
 
   const range = savedDateRange(savedDate, now);
   const term = query.trim().toLowerCase();
   const matches = source.filter((bookmark) => {
-    const matchesDate = !range || (
-      bookmark.savedAt >= range.start && bookmark.savedAt < range.end
-    );
+    const matchesDate = !range || (bookmark.savedAt >= range.start && bookmark.savedAt < range.end);
     if (!matchesDate) {
       return false;
     }
 
-    const matchesViewStatus = viewStatus === "all"
-      || Boolean(bookmark.viewed) === (viewStatus === "viewed");
+    const matchesViewStatus = viewStatus === "all" || Boolean(bookmark.viewed) === (viewStatus === "viewed");
     if (!matchesViewStatus) {
       return false;
     }
@@ -111,11 +100,13 @@ export function filterBookmarks(
       return false;
     }
 
-    return !term
-      || bookmark.title.toLowerCase().includes(term)
-      || bookmark.url.toLowerCase().includes(term)
-      || tags.some((label) => label.includes(term))
-      || bookmark.notes?.some((note) => note.body.toLowerCase().includes(term)) === true;
+    return (
+      !term ||
+      bookmark.title.toLowerCase().includes(term) ||
+      bookmark.url.toLowerCase().includes(term) ||
+      tags.some((label) => label.includes(term)) ||
+      bookmark.notes?.some((note) => note.body.toLowerCase().includes(term)) === true
+    );
   });
 
   matches.sort((left, right) => compareBookmarks(left, right, sort));

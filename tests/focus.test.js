@@ -43,11 +43,23 @@ function useFocusHarness(t, library = [{ url: "https://example.com/saved" }]) {
       }
     });
   }
-  const names = ["searchInputElement", "domainSelectElement", "savedDateSelectElement",
-    "viewStatusSelectElement", "tagSelect", "sortSelectElement", "toggleFiltersElement",
-    "resetFiltersButton", "clearCollectionButton", "collectionNavigationElement",
-    "manageCollectionsButton", "libraryHeadingElement", "retryButtonElement",
-    "bookmarksListElement", "bookmarkDetailsElement"];
+  const names = [
+    "searchInputElement",
+    "domainSelectElement",
+    "savedDateSelectElement",
+    "viewStatusSelectElement",
+    "tagSelect",
+    "sortSelectElement",
+    "toggleFiltersElement",
+    "resetFiltersButton",
+    "clearCollectionButton",
+    "collectionNavigationElement",
+    "manageCollectionsButton",
+    "libraryHeadingElement",
+    "retryButtonElement",
+    "bookmarksListElement",
+    "bookmarkDetailsElement"
+  ];
   const elements = Object.fromEntries(names.map((name) => [name, new Button()]));
   const context = { library, selectedUrl: library?.[0]?.url, collectionScope: "all" };
   return {
@@ -55,7 +67,7 @@ function useFocusHarness(t, library = [{ url: "https://example.com/saved" }]) {
     Button,
     elements,
     context,
-    focus: initializeLibraryFocus(elements, () => context),
+    focus: initializeLibraryFocus(elements, () => context)
   };
 }
 

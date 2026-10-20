@@ -6,7 +6,7 @@ import {
   readLibrary,
   StorageQuotaError,
   saveBookmark,
-  watchBookmarks,
+  watchBookmarks
 } from "../bookmarks/storage.js";
 import type { Collection } from "../bookmarks/collections.js";
 import { availableTags } from "../bookmarks/tags.js";
@@ -57,7 +57,7 @@ export function initializePopup(): void {
     try {
       const [definitions, remembered] = await Promise.all([
         readCollections(),
-        initial ? readLastCollection() : Promise.resolve(""),
+        initial ? readLastCollection() : Promise.resolve("")
       ]);
       collections = definitions;
       let selected = saveTo.value;
@@ -119,7 +119,8 @@ export function initializePopup(): void {
 
   function showLibraryError(message: string): void {
     console.error("Could not open the bookmark library.", message);
-    feedbackElement.textContent = "Couldn't open the library. Try Open library again; reload the extension if the problem continues.";
+    feedbackElement.textContent =
+      "Couldn't open the library. Try Open library again; reload the extension if the problem continues.";
     feedbackElement.hidden = false;
   }
 
@@ -197,13 +198,16 @@ export function initializePopup(): void {
     try {
       // Wait only for bounded metadata capture, never for the image to load.
       const thumbnailUrl = await thumbnailReady;
-      const bookmark = createBookmark({
-        url: page.url,
-        title,
-        thumbnailUrl,
-        collectionId,
-        tags: tags.length > 0 ? tags : undefined,
-      }, savedAt);
+      const bookmark = createBookmark(
+        {
+          url: page.url,
+          title,
+          thumbnailUrl,
+          collectionId,
+          tags: tags.length > 0 ? tags : undefined
+        },
+        savedAt
+      );
       const result = await saveBookmark(bookmark, true);
 
       completed = true;
@@ -211,9 +215,7 @@ export function initializePopup(): void {
       tagInput.set(result.bookmark.tags ?? []);
       collectionOptions(saveTo, collections, result.bookmark.collectionId ?? "");
       saveButtonElement.textContent = "Saved";
-      saveStatusElement.textContent = result.status === "saved"
-        ? "Saved."
-        : "Already saved. Kept its saved details.";
+      saveStatusElement.textContent = result.status === "saved" ? "Saved." : "Already saved. Kept its saved details.";
     } catch (error) {
       saveStatusElement.textContent = "";
       if (error instanceof MissingCollectionError) {

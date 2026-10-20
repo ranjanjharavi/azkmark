@@ -9,7 +9,7 @@ import {
   InvalidStoredBookmarkError,
   StorageQuotaError,
   MissingCollectionError,
-  updateBookmark,
+  updateBookmark
 } from "../../bookmarks/storage.js";
 import type { BookmarkChanges } from "../../bookmarks/storage.js";
 
@@ -51,7 +51,7 @@ export function initializeManagement({
   refresh,
   restoreFocus,
   showFeedback,
-  clearFeedback,
+  clearFeedback
 }: ManagementCallbacks): {
   open: (url: string, mode: ManagementMode) => void;
   updateTarget: () => void;
@@ -197,7 +197,7 @@ export function initializeManagement({
     return {
       title: draftTitle !== originalTitle ? title : undefined,
       collectionId: collectionChanged ? collection || null : undefined,
-      tags: sameTags(tags, originalTags) ? undefined : tags,
+      tags: sameTags(tags, originalTags) ? undefined : tags
     };
   }
 
@@ -212,9 +212,10 @@ export function initializeManagement({
   }
 
   async function persistAction(currentAction: ManagementAction, changes: BookmarkChanges): Promise<string | undefined> {
-    const result = currentAction.mode === "edit"
-      ? await updateBookmark(currentAction.url, changes)
-      : await deleteBookmark(currentAction.url);
+    const result =
+      currentAction.mode === "edit"
+        ? await updateBookmark(currentAction.url, changes)
+        : await deleteBookmark(currentAction.url);
     if (result.status === "not-found") {
       showMissingTarget();
       await refresh();

@@ -16,15 +16,11 @@ export function createSavedDateFormatter(): Intl.DateTimeFormat {
     month: "long",
     day: "numeric",
     hour: "numeric",
-    minute: "2-digit",
+    minute: "2-digit"
   });
 }
 
-export function formatSavedDate(
-  savedAt: number,
-  now = Date.now(),
-  formatter?: Intl.DateTimeFormat,
-): SavedDate {
+export function formatSavedDate(savedAt: number, now = Date.now(), formatter?: Intl.DateTimeFormat): SavedDate {
   const saved = new Date(savedAt);
   if (Number.isNaN(saved.getTime())) {
     const fallback = `Timestamp ${savedAt}`;
@@ -35,7 +31,7 @@ export function formatSavedDate(
   const full = fullFormatter.format(saved);
   const days = calendarDay(new Date(now)) - calendarDay(saved);
   let age = full;
-  
+
   if (days === 0) {
     age = "Today";
   } else if (days === 1) {

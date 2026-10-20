@@ -23,10 +23,7 @@ declare namespace chrome {
 
     function query(queryInfo: { active?: boolean; currentWindow?: boolean }): Promise<Tab[]>;
 
-    function query(
-      queryInfo: { active?: boolean; currentWindow?: boolean },
-      callback: (tabs: Tab[]) => void
-    ): void;
+    function query(queryInfo: { active?: boolean; currentWindow?: boolean }, callback: (tabs: Tab[]) => void): void;
 
     function create(createProperties: { url: string }): Promise<Tab>;
 
@@ -44,9 +41,7 @@ declare namespace chrome {
     }
 
     const onChanged: {
-      addListener(
-        callback: (changes: Record<string, StorageChange>, areaName: string) => void
-      ): void;
+      addListener(callback: (changes: Record<string, StorageChange>, areaName: string) => void): void;
     };
 
     namespace local {

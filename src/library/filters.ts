@@ -1,11 +1,6 @@
 import type { Bookmark } from "../bookmarks/model.js";
 import type { Collection } from "../bookmarks/collections.js";
-import type {
-  BookmarkSelection,
-  BookmarkSort,
-  SavedDateSelection,
-  ViewStatusSelection,
-} from "../bookmarks/search.js";
+import type { BookmarkSelection, BookmarkSort, SavedDateSelection, ViewStatusSelection } from "../bookmarks/search.js";
 import { groupBookmarks } from "../bookmarks/domains.js";
 import { availableTags } from "../bookmarks/tags.js";
 import { requireElement } from "../ui/dom.js";
@@ -78,7 +73,7 @@ export function initializeLibraryFilters({ onChange, onReset, isAvailable }: Fil
       tag,
       sort: sortSelectElement.value as BookmarkSort,
       collectionScope,
-      activeCount,
+      activeCount
     };
   }
 
@@ -135,7 +130,7 @@ export function initializeLibraryFilters({ onChange, onReset, isAvailable }: Fil
     }
     collectionNavigationElement.replaceChildren(
       collectionButtons(collections, bookmarks, collectionScope),
-      manageCollectionsButton,
+      manageCollectionsButton
     );
     updateTagOptions(bookmarks);
     return notices.filter(Boolean).join(" ");
@@ -159,7 +154,7 @@ export function initializeLibraryFilters({ onChange, onReset, isAvailable }: Fil
       tagSelect,
       sortSelectElement,
       toggleFiltersElement,
-      resetFiltersButton,
+      resetFiltersButton
     ];
     controls.forEach((control) => {
       control.disabled = disabled;
@@ -174,14 +169,17 @@ export function initializeLibraryFilters({ onChange, onReset, isAvailable }: Fil
       [domainSelectElement, state.selection.kind !== "all"],
       [savedDateSelectElement, state.savedDate !== "all"],
       [viewStatusSelectElement, state.viewStatus !== "all"],
-      [tagSelect, state.tag !== ""],
+      [tagSelect, state.tag !== ""]
     ];
     states.forEach(([control, selected]) => {
       control.dataset.active = String(selected);
     });
     filterCountElement.textContent = String(state.activeCount);
     filterCountElement.hidden = state.activeCount === 0;
-    toggleFiltersElement.setAttribute("aria-label", state.activeCount ? `Filters, ${state.activeCount} active` : "Filters");
+    toggleFiltersElement.setAttribute(
+      "aria-label",
+      state.activeCount ? `Filters, ${state.activeCount} active` : "Filters"
+    );
     toggleFiltersElement.dataset.active = String(state.activeCount > 0);
     return state;
   }
@@ -257,7 +255,7 @@ export function initializeLibraryFilters({ onChange, onReset, isAvailable }: Fil
       resetFiltersButton,
       clearCollectionButton,
       collectionNavigationElement,
-      manageCollectionsButton,
-    },
+      manageCollectionsButton
+    }
   };
 }

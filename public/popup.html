@@ -13,13 +13,23 @@
     <main class="popup-shell">
       <header class="popup-header">
         <h1>
-          <svg class="popup-brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 32" aria-hidden="true" focusable="false">
+          <svg
+            class="popup-brand-mark"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 28 32"
+            aria-hidden="true"
+            focusable="false">
             <path d="M5 2h18v28l-9-5-9 5V2Zm9 5-5 12h3l1-3h3l1 3h3L15 7h-1Zm0 5 1 2h-2l1-2Z" fill-rule="evenodd" />
           </svg>
           azkmark
         </h1>
         <button id="open-library" type="button" aria-label="Open library" title="Open library">
-          <svg class="popup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <svg
+            class="popup-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false">
             <path d="M4 4h4v16H4zM11 4h4v16h-4zM18 4l3 16" />
           </svg>
           Library
@@ -38,13 +48,25 @@
           </div>
           <div class="popup-fields">
             <label for="save-to">Save to</label>
-            <select id="save-to" class="collection-select" aria-describedby="save-to-error" disabled><option value="">Unsorted</option></select>
+            <select id="save-to" class="collection-select" aria-describedby="save-to-error" disabled>
+              <option value="">Unsorted</option>
+            </select>
             <p id="save-to-error" role="alert" hidden></p>
             <div class="tag-entry">
-              <label for="page-tag">Tags <span class="optional">(optional)</span></label>
+              <label for="page-tag">
+                Tags
+                <span class="optional">(optional)</span>
+              </label>
               <ul id="page-tags" class="tag-drafts" aria-label="Draft tags" hidden></ul>
               <div class="tag-input-row">
-                <input id="page-tag" type="text" list="page-tag-options" autocomplete="off" spellcheck="false" aria-describedby="page-tag-help page-tag-error" placeholder="Add a tag" />
+                <input
+                  id="page-tag"
+                  type="text"
+                  list="page-tag-options"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="page-tag-help page-tag-error"
+                  placeholder="Add a tag" />
                 <button id="page-tag-add" type="button" aria-label="Add tag">Add</button>
               </div>
               <datalist id="page-tag-options"></datalist>

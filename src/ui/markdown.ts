@@ -1,6 +1,27 @@
 const FORMATTING_TAGS = [
-  "p", "br", "strong", "em", "a", "code", "pre", "ul", "ol", "li", "blockquote",
-  "h1", "h2", "h3", "h4", "hr", "del", "table", "thead", "tbody", "tr", "th", "td",
+  "p",
+  "br",
+  "strong",
+  "em",
+  "a",
+  "code",
+  "pre",
+  "ul",
+  "ol",
+  "li",
+  "blockquote",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "hr",
+  "del",
+  "table",
+  "thead",
+  "tbody",
+  "tr",
+  "th",
+  "td"
 ];
 
 export function renderMarkdown(host: HTMLElement, source: string): void {
@@ -14,13 +35,13 @@ export function renderMarkdown(host: HTMLElement, source: string): void {
   const html = marked.parse(source, {
     async: false,
     gfm: true,
-    renderer,
+    renderer
   });
   const fragment = DOMPurify.sanitize(html, {
     RETURN_DOM_FRAGMENT: true,
     ALLOWED_TAGS: FORMATTING_TAGS,
     ALLOWED_ATTR: ["href", "title"],
-    ALLOW_DATA_ATTR: false,
+    ALLOW_DATA_ATTR: false
   });
   fragment.querySelectorAll("a").forEach((link) => {
     const href = link.getAttribute("href") ?? "";

@@ -27,15 +27,15 @@ function readTags(value: unknown): string[] | undefined {
     const lengthField = fields["length"];
     const length: unknown = lengthField?.value;
     if (
-      (prototype !== Array.prototype && prototype !== null)
-      || !lengthField
-      || !Object.hasOwn(lengthField, "value")
-      || lengthField.enumerable
-      || typeof length !== "number"
-      || !Number.isSafeInteger(length)
-      || length < 0
-      || length > MAX_TAGS
-      || Reflect.ownKeys(fields).length !== length + 1
+      (prototype !== Array.prototype && prototype !== null) ||
+      !lengthField ||
+      !Object.hasOwn(lengthField, "value") ||
+      lengthField.enumerable ||
+      typeof length !== "number" ||
+      !Number.isSafeInteger(length) ||
+      length < 0 ||
+      length > MAX_TAGS ||
+      Reflect.ownKeys(fields).length !== length + 1
     ) {
       return undefined;
     }
@@ -46,13 +46,13 @@ function readTags(value: unknown): string[] | undefined {
       const field = fields[String(index)];
       const tag: unknown = field?.value;
       if (
-        !field?.enumerable
-        || !Object.hasOwn(field, "value")
-        || typeof tag !== "string"
-        || !tag
-        || tag.length > MAX_TAG_LENGTH
-        || normalizeTag(tag) !== tag
-        || seen.has(tag)
+        !field?.enumerable ||
+        !Object.hasOwn(field, "value") ||
+        typeof tag !== "string" ||
+        !tag ||
+        tag.length > MAX_TAG_LENGTH ||
+        normalizeTag(tag) !== tag ||
+        seen.has(tag)
       ) {
         return undefined;
       }

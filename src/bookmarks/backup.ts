@@ -25,23 +25,20 @@ function validateLegacyBookmarkFields(bookmarks: readonly unknown[], version: Ba
     }
 
     if (
-      Object.hasOwn(bookmark, "notes")
-      || (version < 3 && (Object.hasOwn(bookmark, "collectionId") || Object.hasOwn(bookmark, "tags")))
-      || (version === 1 && Object.hasOwn(bookmark, "viewed"))
+      Object.hasOwn(bookmark, "notes") ||
+      (version < 3 && (Object.hasOwn(bookmark, "collectionId") || Object.hasOwn(bookmark, "tags"))) ||
+      (version === 1 && Object.hasOwn(bookmark, "viewed"))
     ) {
       throw new TypeError("Invalid bookmark collection.");
     }
   }
 }
 
-export function serializeBackup(
-  bookmarks: readonly Bookmark[],
-  collections: readonly Collection[] = [],
-): string {
+export function serializeBackup(bookmarks: readonly Bookmark[], collections: readonly Collection[] = []): string {
   const envelope = {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
-    ...snapshotLibrary(bookmarks, collections),
+    ...snapshotLibrary(bookmarks, collections)
   };
   return `${JSON.stringify(envelope, null, 2)}\n`;
 }
@@ -72,11 +69,11 @@ function parseEnvelope(json: string): BackupEnvelope {
   const envelope = value as Record<string, unknown>;
   const version = envelope.version;
   if (
-    envelope.format !== BACKUP_FORMAT
-    || !Object.hasOwn(envelope, "format")
-    || !Object.hasOwn(envelope, "version")
-    || !Object.hasOwn(envelope, "bookmarks")
-    || !Array.isArray(envelope.bookmarks)
+    envelope.format !== BACKUP_FORMAT ||
+    !Object.hasOwn(envelope, "format") ||
+    !Object.hasOwn(envelope, "version") ||
+    !Object.hasOwn(envelope, "bookmarks") ||
+    !Array.isArray(envelope.bookmarks)
   ) {
     throw new TypeError("Invalid bookmark backup.");
   }
@@ -85,13 +82,8 @@ function parseEnvelope(json: string): BackupEnvelope {
     throw new UnsupportedBackupVersionError();
   }
 
-  const fields = version >= 3
-    ? ["format", "version", "bookmarks", "collections"]
-    : ["format", "version", "bookmarks"];
-  if (
-    Object.keys(envelope).length !== fields.length
-    || fields.some((field) => !Object.hasOwn(envelope, field))
-  ) {
+  const fields = version >= 3 ? ["format", "version", "bookmarks", "collections"] : ["format", "version", "bookmarks"];
+  if (Object.keys(envelope).length !== fields.length || fields.some((field) => !Object.hasOwn(envelope, field))) {
     throw new TypeError("Invalid bookmark backup.");
   }
 

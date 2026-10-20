@@ -2,11 +2,7 @@ import { parseBackup, UnsupportedBackupVersionError } from "../../bookmarks/back
 import type { LibraryData } from "../../bookmarks/model.js";
 import { parseChromeBookmarks } from "../../bookmarks/chrome-html.js";
 import type { ImportBookmarksResult } from "../../bookmarks/storage.js";
-import {
-  importBookmarkRecords,
-  InvalidStoredBookmarkError,
-  StorageQuotaError,
-} from "../../bookmarks/storage.js";
+import { importBookmarkRecords, InvalidStoredBookmarkError, StorageQuotaError } from "../../bookmarks/storage.js";
 
 interface ImportCallbacks {
   refresh: () => Promise<void>;
@@ -103,9 +99,11 @@ export function initializeImport({ refresh }: ImportCallbacks): void {
       if (readingFile) {
         errorElement.textContent = "Couldn't read the selected file. Use Import to try again or choose another file.";
       } else if (cause instanceof UnsupportedBackupVersionError) {
-        errorElement.textContent = "This backup version isn't supported. Choose an azkmark version 1, 2, 3 or 4 backup.";
+        errorElement.textContent =
+          "This backup version isn't supported. Choose an azkmark version 1, 2, 3 or 4 backup.";
       } else {
-        errorElement.textContent = "This isn't a valid azkmark JSON backup or Chrome HTML export. No bookmarks or collections were changed.";
+        errorElement.textContent =
+          "This isn't a valid azkmark JSON backup or Chrome HTML export. No bookmarks or collections were changed.";
       }
       errorElement.hidden = false;
     } finally {

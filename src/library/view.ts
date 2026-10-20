@@ -54,7 +54,7 @@ export function initializeLibraryView(onDateChange: (now: number) => void, refre
     const bottomInset = [
       window.getComputedStyle(main).paddingBottom,
       window.getComputedStyle(document.body).paddingBottom,
-      window.getComputedStyle(main.parentElement!).borderBottomWidth,
+      window.getComputedStyle(main.parentElement!).borderBottomWidth
     ].reduce((total, value) => total + (Number.parseFloat(value) || 0), 0);
     const top = workspaceElement.getBoundingClientRect().top + window.scrollY;
     const height = `${Math.floor(window.innerHeight - top - bottomInset)}px`;
@@ -75,7 +75,7 @@ export function initializeLibraryView(onDateChange: (now: number) => void, refre
     bookmark: Bookmark | undefined,
     dateFormat: Intl.ResolvedDateTimeFormatOptions | undefined,
     collections: readonly Collection[],
-    savingViewStatus: boolean,
+    savingViewStatus: boolean
   ): void {
     const key = JSON.stringify([bookmark?.url, savingViewStatus, dateFormat]);
     if (bookmark && key === renderedDetailsKey) {
@@ -108,7 +108,7 @@ export function initializeLibraryView(onDateChange: (now: number) => void, refre
     scopeSize,
     savingViewStatus,
     notice,
-    now,
+    now
   }: LibraryViewState): void {
     const { collectionScope, selection } = filters;
     const rows = document.createDocumentFragment();
@@ -160,9 +160,8 @@ export function initializeLibraryView(onDateChange: (now: number) => void, refre
     libraryDisplayControlsElement.hidden = isEmpty;
     emptyStateElement.hidden = !isEmpty || collectionScope !== "all";
     collectionEmpty.hidden = !scopeEmpty;
-    collectionEmptyTitle.textContent = collectionScope === "unsorted"
-      ? "No unsorted bookmarks"
-      : "No bookmarks in this collection";
+    collectionEmptyTitle.textContent =
+      collectionScope === "unsorted" ? "No unsorted bookmarks" : "No bookmarks in this collection";
     let emptyCopy = "Save a page to this collection, or use the pen action to move a saved bookmark here.";
     if (collectionScope === "unsorted") {
       emptyCopy = isEmpty
@@ -241,7 +240,7 @@ export function initializeLibraryView(onDateChange: (now: number) => void, refre
       retryButtonElement,
       bookmarksListElement,
       bookmarkDetailsElement,
-      workspaceElement,
-    },
+      workspaceElement
+    }
   };
 }

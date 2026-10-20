@@ -69,13 +69,17 @@ export function snapshotNotes(value: unknown): BookmarkNote[] {
     id: note.id,
     body: note.body,
     createdAt: note.createdAt,
-    ...(note.updatedAt === undefined ? {} : { updatedAt: note.updatedAt }),
+    ...(note.updatedAt === undefined ? {} : { updatedAt: note.updatedAt })
   }));
 }
 
 export function sameNote(first: BookmarkNote, second: BookmarkNote): boolean {
-  return first.id === second.id && first.body === second.body
-    && first.createdAt === second.createdAt && first.updatedAt === second.updatedAt;
+  return (
+    first.id === second.id &&
+    first.body === second.body &&
+    first.createdAt === second.createdAt &&
+    first.updatedAt === second.updatedAt
+  );
 }
 
 export function orderedNotes(notes: readonly BookmarkNote[] = []): BookmarkNote[] {

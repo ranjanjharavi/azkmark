@@ -23,7 +23,12 @@
     <div class="library-shell">
       <header class="library-app-header">
         <div class="library-brand">
-          <svg class="library-brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 34" aria-hidden="true" focusable="false">
+          <svg
+            class="library-brand-mark"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 28 34"
+            aria-hidden="true"
+            focusable="false">
             <path d="M3 1h22v32l-11-7-11 7Z" />
             <path class="library-brand-letter" d="m9 21 5-14 5 14m-8-5h6" />
           </svg>
@@ -31,9 +36,16 @@
           <span class="library-context">Your bookmark library</span>
         </div>
         <div class="backup-tools">
-          <button id="open-backup-help" type="button" aria-haspopup="dialog" aria-controls="backup-dialog">About backups</button>
+          <button id="open-backup-help" type="button" aria-haspopup="dialog" aria-controls="backup-dialog">
+            About backups
+          </button>
           <button id="open-import" type="button">
-            <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <svg
+              class="backup-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false">
               <path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5" />
             </svg>
             Import
@@ -41,7 +53,12 @@
           <label for="backup-file" class="visually-hidden">Import bookmark backup</label>
           <input id="backup-file" type="file" accept=".json,.html,.htm,application/json,text/html" hidden />
           <button id="export-backup" type="button">
-            <svg class="backup-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <svg
+              class="backup-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false">
               <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
             </svg>
             Export backup
@@ -54,26 +71,72 @@
           <p id="library-total" hidden></p>
         </header>
         <nav id="collection-navigation" class="collection-navigation" aria-label="Collections">
-          <button class="collection-tab" type="button" value="all" aria-pressed="true" aria-controls="bookmarks" disabled>All bookmarks</button>
-          <button class="collection-tab" type="button" value="unsorted" aria-pressed="false" aria-controls="bookmarks" disabled>Unsorted</button>
-          <button id="manage-collections" class="collection-tab" type="button" aria-haspopup="dialog" aria-controls="collection-dialog" disabled>Manage collections</button>
+          <button
+            class="collection-tab"
+            type="button"
+            value="all"
+            aria-pressed="true"
+            aria-controls="bookmarks"
+            disabled>
+            All bookmarks
+          </button>
+          <button
+            class="collection-tab"
+            type="button"
+            value="unsorted"
+            aria-pressed="false"
+            aria-controls="bookmarks"
+            disabled>
+            Unsorted
+          </button>
+          <button
+            id="manage-collections"
+            class="collection-tab"
+            type="button"
+            aria-haspopup="dialog"
+            aria-controls="collection-dialog"
+            disabled>
+            Manage collections
+          </button>
         </nav>
         <output id="export-status" aria-atomic="true"></output>
         <p id="export-error" role="alert" hidden></p>
         <output id="import-status" aria-atomic="true"></output>
         <p id="import-error" role="alert" hidden></p>
-        <form id="library-controls" class="library-controls" role="search" aria-label="Search and filter bookmarks" hidden>
+        <form
+          id="library-controls"
+          class="library-controls"
+          role="search"
+          aria-label="Search and filter bookmarks"
+          hidden>
           <div class="library-search-row">
             <label class="search-field" for="search">
-              <svg class="library-control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <svg
+                class="library-control-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false">
                 <circle cx="10.5" cy="10.5" r="6.5" />
                 <path d="m16 16 5 5" />
               </svg>
               <span class="visually-hidden">Search bookmarks</span>
-              <input id="search" name="query" type="search" placeholder="Search titles, URLs, tags, or notes..." autocomplete="off" spellcheck="false" disabled />
+              <input
+                id="search"
+                name="query"
+                type="search"
+                placeholder="Search titles, URLs, tags, or notes..."
+                autocomplete="off"
+                spellcheck="false"
+                disabled />
             </label>
             <button id="toggle-filters" type="button" aria-expanded="false" aria-controls="library-filters" disabled>
-              <svg class="library-control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <svg
+                class="library-control-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false">
                 <path d="M4 7h16M4 17h16M9 4v6M15 14v6" />
               </svg>
               <span>Filters</span>
@@ -136,7 +199,9 @@
         </section>
         <section id="collection-empty" aria-labelledby="collection-empty-title" hidden>
           <h2 id="collection-empty-title">No bookmarks in this collection</h2>
-          <p id="collection-empty-copy">Save a page to this collection, or use the pen action to move a saved bookmark here.</p>
+          <p id="collection-empty-copy">
+            Save a page to this collection, or use the pen action to move a saved bookmark here.
+          </p>
           <button id="clear-collection" type="button">Show all bookmarks</button>
         </section>
         <section id="no-matches" aria-labelledby="no-matches-title" hidden>
@@ -156,7 +221,14 @@
       </main>
     </div>
     <template id="bookmark-preview-placeholders">
-      <svg class="preview-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No thumbnail available" focusable="false">
+      <svg
+        class="preview-placeholder"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 640 256"
+        preserveAspectRatio="xMidYMid slice"
+        role="img"
+        aria-label="No thumbnail available"
+        focusable="false">
         <rect width="640" height="256" fill="var(--control)" />
         <rect x="128" y="24" width="384" height="208" rx="8" fill="var(--page)" stroke="var(--control-rule)" />
         <path d="M128 64h384" stroke="var(--control-rule)" />
@@ -174,32 +246,70 @@
         </g>
         <rect x="288" y="184" width="84" height="24" rx="4" fill="var(--accent-soft)" />
       </svg>
-      <svg class="preview-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No thumbnail available" focusable="false">
+      <svg
+        class="preview-placeholder"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 640 256"
+        preserveAspectRatio="xMidYMid slice"
+        role="img"
+        aria-label="No thumbnail available"
+        focusable="false">
         <rect width="640" height="256" fill="var(--accent-soft)" />
-        <path d="M0 64h640M0 128h640M0 192h640M80 0v256M160 0v256M240 0v256M320 0v256M400 0v256M480 0v256M560 0v256" stroke="var(--accent)" opacity="0.12" />
+        <path
+          d="M0 64h640M0 128h640M0 192h640M80 0v256M160 0v256M240 0v256M320 0v256M400 0v256M480 0v256M560 0v256"
+          stroke="var(--accent)"
+          opacity="0.12" />
         <rect x="80" y="44" width="140" height="168" rx="4" fill="var(--accent)" />
         <rect x="236" y="44" width="324" height="72" rx="4" fill="var(--page)" />
         <rect x="236" y="132" width="154" height="80" rx="4" fill="var(--preview-muted)" />
         <rect x="406" y="132" width="154" height="80" rx="4" fill="var(--page)" />
       </svg>
-      <svg class="preview-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No thumbnail available" focusable="false">
+      <svg
+        class="preview-placeholder"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 640 256"
+        preserveAspectRatio="xMidYMid slice"
+        role="img"
+        aria-label="No thumbnail available"
+        focusable="false">
         <rect width="640" height="256" fill="var(--accent-soft)" />
         <circle cx="202" cy="128" r="80" fill="var(--accent)" />
         <path d="m300 204 92-152 92 152Z" fill="var(--preview-muted)" />
         <rect x="446" y="72" width="112" height="112" rx="4" fill="var(--page)" stroke="var(--accent)" />
         <path d="M80 224h480" stroke="var(--accent)" opacity="0.25" />
       </svg>
-      <svg class="preview-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No thumbnail available" focusable="false">
+      <svg
+        class="preview-placeholder"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 640 256"
+        preserveAspectRatio="xMidYMid slice"
+        role="img"
+        aria-label="No thumbnail available"
+        focusable="false">
         <rect width="640" height="256" fill="var(--accent-soft)" />
-        <path d="M160 60c60-16 112-12 160 12 48-24 100-28 160-12v148c-60-16-112-12-160 12-48-24-100-28-160-12Z" fill="var(--page)" stroke="var(--accent)" stroke-width="3" />
-        <path d="M320 72v148M188 94h84M188 118h96M188 142h76M352 94h92M352 118h76M352 142h92" stroke="var(--accent)" stroke-width="3" opacity="0.4" />
+        <path
+          d="M160 60c60-16 112-12 160 12 48-24 100-28 160-12v148c-60-16-112-12-160 12-48-24-100-28-160-12Z"
+          fill="var(--page)"
+          stroke="var(--accent)"
+          stroke-width="3" />
+        <path
+          d="M320 72v148M188 94h84M188 118h96M188 142h76M352 94h92M352 118h76M352 142h92"
+          stroke="var(--accent)"
+          stroke-width="3"
+          opacity="0.4" />
       </svg>
     </template>
     <dialog id="backup-dialog" aria-labelledby="backup-heading">
       <h2 id="backup-heading">About backups</h2>
       <p>What's exported: Your entire library and all collections, bypassing any active filters.</p>
-      <p>Data included: URLs, titles, dates, statuses, tags, collection assignments, thumbnail links, and dated Markdown notes.</p>
-      <p>Version 4 JSON backups preserve note histories. Versions 1, 2, and 3 remain importable. Chrome HTML imports do not include azkmark notes. Duplicate URLs keep their existing details and notes.</p>
+      <p>
+        Data included: URLs, titles, dates, statuses, tags, collection assignments, thumbnail links, and dated Markdown
+        notes.
+      </p>
+      <p>
+        Version 4 JSON backups preserve note histories. Versions 1, 2, and 3 remain importable. Chrome HTML imports do
+        not include azkmark notes. Duplicate URLs keep their existing details and notes.
+      </p>
       <p>Import: use Import in the header to choose an azkmark JSON backup or Chrome HTML export.</p>
       <form method="dialog" class="management-actions">
         <button type="submit" autofocus>Close</button>
@@ -215,21 +325,35 @@
           <textarea id="bookmark-title" rows="3" required aria-describedby="management-title-error"></textarea>
           <p id="management-title-error" role="alert" hidden>Enter a title before saving.</p>
           <label for="bookmark-collection" class="collection-label">Collection</label>
-          <select id="bookmark-collection" class="collection-select" aria-describedby="management-error"><option value="">Unsorted</option></select>
+          <select id="bookmark-collection" class="collection-select" aria-describedby="management-error">
+            <option value="">Unsorted</option>
+          </select>
           <div class="tag-entry">
             <label for="bookmark-tag">Tags (optional)</label>
             <div class="tag-input-row">
-              <input id="bookmark-tag" type="text" list="bookmark-tag-options" autocomplete="off" spellcheck="false" aria-describedby="bookmark-tag-help bookmark-tag-error" placeholder="Add a tag" />
+              <input
+                id="bookmark-tag"
+                type="text"
+                list="bookmark-tag-options"
+                autocomplete="off"
+                spellcheck="false"
+                aria-describedby="bookmark-tag-help bookmark-tag-error"
+                placeholder="Add a tag" />
               <button id="bookmark-tag-add" type="button">Add tag</button>
             </div>
             <datalist id="bookmark-tag-options"></datalist>
-            <p id="bookmark-tag-help" class="tag-help">Up to 32 tags, 80 characters each. Labels are lowercased; whitespace collapses. Commas stay inside a tag. Save includes pending text.</p>
+            <p id="bookmark-tag-help" class="tag-help">
+              Up to 32 tags, 80 characters each. Labels are lowercased; whitespace collapses. Commas stay inside a tag.
+              Save includes pending text.
+            </p>
             <p id="bookmark-tag-error" class="tag-error" role="alert" hidden></p>
             <ul id="bookmark-tags" class="tag-drafts" aria-label="Draft tags" hidden></ul>
             <output id="bookmark-tag-status" class="visually-hidden" aria-atomic="true"></output>
           </div>
         </div>
-        <p id="management-delete" hidden>This permanently deletes this bookmark from your azkmark library. It can't be undone.</p>
+        <p id="management-delete" hidden>
+          This permanently deletes this bookmark from your azkmark library. It can't be undone.
+        </p>
         <p id="management-error" role="alert" hidden></p>
         <output id="management-status" aria-atomic="true"></output>
         <div class="management-actions">
@@ -250,7 +374,14 @@
         <form id="collection-rename-form" class="collection-rename-form" novalidate hidden>
           <label for="collection-rename-name">Collection name</label>
           <div class="collection-inline-controls">
-            <input id="collection-rename-name" class="collection-name-input" type="text" maxlength="100" required autocomplete="off" aria-describedby="collection-rename-error" />
+            <input
+              id="collection-rename-name"
+              class="collection-name-input"
+              type="text"
+              maxlength="100"
+              required
+              autocomplete="off"
+              aria-describedby="collection-rename-error" />
             <button id="collection-rename-save" type="submit">Save</button>
             <button id="collection-rename-cancel" class="collection-quiet-button" type="button">Cancel</button>
           </div>
@@ -258,7 +389,15 @@
         </form>
         <form id="collection-form" class="collection-create-form" novalidate>
           <label for="collection-name">New collection</label>
-          <input id="collection-name" class="collection-name-input" type="text" maxlength="100" required autocomplete="off" placeholder="e.g. Inspiration" aria-describedby="collection-error" />
+          <input
+            id="collection-name"
+            class="collection-name-input"
+            type="text"
+            maxlength="100"
+            required
+            autocomplete="off"
+            placeholder="e.g. Inspiration"
+            aria-describedby="collection-error" />
           <button id="collection-submit" type="submit">Add collection</button>
         </form>
         <p id="collection-error" role="alert" hidden></p>
@@ -269,14 +408,19 @@
         <button id="collection-cancel" class="collection-quiet-button" type="button">Done</button>
       </footer>
     </dialog>
-    <dialog id="collection-delete-dialog" aria-labelledby="collection-delete-heading" aria-describedby="collection-confirm">
+    <dialog
+      id="collection-delete-dialog"
+      aria-labelledby="collection-delete-heading"
+      aria-describedby="collection-confirm">
       <h2 id="collection-delete-heading">Delete collection?</h2>
       <p id="collection-confirm"></p>
       <p id="collection-delete-error" role="alert" hidden></p>
       <output id="collection-delete-status" aria-atomic="true"></output>
       <form id="collection-delete-form" novalidate>
         <div class="management-actions">
-          <button id="collection-delete-cancel" class="collection-quiet-button" type="button" autofocus>Keep collection</button>
+          <button id="collection-delete-cancel" class="collection-quiet-button" type="button" autofocus>
+            Keep collection
+          </button>
           <button id="collection-delete-submit" class="destructive" type="submit">Delete collection</button>
         </div>
       </form>

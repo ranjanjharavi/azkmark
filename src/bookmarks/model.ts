@@ -29,9 +29,7 @@ export type BookmarkDetails = Pick<Bookmark, "url" | "title"> & {
   notes?: readonly BookmarkNote[];
 };
 
-const BOOKMARK_FIELDS = new Set([
-  "url", "title", "savedAt", "thumbnailUrl", "viewed", "collectionId", "tags", "notes",
-]);
+const BOOKMARK_FIELDS = new Set(["url", "title", "savedAt", "thumbnailUrl", "viewed", "collectionId", "tags", "notes"]);
 
 function bookmarkFields(value: object): PropertyDescriptorMap | undefined {
   const prototype = Object.getPrototypeOf(value);
@@ -61,10 +59,10 @@ export function isBookmark(value: unknown): value is Bookmark {
   try {
     const fields = bookmarkFields(value);
     if (
-      !fields
-      || !Object.hasOwn(fields, "url")
-      || !Object.hasOwn(fields, "title")
-      || !Object.hasOwn(fields, "savedAt")
+      !fields ||
+      !Object.hasOwn(fields, "url") ||
+      !Object.hasOwn(fields, "title") ||
+      !Object.hasOwn(fields, "savedAt")
     ) {
       return false;
     }
@@ -116,7 +114,7 @@ export function createBookmark(details: BookmarkDetails, savedAt = Date.now()): 
     ...(details?.viewed === undefined ? {} : { viewed: details.viewed }),
     ...(details?.collectionId === undefined ? {} : { collectionId: details.collectionId }),
     ...(details?.tags === undefined ? {} : { tags: snapshotTags(details.tags) }),
-    ...(notes?.length ? { notes } : {}),
+    ...(notes?.length ? { notes } : {})
   };
 
   if (!isBookmark(record)) {
@@ -144,10 +142,7 @@ export function snapshotBookmarks(value: unknown): Bookmark[] {
 }
 
 // Reference-only check for data already validated by the snapshot paths
-export function validateCollectionReferences(
-  bookmarks: readonly Bookmark[],
-  collections: readonly Collection[],
-): void {
+export function validateCollectionReferences(bookmarks: readonly Bookmark[], collections: readonly Collection[]): void {
   const ids = new Set(collections.map((collection) => collection.id));
 
   if (bookmarks.some((bookmark) => bookmark.collectionId !== undefined && !ids.has(bookmark.collectionId))) {
@@ -155,10 +150,7 @@ export function validateCollectionReferences(
   }
 }
 
-export function snapshotLibrary(
-  bookmarks: unknown,
-  collections: unknown,
-): LibraryData {
+export function snapshotLibrary(bookmarks: unknown, collections: unknown): LibraryData {
   const records = snapshotBookmarks(bookmarks);
   const definitions = snapshotCollections(collections);
   validateCollectionReferences(records, definitions);
@@ -178,12 +170,12 @@ export function deduplicateBookmarks(incoming: readonly Bookmark[]): BookmarkDed
     if (byUrl.has(bookmark.url)) {
       continue;
     }
-    
+
     byUrl.set(bookmark.url, bookmark);
   }
 
   return {
     bookmarks: Array.from(byUrl.values()),
-    skipped: records.length - byUrl.size,
+    skipped: records.length - byUrl.size
   };
 }

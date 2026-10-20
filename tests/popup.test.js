@@ -12,7 +12,7 @@ const capturedPage = {
   id: 7,
   windowId: 1,
   url: "https://example.com/article?draft=1#section",
-  title: "Captured page title",
+  title: "Captured page title"
 };
 const bookmarkKey = "azkmark:bookmark:" + capturedPage.url;
 
@@ -125,7 +125,7 @@ function createPopupDocument() {
     body: new Element("body"),
     querySelector: (selector) => elements.get(selector.slice(1)) ?? null,
     createElement: (tagName) => new Element(tagName),
-    createDocumentFragment: () => new Element("#fragment"),
+    createDocumentFragment: () => new Element("#fragment")
   };
   document.activeElement = document.body;
   class Option extends Element {
@@ -143,7 +143,7 @@ async function usePopupHarness(t, { initial = {}, tab = capturedPage, thumbnailU
   const data = structuredClone({
     [COLLECTIONS_KEY]: [reading, work],
     [LAST_COLLECTION_KEY]: reading.id,
-    ...initial,
+    ...initial
   });
   const createdTabs = [];
   const timers = new Map();
@@ -158,7 +158,7 @@ async function usePopupHarness(t, { initial = {}, tab = capturedPage, thumbnailU
     },
     async set(items) {
       Object.assign(data, structuredClone(items));
-    },
+    }
   };
   const chrome = {
     runtime: { getURL: (path) => `chrome-extension://test/${path}` },
@@ -169,23 +169,26 @@ async function usePopupHarness(t, { initial = {}, tab = capturedPage, thumbnailU
       },
       async create(options) {
         createdTabs.push(options);
-      },
+      }
     },
     scripting: {
       executeScript(_options, callback) {
         const results = [];
         if (thumbnailUrl) {
-          results.push({ frameId: 0, result: {
-            pageUrl: tab.url,
-            baseUrl: tab.url,
-            canonicalUrl: null,
-            imageUrls: [thumbnailUrl],
-          } });
+          results.push({
+            frameId: 0,
+            result: {
+              pageUrl: tab.url,
+              baseUrl: tab.url,
+              canonicalUrl: null,
+              imageUrls: [thumbnailUrl]
+            }
+          });
         }
         callback(results);
-      },
+      }
     },
-    storage: { local, onChanged: { addListener: (listener) => storageListeners.push(listener) } },
+    storage: { local, onChanged: { addListener: (listener) => storageListeners.push(listener) } }
   };
   const window = {
     setTimeout(callback, delay) {
@@ -195,11 +198,17 @@ async function usePopupHarness(t, { initial = {}, tab = capturedPage, thumbnailU
     },
     clearTimeout(id) {
       timers.delete(id);
-    },
+    }
   };
   // Lock ordering/concurrency belongs to storage.test.js, not this UI harness.
   const navigator = { locks: { request: async (_name, callback) => callback() } };
-  for (const [name, value] of Object.entries({ document: dom.document, Option: dom.Option, chrome, window, navigator })) {
+  for (const [name, value] of Object.entries({
+    document: dom.document,
+    Option: dom.Option,
+    chrome,
+    window,
+    navigator
+  })) {
     const previous = Object.getOwnPropertyDescriptor(globalThis, name);
     Object.defineProperty(globalThis, name, { configurable: true, value });
     t.after(() => {
@@ -231,7 +240,7 @@ async function usePopupHarness(t, { initial = {}, tab = capturedPage, thumbnailU
       for (const listener of storageListeners) {
         listener({ [COLLECTIONS_KEY]: {} }, "local");
       }
-    },
+    }
   };
 }
 
@@ -272,7 +281,7 @@ test("capture shows the domain but preserves the full title and destination with
 
 test("unsupported pages retain feedback and library access while saving stays disabled", async (t) => {
   const { element, createdTabs } = await usePopupHarness(t, {
-    tab: { ...capturedPage, url: "chrome://extensions" },
+    tab: { ...capturedPage, url: "chrome://extensions" }
   });
   assert.equal(element("page-details").hidden, true);
   assert.equal(element("page-status").hidden, false);
@@ -363,7 +372,7 @@ test("duplicate saves restore the stored title, tags, and collection without ove
     title: "An authoritative saved title that is longer than the newly captured page title",
     tags: ["saved"],
     collectionId: work.id,
-    savedAt: 1,
+    savedAt: 1
   };
   const { element, data } = await usePopupHarness(t, { initial: { [bookmarkKey]: stored } });
   element("page-title").value = "New draft title";
@@ -380,14 +389,16 @@ test("duplicate saves restore the stored title, tags, and collection without ove
 
 for (const { message, feedback } of [
   { message: "Write failed", feedback: /Couldn't save this page/ },
-  { message: "QUOTA_BYTES exceeded", feedback: /Storage is full/ },
+  { message: "QUOTA_BYTES exceeded", feedback: /Storage is full/ }
 ]) {
   test(`${message}: failed saves keep drafts, recover focus, and allow a successful retry`, async (t) => {
     const { element, document, local, data } = await usePopupHarness(t);
     await addDraftTag(element, "design");
     element("page-tag").value = "  pending  ";
     element("page-title").value = "Draft title";
-    const failure = t.mock.method(local, "set", async () => { throw new Error(message); });
+    const failure = t.mock.method(local, "set", async () => {
+      throw new Error(message);
+    });
     element("save").focus();
     const pending = element("save-form").emit("submit");
     document.body.focus();
@@ -470,7 +481,7 @@ test("passive collection refresh preserves title/tag drafts and the user's curre
 for (const failure of ["error", "timeout"]) {
   test(`thumbnail ${failure} collapses the image and ignores a late load`, async (t) => {
     const { element, runTimers } = await usePopupHarness(t, {
-      thumbnailUrl: "https://images.example.com/cover.jpg",
+      thumbnailUrl: "https://images.example.com/cover.jpg"
     });
     const image = element("page-image");
     assert.equal(element("preview-status").textContent, "Loading thumbnail…");

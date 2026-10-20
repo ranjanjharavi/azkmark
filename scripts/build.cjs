@@ -11,9 +11,9 @@ fs.cpSync(publicDirectory, outputDirectory, { recursive: true });
 const vendorDirectory = path.join(outputDirectory, "vendor");
 fs.mkdirSync(vendorDirectory, { recursive: true });
 for (const [source, target] of [
-	["marked/lib/marked.umd.js", "marked.js"],
-	["dompurify/dist/purify.min.js", "purify.js"],
-	["lucide/dist/umd/lucide.min.js", "lucide.js"]
+  ["marked/lib/marked.umd.js", "marked.js"],
+  ["dompurify/dist/purify.min.js", "purify.js"],
+  ["lucide/dist/umd/lucide.min.js", "lucide.js"]
 ]) {
-	fs.copyFileSync(path.join(projectRoot, "node_modules", source), path.join(vendorDirectory, target));
+  fs.copyFileSync(path.join(projectRoot, "node_modules", source), path.join(vendorDirectory, target));
 }
