@@ -1,8 +1,4 @@
-import {
-  InvalidStoredBookmarkError,
-  StorageQuotaError,
-  updateBookmarkViewed,
-} from "../../bookmarks/storage.js";
+import { InvalidStoredBookmarkError, StorageQuotaError, updateBookmarkViewed } from "../../bookmarks/storage.js";
 import { requireElement } from "../../ui/dom.js";
 import type { FocusSnapshot, initializeLibraryFocus } from "../focus.js";
 
@@ -47,9 +43,11 @@ export function initializeViewedStatus({ refresh, render, focus }: ViewedStatusC
       if (cause instanceof InvalidStoredBookmarkError) {
         viewedErrorElement.textContent = "This bookmark's saved data is invalid. Its status hasn't been changed.";
       } else if (cause instanceof StorageQuotaError) {
-        viewedErrorElement.textContent = "Storage is full. Export a backup, free some space, then use the status button to retry.";
+        viewedErrorElement.textContent =
+          "Storage is full. Export a backup, free some space, then use the status button to retry.";
       } else {
-        viewedErrorElement.textContent = "Couldn't save status. No change was confirmed; use the status button to retry.";
+        viewedErrorElement.textContent =
+          "Couldn't save status. No change was confirmed; use the status button to retry.";
       }
       viewedErrorElement.hidden = false;
     } finally {
@@ -63,6 +61,6 @@ export function initializeViewedStatus({ refresh, render, focus }: ViewedStatusC
 
   return {
     update: setBookmarkViewed,
-    isPending: (url: string) => pendingViewed.has(url),
+    isPending: (url: string) => pendingViewed.has(url)
   };
 }

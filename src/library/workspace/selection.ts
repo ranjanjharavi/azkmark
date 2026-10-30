@@ -4,7 +4,7 @@ export function reconcileSelection(
   matches: readonly Bookmark[],
   library: readonly Bookmark[],
   previousUrl: string | undefined,
-  previousUrls: readonly string[],
+  previousUrls: readonly string[]
 ): Bookmark | undefined {
   if (matches.length === 0) {
     return undefined;

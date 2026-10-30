@@ -19,7 +19,7 @@ import {
   addBookmarkNote,
   updateBookmarkNote,
   deleteBookmarkNote,
-  watchBookmarks,
+  watchBookmarks
 } from "../dist/bookmarks/storage.js";
 
 // Only the storage and exclusive-lock APIs used by these tests are modeled.
@@ -53,7 +53,7 @@ function useStorageHarness(t, initial = {}) {
     },
     async remove(key) {
       delete data[key];
-    },
+    }
   };
   const locks = {
     request(name, callback) {
@@ -65,15 +65,18 @@ function useStorageHarness(t, initial = {}) {
       }
       const previous = tails.get(name) ?? Promise.resolve();
       const pending = previous.then(() => heldLocks.run([...owned, name], callback));
-      tails.set(name, pending.catch(() => {}));
+      tails.set(
+        name,
+        pending.catch(() => {})
+      );
       return pending;
-    },
+    }
   };
 
   const onChanged = {
     addListener(listener) {
       changeListeners.push(listener);
-    },
+    }
   };
   const globals = { chrome: { storage: { local, onChanged } }, navigator: { locks } };
   for (const [name, value] of Object.entries(globals)) {
@@ -114,7 +117,7 @@ function bookmark(name, fields = {}) {
     url: `https://example.com/${name}`,
     title: `Saved ${name}`,
     savedAt: 1,
-    ...fields,
+    ...fields
   };
 }
 
@@ -135,7 +138,7 @@ test("concurrent note additions and metadata edits preserve all locked fields", 
     addBookmarkNote(record.url, note("first")),
     addBookmarkNote(record.url, note("second")),
     updateBookmark(record.url, { title: "Updated" }),
-    updateBookmarkViewed(record.url, true),
+    updateBookmarkViewed(record.url, true)
   ]);
   assert.deepEqual(harness.data[key].notes, [note("first"), note("second")]);
   assert.equal(harness.data[key].title, "Updated");
@@ -169,11 +172,17 @@ test("stale edits and deletes conflict while different entries remain independen
   const results = await Promise.all([
     updateBookmarkNote(record.url, first, "first edit"),
     updateBookmarkNote(record.url, first, "stale edit"),
-    updateBookmarkNote(record.url, second, "independent edit"),
+    updateBookmarkNote(record.url, second, "independent edit")
   ]);
-  assert.deepEqual(results.map(({ status }) => status), ["updated", "conflict", "updated"]);
+  assert.deepEqual(
+    results.map(({ status }) => status),
+    ["updated", "conflict", "updated"]
+  );
   assert.equal((await deleteBookmarkNote(record.url, first)).status, "conflict");
-  assert.deepEqual(harness.data[key].notes.map(({ body }) => body), ["first edit", "independent edit"]);
+  assert.deepEqual(
+    harness.data[key].notes.map(({ body }) => body),
+    ["first edit", "independent edit"]
+  );
   assert.equal(harness.data[key].notes[0].createdAt, first.createdAt);
 });
 
@@ -215,13 +224,13 @@ test("library reads preserve exact URL keys and ignore unrelated Chrome storage"
     collectionId: reading.id,
     thumbnailUrl: "https://images.example.com/preview.png",
     tags: ["keep"],
-    viewed: true,
+    viewed: true
   });
   const initial = {
     [bookmarkKey(record.url)]: record,
     [COLLECTIONS_KEY]: [reading, work],
     [LAST_COLLECTION_KEY]: reading.id,
-    unrelated: { invalidBookmark: true },
+    unrelated: { invalidBookmark: true }
   };
   const harness = useStorageHarness(t, initial);
 
@@ -263,11 +272,14 @@ test("unchanged bookmark and collection edits avoid persistence writes", async (
   const initial = { [COLLECTIONS_KEY]: [reading], [bookmarkKey(record.url)]: record };
   const harness = useStorageHarness(t, initial);
 
-  assert.deepEqual(await updateBookmark(record.url, {
-    title: `  ${record.title}  `,
-    collectionId: reading.id,
-    tags: ["keep"],
-  }), { status: "unchanged", bookmark: record });
+  assert.deepEqual(
+    await updateBookmark(record.url, {
+      title: `  ${record.title}  `,
+      collectionId: reading.id,
+      tags: ["keep"]
+    }),
+    { status: "unchanged", bookmark: record }
+  );
   assert.deepEqual(await updateBookmarkViewed(record.url, true), { status: "updated", bookmark: record });
   assert.deepEqual(await saveCollection("  Reading  ", reading.id), reading);
   assert.deepEqual(harness.writes, []);
@@ -279,18 +291,21 @@ test("concurrent same-URL saves write once and retain the first winner's details
   const first = bookmark("page?q=one#part", {
     thumbnailUrl: "https://images.example.com/first.png",
     viewed: true,
-    tags: ["first"],
+    tags: ["first"]
   });
   const second = {
     ...first,
     title: "Losing title",
     savedAt: 2,
     viewed: false,
-    tags: ["second"],
+    tags: ["second"]
   };
 
   const results = await Promise.all([saveBookmark(first), saveBookmark(second)]);
-  assert.deepEqual(results.map((result) => result.status), ["saved", "already-saved"]);
+  assert.deepEqual(
+    results.map((result) => result.status),
+    ["saved", "already-saved"]
+  );
   assert.deepEqual(results[0].bookmark, first);
   assert.deepEqual(results[1].bookmark, first);
   assert.deepEqual(harness.data[bookmarkKey(first.url)], first);
@@ -306,7 +321,7 @@ test("save snapshots the record and remembered collection before waiting for a l
     collectionId: reading.id,
     thumbnailUrl: "https://images.example.com/original.png",
     viewed: true,
-    tags: ["original"],
+    tags: ["original"]
   });
   const submitted = structuredClone(draft);
   const saving = saveBookmark(draft, true);
@@ -362,7 +377,7 @@ test("edit snapshots the trimmed title, tag array, and supplied fields before wa
   assert.deepEqual(draft, {
     title: "Changed after submitting",
     tags: ["changed", "later"],
-    collectionId: null,
+    collectionId: null
   });
 });
 
@@ -381,7 +396,7 @@ test("title-only edits preserve untouched fields from the latest locked record",
     thumbnailUrl: "https://images.example.com/latest.png",
     viewed: true,
     collectionId: work.id,
-    tags: ["remote"],
+    tags: ["remote"]
   };
   harness.data[key] = structuredClone(latest);
 
@@ -407,7 +422,7 @@ test("Viewed writes preserve the latest locked title, tags, collection, and meta
     savedAt: 2,
     thumbnailUrl: "https://images.example.com/latest.png",
     collectionId: work.id,
-    tags: ["remote"],
+    tags: ["remote"]
   };
   harness.data[key] = structuredClone(latest);
 
@@ -427,7 +442,7 @@ test("queued title and Viewed edits cannot resurrect a deleted bookmark", async 
   const results = await Promise.all([
     deleteBookmark(record.url),
     updateBookmark(record.url, { title: "Too late" }),
-    updateBookmarkViewed(record.url, true),
+    updateBookmarkViewed(record.url, true)
   ]);
   assert.deepEqual(results, [{ status: "deleted" }, { status: "not-found" }, { status: "not-found" }]);
   assert.equal(harness.data[key], undefined);
@@ -437,7 +452,7 @@ test("queued title and Viewed edits cannot resurrect a deleted bookmark", async 
 
 const membershipChanges = [
   { name: "assigning a collection", collectionId: work.id },
-  { name: "clearing membership", collectionId: null },
+  { name: "clearing membership", collectionId: null }
 ];
 for (const { name, collectionId } of membershipChanges) {
   test(`${name} takes the collection lock before the URL lock`, async (t) => {
@@ -463,7 +478,7 @@ test("import snapshots the file before waiting and acquires the collection lock 
   await setImmediate();
   const records = [
     bookmark("import-first", { collectionId: reading.id, tags: ["original"] }),
-    bookmark("import-second", { collectionId: reading.id }),
+    bookmark("import-second", { collectionId: reading.id })
   ];
   const definitions = [{ ...reading }];
   const submitted = structuredClone({ bookmarks: records, collections: definitions });
@@ -490,7 +505,7 @@ test("import snapshots the file before waiting and acquires the collection lock 
   assert.deepEqual(harness.writes, [
     { keys: [COLLECTIONS_KEY], locks: [COLLECTIONS_KEY] },
     { keys: [firstKey], locks: [COLLECTIONS_KEY, firstKey] },
-    { keys: [secondKey], locks: [COLLECTIONS_KEY, secondKey] },
+    { keys: [secondKey], locks: [COLLECTIONS_KEY, secondKey] }
   ]);
   assert.deepEqual(await readLibrary(), submitted);
 });
@@ -506,7 +521,7 @@ test("collection deletion takes the outer collection lock and separate member UR
     [COLLECTIONS_KEY]: [reading, work],
     [firstKey]: first,
     [secondKey]: second,
-    [unrelatedKey]: unrelated,
+    [unrelatedKey]: unrelated
   });
 
   const result = await deleteCollection(reading.id);
@@ -515,7 +530,7 @@ test("collection deletion takes the outer collection lock and separate member UR
   assert.deepEqual(harness.writes, [
     { keys: [firstKey], locks: [COLLECTIONS_KEY, firstKey] },
     { keys: [secondKey], locks: [COLLECTIONS_KEY, secondKey] },
-    { keys: [COLLECTIONS_KEY], locks: [COLLECTIONS_KEY] },
+    { keys: [COLLECTIONS_KEY], locks: [COLLECTIONS_KEY] }
   ]);
   assert.deepEqual(harness.data[COLLECTIONS_KEY], [work]);
   assert.equal(harness.data[firstKey].collectionId, undefined);
@@ -534,13 +549,13 @@ test("partial import retains definitions and counts only confirmed records acros
   const secondKey = bookmarkKey(second.url);
   const harness = useStorageHarness(t, {
     [COLLECTIONS_KEY]: [reading],
-    [bookmarkKey(existing.url)]: existing,
+    [bookmarkKey(existing.url)]: existing
   });
   const records = [
     { ...existing, title: "Losing existing title", collectionId: work.id },
     first,
     { ...first, title: "Losing duplicate title", tags: ["losing"] },
-    second,
+    second
   ];
   const definitions = [reading, work];
   const submitted = structuredClone({ bookmarks: records, collections: definitions });
@@ -558,7 +573,10 @@ test("partial import retains definitions and counts only confirmed records acros
   const retry = await importBookmarkRecords(records, definitions);
   assert.deepEqual(retry, { status: "imported", added: 1, skipped: 3, collectionsAdded: 0 });
   assert.deepEqual(await readLibrary(), { bookmarks: [existing, first, second], collections: definitions });
-  assert.deepEqual(harness.writes.map((write) => write.keys), [[COLLECTIONS_KEY], [firstKey], [secondKey]]);
+  assert.deepEqual(
+    harness.writes.map((write) => write.keys),
+    [[COLLECTIONS_KEY], [firstKey], [secondKey]]
+  );
 
   const repeated = await importBookmarkRecords(records, definitions);
   assert.deepEqual(repeated, { status: "imported", added: 0, skipped: 4, collectionsAdded: 0 });
@@ -611,7 +629,7 @@ test("an applied but unacknowledged import write is not counted or duplicated on
 
 const deletionFailures = [
   { name: "member move", atDefinition: false, moved: 1, secondCollectionId: reading.id },
-  { name: "definition removal", atDefinition: true, moved: 2, secondCollectionId: undefined },
+  { name: "definition removal", atDefinition: true, moved: 2, secondCollectionId: undefined }
 ];
 for (const scenario of deletionFailures) {
   test(`failed collection ${scenario.name} retains a valid definition and completes on retry`, async (t) => {
@@ -625,7 +643,7 @@ for (const scenario of deletionFailures) {
       [COLLECTIONS_KEY]: [reading, work],
       [firstKey]: first,
       [secondKey]: second,
-      [unrelatedKey]: unrelated,
+      [unrelatedKey]: unrelated
     });
     const cause = new Error("Collection write failed.");
     const failingKey = scenario.atDefinition ? COLLECTIONS_KEY : secondKey;
@@ -642,7 +660,10 @@ for (const scenario of deletionFailures) {
     fault.mock.restore();
     const retry = await deleteCollection(reading.id);
     assert.deepEqual(retry, { status: "deleted", moved: 2 - scenario.moved });
-    assert.deepEqual(harness.writes.map((write) => write.keys), [[firstKey], [secondKey], [COLLECTIONS_KEY]]);
+    assert.deepEqual(
+      harness.writes.map((write) => write.keys),
+      [[firstKey], [secondKey], [COLLECTIONS_KEY]]
+    );
     assert.deepEqual(harness.data[COLLECTIONS_KEY], [work]);
     assert.equal(harness.data[secondKey].collectionId, undefined);
     assert.deepEqual({ ...harness.data[firstKey], collectionId: reading.id }, first);
@@ -662,12 +683,12 @@ const storageFailures = [
   { name: "quota", cause: quotaCause, type: StorageQuotaError, message: quotaCause.message },
   { name: "ordinary", cause: ordinaryCause, type: TypeError, message: ordinaryCause.message, preserve: true },
   { name: "empty Error", cause: new Error(""), type: Error, message: genericStorageMessage },
-  { name: "non-Error", cause: "quota exceeded", type: Error, message: genericStorageMessage },
+  { name: "non-Error", cause: "quota exceeded", type: Error, message: genericStorageMessage }
 ];
 const storageOperations = [
   { name: "read", method: "get", run: readLibrary },
   { name: "write", method: "set", run: updateBookmark, status: "updated" },
-  { name: "remove", method: "remove", run: deleteBookmark, status: "deleted" },
+  { name: "remove", method: "remove", run: deleteBookmark, status: "deleted" }
 ];
 for (const operation of storageOperations) {
   for (const failure of storageFailures) {
@@ -710,23 +731,23 @@ const rejectedImports = [
   {
     name: "invalid losing duplicate tags",
     records: [validImport, { ...validImport, tags: ["UPPERCASE"] }],
-    collections: [],
+    collections: []
   },
   {
     name: "orphan reference on a losing duplicate",
     records: [validImport, { ...validImport, collectionId: "missing" }],
-    collections: [reading],
+    collections: [reading]
   },
   {
     name: "file orphan despite a matching stored definition",
     records: [validImport, bookmark("orphan", { collectionId: reading.id })],
-    collections: [],
+    collections: []
   },
   {
     name: "invalid unused collection definition",
     records: [validImport],
-    collections: [{ ...work, name: " Work " }],
-  },
+    collections: [{ ...work, name: " Work " }]
+  }
 ];
 for (const scenario of rejectedImports) {
   test(`${scenario.name} is rejected before locks or storage access`, async (t) => {

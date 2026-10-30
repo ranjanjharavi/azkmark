@@ -22,12 +22,12 @@ function snapshotCollection(value: unknown): Collection {
 
   const prototype = Object.getPrototypeOf(value);
   const fields = Object.getOwnPropertyDescriptors(value);
-  
+
   if (
-    (prototype !== Object.prototype && prototype !== null)
-    || Reflect.ownKeys(fields).length !== 2
-    || !Object.hasOwn(fields, "id")
-    || !Object.hasOwn(fields, "name")
+    (prototype !== Object.prototype && prototype !== null) ||
+    Reflect.ownKeys(fields).length !== 2 ||
+    !Object.hasOwn(fields, "id") ||
+    !Object.hasOwn(fields, "name")
   ) {
     throw new TypeError("Invalid collection.");
   }
@@ -41,11 +41,11 @@ function snapshotCollection(value: unknown): Collection {
   const id: unknown = fields["id"].value;
   const name: unknown = fields["name"].value;
   if (
-    !isCollectionId(id)
-    || typeof name !== "string"
-    || !name
-    || name.length > 100
-    || name !== normalizeCollectionName(name)
+    !isCollectionId(id) ||
+    typeof name !== "string" ||
+    !name ||
+    name.length > 100 ||
+    name !== normalizeCollectionName(name)
   ) {
     throw new TypeError("Invalid collection.");
   }
@@ -89,13 +89,13 @@ export interface CollectionMergeResult {
 export function mergeCollections(
   existing: readonly Collection[],
   incoming: readonly Collection[],
-  createId: () => string,
+  createId: () => string
 ): CollectionMergeResult {
   const collections = snapshotCollections(existing);
   const candidates = snapshotCollections(incoming);
   const byName = new Map(collections.map((collection) => [collectionNameKey(collection.name), collection]));
   const usedIds = new Set(collections.map((collection) => collection.id));
-  
+
   // Generated IDs must not consume the identity of a later incoming definition
   const reservedIds = new Set(usedIds);
   candidates.forEach(({ id }) => reservedIds.add(id));

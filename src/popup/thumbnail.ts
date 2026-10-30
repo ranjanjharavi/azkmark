@@ -40,9 +40,11 @@ function canonicalMatchesPage(current: URL, canonical: URL): boolean {
     return videoId === youtubeVideoId(canonical);
   }
 
-  return current.host.replace(/^www\./, "") === canonical.host.replace(/^www\./, "")
-    && current.pathname.replace(/\/$/, "") === canonical.pathname.replace(/\/$/, "")
-    && current.search === canonical.search;
+  return (
+    current.host.replace(/^www\./, "") === canonical.host.replace(/^www\./, "") &&
+    current.pathname.replace(/\/$/, "") === canonical.pathname.replace(/\/$/, "") &&
+    current.search === canonical.search
+  );
 }
 
 function thumbnailVideoId(image: URL): string | undefined {
@@ -122,7 +124,7 @@ export function captureThumbnail(page: CurrentPage, callback: ThumbnailCallback)
     chrome.scripting.executeScript(
       {
         target: { tabId: page.tabId, frameIds: [0] },
-        files: ["thumbnail-capture.js"],
+        files: ["thumbnail-capture.js"]
       },
       (results) => {
         if (chrome.runtime.lastError) {

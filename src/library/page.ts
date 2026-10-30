@@ -24,19 +24,22 @@ export function initializeLibrary(): void {
   const filters = initializeLibraryFilters({
     onChange: () => render(),
     onReset: () => focus.reset(),
-    isAvailable: () => library !== undefined,
+    isAvailable: () => library !== undefined
   });
-  const view = initializeLibraryView((now) => render("", focus.capture(), now), () => refresh());
+  const view = initializeLibraryView(
+    (now) => render("", focus.capture(), now),
+    () => refresh()
+  );
   const focus = initializeLibraryFocus({ ...filters.elements, ...view.elements }, () => ({
     library,
     selectedUrl,
-    collectionScope: filters.read().collectionScope,
+    collectionScope: filters.read().collectionScope
   }));
   const { refresh, schedule } = createRefreshScheduler(readAndRenderBookmarks);
   const viewedStatus = initializeViewedStatus({
     refresh,
     render: (snapshot) => render("", snapshot),
-    focus,
+    focus
   });
   const managementFeedbackElement = requireElement<HTMLOutputElement>("#management-feedback");
 
@@ -52,10 +55,10 @@ export function initializeLibrary(): void {
 
   const collectionManagement = initializeCollections({
     getBookmarks: () => library,
-    getCollections: () => library ? collections : undefined,
+    getCollections: () => (library ? collections : undefined),
     refresh,
     showFeedback: showManagementFeedback,
-    clearFeedback: clearManagementFeedback,
+    clearFeedback: clearManagementFeedback
   });
   const management = initializeManagement({
     getBookmarks: () => library,
@@ -63,7 +66,7 @@ export function initializeLibrary(): void {
     refresh,
     restoreFocus: focus.restoreManagement,
     showFeedback: showManagementFeedback,
-    clearFeedback: clearManagementFeedback,
+    clearFeedback: clearManagementFeedback
   });
 
   function render(notice = "", snapshot?: FocusSnapshot, now = Date.now()): void {
@@ -88,7 +91,7 @@ export function initializeLibrary(): void {
       scopeSize: library.filter(inScope).length,
       savingViewStatus: selectedBookmark !== undefined && viewedStatus.isPending(selectedBookmark.url),
       notice,
-      now,
+      now
     });
     if (noteFocus?.isConnected) noteFocus.focus({ preventScroll: true });
     else focus.restore(previousFocus);

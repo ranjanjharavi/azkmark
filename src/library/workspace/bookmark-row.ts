@@ -6,7 +6,7 @@ export function bookmarkRow(
   bookmark: Bookmark,
   selected: boolean,
   now: number,
-  dateFormatter: Intl.DateTimeFormat,
+  dateFormatter: Intl.DateTimeFormat
 ): HTMLLIElement {
   const row = document.createElement("li");
   row.className = "bookmark-row";

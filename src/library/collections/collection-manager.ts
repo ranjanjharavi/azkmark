@@ -5,7 +5,7 @@ import {
   InvalidStoredBookmarkError,
   MissingCollectionError,
   saveCollection,
-  StorageQuotaError,
+  StorageQuotaError
 } from "../../bookmarks/storage.js";
 import { requireElement } from "../../ui/dom.js";
 import { countCollectionBookmarks } from "./collection-counts.js";
@@ -24,7 +24,7 @@ export function initializeCollections({
   getCollections,
   refresh,
   showFeedback,
-  clearFeedback,
+  clearFeedback
 }: CollectionCallbacks): { update: () => void } {
   const open = requireElement<HTMLButtonElement>("#manage-collections");
   const dialog = requireElement<HTMLDialogElement>("#collection-dialog");
@@ -62,10 +62,10 @@ export function initializeCollections({
     for (const button of buttons) {
       const row = button.closest<HTMLLIElement>("li[data-collection-id]");
       if (
-        row?.dataset.collectionId !== id
-        || button.dataset.collectionAction !== action
-        || button.disabled
-        || button.closest("[hidden]")
+        row?.dataset.collectionId !== id ||
+        button.dataset.collectionAction !== action ||
+        button.disabled ||
+        button.closest("[hidden]")
       ) {
         continue;
       }
@@ -135,7 +135,11 @@ export function initializeCollections({
     }
   }
 
-  function updateDeleteConfirmation(collections: readonly Collection[], counts: ReadonlyMap<string | undefined, number>, wasMissing: boolean): void {
+  function updateDeleteConfirmation(
+    collections: readonly Collection[],
+    counts: ReadonlyMap<string | undefined, number>,
+    wasMissing: boolean
+  ): void {
     if (!deleting) return;
     const current = collections.find(({ id }) => id === deleting?.id) ?? deleting;
     deleteHeading.textContent = "Delete “" + current.name + "”?";
@@ -309,7 +313,11 @@ export function initializeCollections({
     fieldError.hidden = false;
   }
 
-  function restoreNameFocus(input: HTMLInputElement, target: Collection | undefined, saved: Collection | undefined): void {
+  function restoreNameFocus(
+    input: HTMLInputElement,
+    target: Collection | undefined,
+    saved: Collection | undefined
+  ): void {
     if (!dialog.open || deleteDialog.open) return;
     if (saved && target) {
       focusRow(saved.id, "rename");
@@ -387,9 +395,10 @@ export function initializeCollections({
         editing = undefined;
         missingEdit = false;
       }
-      status.textContent = result.status === "not-found"
-        ? "Collection was already removed. The library has been refreshed."
-        : "Collection deleted. " + count + " to Unsorted.";
+      status.textContent =
+        result.status === "not-found"
+          ? "Collection was already removed. The library has been refreshed."
+          : "Collection deleted. " + count + " to Unsorted.";
       showFeedback(status.textContent);
       deleteDialog.close();
       if (!getCollections() || !getBookmarks()) {

@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.cjs && tsc --project tsconfig.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "npm run build && node --test"
   },
@@ -17,6 +19,7 @@
   "dependencies": {
     "dompurify": "3.4.17",
     "lucide": "1.55.0",
-    "marked": "18.1.1"
+    "marked": "18.1.1",
+    "prettier": "3.9.10"
   }
 }

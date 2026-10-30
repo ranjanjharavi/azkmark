@@ -1,8 +1,9 @@
 function hasLibraryView(url: string, tabId?: number): boolean {
   // Inspect only this extension's loaded views, never another tab's URL/title.
-  const views = tabId === undefined
-    ? chrome.extension.getViews({ type: "tab" })
-    : chrome.extension.getViews({ type: "tab", tabId });
+  const views =
+    tabId === undefined
+      ? chrome.extension.getViews({ type: "tab" })
+      : chrome.extension.getViews({ type: "tab", tabId });
   return views.some((view) => !view.closed && view.location.href === url);
 }
 

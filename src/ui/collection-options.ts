@@ -14,11 +14,7 @@ function collectionGroup(collections: readonly Collection[]): HTMLOptGroupElemen
   return group;
 }
 
-export function collectionOptions(
-  select: HTMLSelectElement,
-  collections: readonly Collection[],
-  selected = "",
-): void {
+export function collectionOptions(select: HTMLSelectElement, collections: readonly Collection[], selected = ""): void {
   const options = document.createDocumentFragment();
   options.appendChild(new Option("Unsorted", ""));
 

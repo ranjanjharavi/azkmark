@@ -55,18 +55,14 @@ function focusBookmarkRow(list: HTMLUListElement, url: string | undefined): bool
   return false;
 }
 
-function focusDetailAction(
-  details: HTMLElement,
-  url: string | undefined,
-  action: BookmarkAction | undefined,
-): boolean {
+function focusDetailAction(details: HTMLElement, url: string | undefined, action: BookmarkAction | undefined): boolean {
   const buttons = details.querySelectorAll<HTMLButtonElement>(".bookmark-action");
   for (let index = 0; index < buttons.length; index++) {
     const button = buttons[index];
     if (
-      button.getAttribute("data-bookmark-url") === url
-      && button.getAttribute("data-action") === action
-      && !button.disabled
+      button.getAttribute("data-bookmark-url") === url &&
+      button.getAttribute("data-action") === action &&
+      !button.disabled
     ) {
       button.focus({ preventScroll: true });
       return true;
@@ -99,10 +95,7 @@ interface LibraryFocusContext {
   collectionScope: string;
 }
 
-export function initializeLibraryFocus(
-  elements: LibraryFocusElements,
-  getContext: () => LibraryFocusContext,
-) {
+export function initializeLibraryFocus(elements: LibraryFocusElements, getContext: () => LibraryFocusContext) {
   const {
     searchInputElement,
     domainSelectElement,
@@ -118,7 +111,7 @@ export function initializeLibraryFocus(
     libraryHeadingElement,
     retryButtonElement,
     bookmarksListElement,
-    bookmarkDetailsElement,
+    bookmarkDetailsElement
   } = elements;
 
   function captureFocus(): FocusSnapshot {
@@ -131,9 +124,9 @@ export function initializeLibraryFocus(
       return { target: "search" };
     }
     if (
-      activeElement instanceof HTMLButtonElement
-      && collectionNavigationElement.contains(activeElement)
-      && activeElement.hasAttribute("value")
+      activeElement instanceof HTMLButtonElement &&
+      collectionNavigationElement.contains(activeElement) &&
+      activeElement.hasAttribute("value")
     ) {
       return { target: "collection", collectionScope: activeElement.value };
     }
@@ -254,16 +247,16 @@ export function initializeLibraryFocus(
       "view-status": viewStatusSelectElement,
       tag: tagSelect,
       sort: sortSelectElement,
-      filters: toggleFiltersElement,
+      filters: toggleFiltersElement
     };
     if (
-      focus.target === "search"
-      || focus.target === "domain"
-      || focus.target === "saved-date"
-      || focus.target === "view-status"
-      || focus.target === "tag"
-      || focus.target === "sort"
-      || focus.target === "filters"
+      focus.target === "search" ||
+      focus.target === "domain" ||
+      focus.target === "saved-date" ||
+      focus.target === "view-status" ||
+      focus.target === "tag" ||
+      focus.target === "sort" ||
+      focus.target === "filters"
     ) {
       if (total > 0) {
         controlTargets[focus.target].focus({ preventScroll: true });
@@ -314,18 +307,18 @@ export function initializeLibraryFocus(
     button: HTMLButtonElement,
     url: string,
     wasFocused: boolean,
-    previous: FocusSnapshot,
+    previous: FocusSnapshot
   ): FocusSnapshot {
     const activeElement = document.activeElement;
-    const recoverActionFocus = wasFocused && (
-      activeElement === button
-      || activeElement === document.body
-      || activeElement === libraryHeadingElement
-      || (activeElement instanceof HTMLButtonElement
-        && activeElement.getAttribute("data-bookmark-url") === url
-        && (activeElement.getAttribute("data-action") === "viewed"
-          || activeElement.classList.contains("bookmark-select")))
-    );
+    const recoverActionFocus =
+      wasFocused &&
+      (activeElement === button ||
+        activeElement === document.body ||
+        activeElement === libraryHeadingElement ||
+        (activeElement instanceof HTMLButtonElement &&
+          activeElement.getAttribute("data-bookmark-url") === url &&
+          (activeElement.getAttribute("data-action") === "viewed" ||
+            activeElement.classList.contains("bookmark-select"))));
     if (recoverActionFocus && !getContext().library) {
       retryButtonElement.focus({ preventScroll: true });
     }
@@ -338,6 +331,6 @@ export function initializeLibraryFocus(
     restoreManagement: restoreManagementFocus,
     restoreAfterReadError,
     reset,
-    afterViewedUpdate,
+    afterViewedUpdate
   };
 }

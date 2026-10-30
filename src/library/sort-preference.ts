@@ -3,10 +3,7 @@ import type { BookmarkSort } from "../bookmarks/search.js";
 const SORT_KEY = "azkmark.library.sort";
 
 // Display preferences stay separate from bookmark storage and backups
-export function initializeSortPreference(
-  select: HTMLSelectElement,
-  apply: (value: BookmarkSort) => void,
-): void {
+export function initializeSortPreference(select: HTMLSelectElement, apply: (value: BookmarkSort) => void): void {
   function update(next: string | null): BookmarkSort {
     let value: BookmarkSort = "newest";
     if (next === "oldest" || next === "title-asc" || next === "title-desc") {

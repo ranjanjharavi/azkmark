@@ -24,7 +24,7 @@ export function bookmarkDetails(
   bookmark: Bookmark,
   collections: readonly Collection[],
   savingViewStatus = false,
-  notesPanel?: HTMLElement,
+  notesPanel?: HTMLElement
 ): HTMLDivElement {
   const details = document.createElement("div");
   details.className = "bookmark-detail-content";
@@ -45,7 +45,7 @@ export function bookmarkDetails(
     saved.textContent = new Date(bookmark.savedAt).toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
-      day: "numeric",
+      day: "numeric"
     });
   }
   header.appendChild(saved);

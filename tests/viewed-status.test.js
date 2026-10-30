@@ -13,8 +13,12 @@ function useViewedHarness(t) {
     disabled: false,
     dataset: { viewed: "true" },
     attributes: { "data-viewed": "true" },
-    getAttribute(name) { return this.attributes[name] ?? null; },
-    setAttribute(name, value) { this.attributes[name] = value; },
+    getAttribute(name) {
+      return this.attributes[name] ?? null;
+    },
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    }
   };
   const document = {
     activeElement: button,
@@ -22,7 +26,7 @@ function useViewedHarness(t) {
       if (selector === "#viewed-feedback") return feedback;
       if (selector === "#viewed-error") return error;
       return null;
-    },
+    }
   };
   const local = {
     async get(requested) {
@@ -30,12 +34,12 @@ function useViewedHarness(t) {
     },
     async set(items) {
       Object.assign(data, structuredClone(items));
-    },
+    }
   };
   const globals = {
     document,
     chrome: { storage: { local } },
-    navigator: { locks: { request: async (_name, callback) => callback() } },
+    navigator: { locks: { request: async (_name, callback) => callback() } }
   };
   for (const [name, value] of Object.entries(globals)) {
     const previous = Object.getOwnPropertyDescriptor(globalThis, name);
@@ -54,7 +58,7 @@ function useViewedHarness(t) {
   const callbacks = {
     async refresh() {
       refreshed.push(status.isPending(url));
-    },
+    }
   };
   const status = initializeViewedStatus({
     refresh: () => callbacks.refresh(),
@@ -64,8 +68,8 @@ function useViewedHarness(t) {
       afterViewedUpdate(_button, _url, wasFocused, previous) {
         assert.equal(wasFocused, true);
         return previous;
-      },
-    },
+      }
+    }
   });
   return { url, key, data, local, button, feedback, error, snapshot, rendered, refreshed, callbacks, status };
 }
@@ -74,7 +78,9 @@ test("a pending viewed write blocks duplicate submissions and stays pending thro
   const harness = useViewedHarness(t);
   const { status, url, button, local, data, key, refreshed, rendered, snapshot } = harness;
   let finish;
-  const writeGate = new Promise((resolve) => { finish = resolve; });
+  const writeGate = new Promise((resolve) => {
+    finish = resolve;
+  });
   const write = local.set;
   const writes = t.mock.method(local, "set", async (items) => {
     await writeGate;
@@ -100,7 +106,9 @@ test("a quota failure clears pending state, keeps data intact, and permits retry
   const { status, url, local, data, key, button, error } = useViewedHarness(t);
   const original = structuredClone(data);
   const write = local.set;
-  local.set = async () => { throw new Error("QUOTA_BYTES exceeded"); };
+  local.set = async () => {
+    throw new Error("QUOTA_BYTES exceeded");
+  };
   await status.update(button, url);
   assert.deepEqual(data, original);
   assert.equal(status.isPending(url), false);
@@ -137,7 +145,9 @@ test("an invalid stored record is not overwritten and the status button remains 
 
 test("refresh rejection after a write still clears pending state and renders recovery", async (t) => {
   const { status, url, data, key, button, callbacks, rendered, error } = useViewedHarness(t);
-  callbacks.refresh = async () => { throw new Error("Refresh failed"); };
+  callbacks.refresh = async () => {
+    throw new Error("Refresh failed");
+  };
   await status.update(button, url);
   assert.equal(data[key].viewed, true);
   assert.equal(status.isPending(url), false);

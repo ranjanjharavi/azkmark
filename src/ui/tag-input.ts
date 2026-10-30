@@ -80,9 +80,10 @@ export function initializeTagInput(prefix: string): TagInput {
       return tags;
     }
 
-    error.textContent = count > MAX_TAGS
-      ? `Use up to ${MAX_TAGS} tags. Remove a tag before adding another.`
-      : `Each tag must be ${MAX_TAG_LENGTH} characters or fewer. Shorten the tag before saving.`;
+    error.textContent =
+      count > MAX_TAGS
+        ? `Use up to ${MAX_TAGS} tags. Remove a tag before adding another.`
+        : `Each tag must be ${MAX_TAG_LENGTH} characters or fewer. Shorten the tag before saving.`;
     error.hidden = false;
     input.setAttribute("aria-invalid", "true");
     input.focus();
@@ -141,6 +142,6 @@ export function initializeTagInput(prefix: string): TagInput {
       buttons.forEach((button) => {
         button.disabled = value;
       });
-    },
+    }
   };
 }

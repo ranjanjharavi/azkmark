@@ -5,7 +5,15 @@ import { setImmediate } from "node:timers/promises";
 import { JSDOM } from "jsdom";
 import { createBookmark, isBookmark, snapshotBookmarks } from "../dist/bookmarks/model.js";
 import { parseBackup, serializeBackup } from "../dist/bookmarks/backup.js";
-import { isNote, isNotes, snapshotNotes, orderedNotes, MAX_NOTE_LENGTH, MAX_NOTES, MAX_NOTES_LENGTH } from "../dist/bookmarks/notes.js";
+import {
+  isNote,
+  isNotes,
+  snapshotNotes,
+  orderedNotes,
+  MAX_NOTE_LENGTH,
+  MAX_NOTES,
+  MAX_NOTES_LENGTH
+} from "../dist/bookmarks/notes.js";
 import { renderMarkdown } from "../dist/ui/markdown.js";
 import { initializeNotesPanel } from "../dist/library/workspace/notes-panel.js";
 import { initializeNoteEditor } from "../dist/library/workspace/note-editor.js";
@@ -30,7 +38,16 @@ test("note snapshots preserve Markdown and detach nested records", () => {
 });
 
 test("notes reject malformed fields, duplicate IDs, and unsafe timestamps", () => {
-  for (const fields of [{ id: "" }, { body: " \n " }, { createdAt: -1 }, { createdAt: 0.5 }, { createdAt: Infinity }, { updatedAt: 9 }, { updatedAt: undefined }, { extra: true }]) {
+  for (const fields of [
+    { id: "" },
+    { body: " \n " },
+    { createdAt: -1 },
+    { createdAt: 0.5 },
+    { createdAt: Infinity },
+    { updatedAt: 9 },
+    { updatedAt: undefined },
+    { extra: true }
+  ]) {
     assert.equal(isNote(note(fields)), false, JSON.stringify(fields));
   }
   assert.equal(isNotes([note(), note()]), false);
@@ -40,8 +57,19 @@ test("notes reject malformed fields, duplicate IDs, and unsafe timestamps", () =
 
 test("note validation does not invoke accessors", () => {
   let reads = 0;
-  const accessor = Object.defineProperty(note(), "body", { enumerable: true, get() { reads++; return "unsafe"; } });
-  const entries = Object.defineProperty([], "0", { get() { reads++; return note(); } });
+  const accessor = Object.defineProperty(note(), "body", {
+    enumerable: true,
+    get() {
+      reads++;
+      return "unsafe";
+    }
+  });
+  const entries = Object.defineProperty([], "0", {
+    get() {
+      reads++;
+      return note();
+    }
+  });
   assert.equal(isNote(accessor), false);
   assert.equal(isNotes(entries), false);
   assert.equal(isNote(Object.create(note())), false);
@@ -54,14 +82,23 @@ test("shared note limits enforce body, count, and aggregate boundaries", () => {
   const entries = Array.from({ length: MAX_NOTES }, (_, index) => note({ id: `entry-${index}` }));
   assert.equal(isNotes(entries), true);
   assert.equal(isNotes([...entries, note({ id: "overflow" })]), false);
-  const full = Array.from({ length: MAX_NOTES_LENGTH / MAX_NOTE_LENGTH }, (_, index) => note({ id: `full-${index}`, body: "x".repeat(MAX_NOTE_LENGTH) }));
+  const full = Array.from({ length: MAX_NOTES_LENGTH / MAX_NOTE_LENGTH }, (_, index) =>
+    note({ id: `full-${index}`, body: "x".repeat(MAX_NOTE_LENGTH) })
+  );
   assert.equal(isNotes(full), true);
   assert.equal(isNotes([...full, note()]), false);
 });
 
 test("history sorts by creation, not edit time, without mutating its input", () => {
-  const entries = [note({ id: "older", updatedAt: 100 }), note({ id: "second", createdAt: 20 }), note({ id: "first", createdAt: 20 })];
-  assert.deepEqual(orderedNotes(entries).map(({ id }) => id), ["first", "second", "older"]);
+  const entries = [
+    note({ id: "older", updatedAt: 100 }),
+    note({ id: "second", createdAt: 20 }),
+    note({ id: "first", createdAt: 20 })
+  ];
+  assert.deepEqual(
+    orderedNotes(entries).map(({ id }) => id),
+    ["first", "second", "older"]
+  );
   assert.equal(entries[0].id, "older");
 });
 
@@ -76,51 +113,104 @@ test("version 4 backups round-trip complete note histories and empty libraries",
 
 test("legacy backup versions keep their original envelopes and field restrictions", () => {
   for (const version of [1, 2, 3]) {
-    const envelope = { format: "azkmark", version, bookmarks: [bookmark()], ...(version >= 3 ? { collections: [] } : {}) };
+    const envelope = {
+      format: "azkmark",
+      version,
+      bookmarks: [bookmark()],
+      ...(version >= 3 ? { collections: [] } : {})
+    };
     assert.deepEqual(parseBackup(JSON.stringify(envelope)), { bookmarks: [bookmark()], collections: [] });
-    assert.throws(() => parseBackup(JSON.stringify({ ...envelope, bookmarks: [bookmark({ notes: [note()] })] })), TypeError);
-    if (version < 3) assert.throws(() => parseBackup(JSON.stringify({ ...envelope, bookmarks: [bookmark({ tags: ["no"] })] })), TypeError);
-    if (version === 1) assert.throws(() => parseBackup(JSON.stringify({ ...envelope, bookmarks: [bookmark({ viewed: true })] })), TypeError);
+    assert.throws(
+      () => parseBackup(JSON.stringify({ ...envelope, bookmarks: [bookmark({ notes: [note()] })] })),
+      TypeError
+    );
+    if (version < 3)
+      assert.throws(
+        () => parseBackup(JSON.stringify({ ...envelope, bookmarks: [bookmark({ tags: ["no"] })] })),
+        TypeError
+      );
+    if (version === 1)
+      assert.throws(
+        () => parseBackup(JSON.stringify({ ...envelope, bookmarks: [bookmark({ viewed: true })] })),
+        TypeError
+      );
   }
   const collections = [{ id: "reading", name: "Reading" }];
   const record = bookmark({ collectionId: "reading", tags: ["keep"], viewed: true });
-  assert.deepEqual(parseBackup(JSON.stringify({ format: "azkmark", version: 3, bookmarks: [record], collections })), { bookmarks: [record], collections });
+  assert.deepEqual(parseBackup(JSON.stringify({ format: "azkmark", version: 3, bookmarks: [record], collections })), {
+    bookmarks: [record],
+    collections
+  });
 });
 
 test("saved note search preserves existing filters, sorting, and ordinary matches", () => {
-  const records = [bookmark({ notes: [note({ body: "Unique RESEARCH phrase" })], tags: ["reading"], viewed: true }), bookmark({ url: "https://example.com/plain", title: "Plain", savedAt: 2 })];
+  const records = [
+    bookmark({ notes: [note({ body: "Unique RESEARCH phrase" })], tags: ["reading"], viewed: true }),
+    bookmark({ url: "https://example.com/plain", title: "Plain", savedAt: 2 })
+  ];
   assert.deepEqual(filterBookmarks(records, { query: " research " }), [records[0]]);
   assert.deepEqual(filterBookmarks(records, { query: "research", viewStatus: "to-view" }), []);
   assert.deepEqual(filterBookmarks(records, { query: "research", tag: "other" }), []);
   assert.deepEqual(filterBookmarks(records, { query: "plain" }), [records[1]]);
-  assert.deepEqual(filterBookmarks(records).map(({ title }) => title), ["Plain", "Notes"]);
+  assert.deepEqual(
+    filterBookmarks(records).map(({ title }) => title),
+    ["Plain", "Notes"]
+  );
   records[0].notes = [];
   assert.deepEqual(filterBookmarks(records, { query: "research" }), []);
 });
 
 function useNotesDom(t, record = bookmark({ notes: [note()] })) {
-  const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "https://extension.test/library.html", runScripts: "outside-only", pretendToBeVisual: true });
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "https://extension.test/library.html",
+    runScripts: "outside-only",
+    pretendToBeVisual: true
+  });
   const { window } = dom;
-  window.HTMLDialogElement.prototype.showModal = function () { this.setAttribute("open", ""); };
-  window.HTMLDialogElement.prototype.close = function () { this.removeAttribute("open"); this.dispatchEvent(new window.Event("close")); };
-  for (const file of ["marked.js", "purify.js", "lucide.js"]) window.eval(readFileSync(new URL(`../dist/vendor/${file}`, import.meta.url), "utf8"));
+  window.HTMLDialogElement.prototype.showModal = function () {
+    this.setAttribute("open", "");
+  };
+  window.HTMLDialogElement.prototype.close = function () {
+    this.removeAttribute("open");
+    this.dispatchEvent(new window.Event("close"));
+  };
+  for (const file of ["marked.js", "purify.js", "lucide.js"])
+    window.eval(readFileSync(new URL(`../dist/vendor/${file}`, import.meta.url), "utf8"));
   const key = "azkmark:bookmark:" + record.url;
   const data = { [key]: structuredClone(record) };
   const local = {
-    async get(name) { return structuredClone(name === null ? data : Object.hasOwn(data, name) ? { [name]: data[name] } : {}); },
-    async set(items) { Object.assign(data, structuredClone(items)); },
-    async remove(name) { delete data[name]; },
+    async get(name) {
+      return structuredClone(name === null ? data : Object.hasOwn(data, name) ? { [name]: data[name] } : {});
+    },
+    async set(items) {
+      Object.assign(data, structuredClone(items));
+    },
+    async remove(name) {
+      delete data[name];
+    }
   };
   const globals = {
-    window, document: window.document, Element: window.Element, HTMLElement: window.HTMLElement,
+    window,
+    document: window.document,
+    Element: window.Element,
+    HTMLElement: window.HTMLElement,
     HTMLButtonElement: window.HTMLButtonElement,
     Option: window.Option,
     localStorage: window.localStorage,
-    marked: window.marked, DOMPurify: window.DOMPurify, lucide: window.lucide,
-    IntersectionObserver: class { observe() {} unobserve() {} disconnect() {} },
-    ResizeObserver: class { observe() {} disconnect() {} },
+    marked: window.marked,
+    DOMPurify: window.DOMPurify,
+    lucide: window.lucide,
+    IntersectionObserver: class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+    ResizeObserver: class {
+      observe() {}
+      disconnect() {}
+    },
     navigator: { locks: { request: async (_name, callback) => callback() } },
-    chrome: { storage: { local } },
+    chrome: { storage: { local } }
   };
   for (const [name, value] of Object.entries(globals)) {
     const previous = Object.getOwnPropertyDescriptor(globalThis, name);
@@ -136,7 +226,10 @@ function useNotesDom(t, record = bookmark({ notes: [note()] })) {
 
 function useLibraryDom(t, record) {
   const harness = useNotesDom(t, record);
-  const fixture = new harness.window.DOMParser().parseFromString(readFileSync(new URL("../public/library.html", import.meta.url), "utf8"), "text/html");
+  const fixture = new harness.window.DOMParser().parseFromString(
+    readFileSync(new URL("../public/library.html", import.meta.url), "utf8"),
+    "text/html"
+  );
   harness.document.body.replaceChildren(...fixture.body.childNodes);
   return harness;
 }
@@ -154,11 +247,16 @@ test("library markup labels the import picker and uses native status outputs", (
 test("filter controls sort domains and expose active selections through dataset", (t) => {
   const { document } = useLibraryDom(t);
   const filters = initializeLibraryFilters({ onChange: () => {}, onReset: () => {}, isAvailable: () => true });
-  const records = ["zebra", "alpha"].flatMap((domain) => [1, 2].map((index) => bookmark({ url: `https://${domain}.example/${index}`, tags: ["saved"] })));
+  const records = ["zebra", "alpha"].flatMap((domain) =>
+    [1, 2].map((index) => bookmark({ url: `https://${domain}.example/${index}`, tags: ["saved"] }))
+  );
   filters.update(records, []);
   filters.setDisabled(false);
   const domain = document.querySelector("#domain");
-  assert.deepEqual([...domain.options].map((option) => option.value), ["all", "general", "domain:alpha.example", "domain:zebra.example"]);
+  assert.deepEqual(
+    [...domain.options].map((option) => option.value),
+    ["all", "general", "domain:alpha.example", "domain:zebra.example"]
+  );
   domain.value = "domain:zebra.example";
   document.querySelector("#tag-filter").value = "saved";
   const state = filters.render();
@@ -172,7 +270,10 @@ test("filter controls sort domains and expose active selections through dataset"
 test("production Markdown renders formatting without executable HTML or remote resources", (t) => {
   const { document } = useNotesDom(t);
   const host = document.createElement("div");
-  renderMarkdown(host, '**Safe**\n\n`code`\n\n![remote](https://tracker.example/pixel)\n\n<img src=x onerror=alert(1)>\n\n[bad](javascript:alert(1))\n\n[good](https://example.com)');
+  renderMarkdown(
+    host,
+    "**Safe**\n\n`code`\n\n![remote](https://tracker.example/pixel)\n\n<img src=x onerror=alert(1)>\n\n[bad](javascript:alert(1))\n\n[good](https://example.com)"
+  );
   assert.equal(host.querySelector("strong").textContent, "Safe");
   assert.equal(host.querySelector("code").textContent, "code");
   assert.equal(host.querySelector("img,script,iframe,[onerror],[onclick],[src]"), null);
@@ -210,13 +311,30 @@ test("panel refreshes, tabs, and bookmark switches retain the same draft textare
 
 test("detail scrolling survives refreshes and resets when the selected bookmark changes", (t) => {
   const { window } = useLibraryDom(t);
-  const view = initializeLibraryView(() => {}, async () => {});
+  const view = initializeLibraryView(
+    () => {},
+    async () => {}
+  );
   const first = bookmark({ notes: [note()] });
   const second = bookmark({ url: "https://example.com/second", notes: [note()] });
   const state = {
-    library: [first, second], collections: [], matches: [first, second], scopeSize: 2,
-    filters: { query: "", selection: { kind: "all" }, savedDate: "all", viewStatus: "all", tag: "", sort: "newest", collectionScope: "all", activeCount: 0 },
-    savingViewStatus: false, notice: "", now: Date.now(),
+    library: [first, second],
+    collections: [],
+    matches: [first, second],
+    scopeSize: 2,
+    filters: {
+      query: "",
+      selection: { kind: "all" },
+      savedDate: "all",
+      viewStatus: "all",
+      tag: "",
+      sort: "newest",
+      collectionScope: "all",
+      activeCount: 0
+    },
+    savingViewStatus: false,
+    notice: "",
+    now: Date.now()
   };
   view.render({ ...state, selectedBookmark: first });
   const { workspaceElement } = view.elements;
@@ -246,7 +364,14 @@ test("bookmark dialog validates drafts, preserves failed edits, and retries with
   const record = bookmark({ notes: [note()], tags: ["keep"] });
   const { window, document, data, key, local } = useLibraryDom(t, record);
   const feedback = [];
-  const manager = initializeManagement({ getBookmarks: () => [data[key]], getCollections: () => [], refresh: async () => {}, restoreFocus: () => {}, showFeedback: (message) => feedback.push(message), clearFeedback: () => {} });
+  const manager = initializeManagement({
+    getBookmarks: () => [data[key]],
+    getCollections: () => [],
+    refresh: async () => {},
+    restoreFocus: () => {},
+    showFeedback: (message) => feedback.push(message),
+    clearFeedback: () => {}
+  });
   manager.open(record.url, "edit");
   const form = document.querySelector("#management-form");
   const title = document.querySelector("#bookmark-title");
@@ -255,7 +380,9 @@ test("bookmark dialog validates drafts, preserves failed edits, and retries with
   assert.equal(title.getAttribute("aria-invalid"), "true");
   title.value = "  Revised title  ";
   const write = local.set;
-  local.set = async () => { throw new Error("QUOTA_BYTES exceeded"); };
+  local.set = async () => {
+    throw new Error("QUOTA_BYTES exceeded");
+  };
   form.dispatchEvent(new window.Event("submit", { cancelable: true }));
   await setImmediate();
   assert.match(document.querySelector("#management-error").textContent, /storage is full/);
@@ -263,9 +390,15 @@ test("bookmark dialog validates drafts, preserves failed edits, and retries with
   assert.equal(title.readOnly, false);
   assert.equal(document.querySelector("#bookmark-dialog").open, true);
   let finish;
-  const gate = new Promise((resolve) => { finish = resolve; });
+  const gate = new Promise((resolve) => {
+    finish = resolve;
+  });
   let writes = 0;
-  local.set = async (items) => { writes++; await gate; await write(items); };
+  local.set = async (items) => {
+    writes++;
+    await gate;
+    await write(items);
+  };
   form.dispatchEvent(new window.Event("submit", { cancelable: true }));
   form.dispatchEvent(new window.Event("submit", { cancelable: true }));
   await setImmediate();
@@ -284,7 +417,14 @@ test("bookmark dialog validates drafts, preserves failed edits, and retries with
 test("bookmark dialog handles a missing delete target without recreating it", async (t) => {
   const record = bookmark({ notes: [note()] });
   const { window, document, data, key } = useLibraryDom(t, record);
-  const manager = initializeManagement({ getBookmarks: () => Object.values(data), getCollections: () => [], refresh: async () => {}, restoreFocus: () => {}, showFeedback: () => {}, clearFeedback: () => {} });
+  const manager = initializeManagement({
+    getBookmarks: () => Object.values(data),
+    getCollections: () => [],
+    refresh: async () => {},
+    restoreFocus: () => {},
+    showFeedback: () => {},
+    clearFeedback: () => {}
+  });
   manager.open(record.url, "delete");
   delete data[key];
   document.querySelector("#management-form").dispatchEvent(new window.Event("submit", { cancelable: true }));
@@ -301,7 +441,13 @@ test("collection rename retains drafts through quota failures and missing-target
   const collectionKey = "azkmark:collections";
   const collections = [{ id: "reading", name: "Reading" }];
   data[collectionKey] = structuredClone(collections);
-  const manager = initializeCollections({ getBookmarks: () => [data[key]], getCollections: () => data[collectionKey], refresh: async () => {}, showFeedback: () => {}, clearFeedback: () => {} });
+  const manager = initializeCollections({
+    getBookmarks: () => [data[key]],
+    getCollections: () => data[collectionKey],
+    refresh: async () => {},
+    showFeedback: () => {},
+    clearFeedback: () => {}
+  });
   const open = document.querySelector("#manage-collections");
   open.disabled = false;
   open.click();
@@ -310,7 +456,9 @@ test("collection rename retains drafts through quota failures and missing-target
   const form = document.querySelector("#collection-rename-form");
   input.value = "Research";
   const write = local.set;
-  local.set = async () => { throw new Error("QUOTA_BYTES exceeded"); };
+  local.set = async () => {
+    throw new Error("QUOTA_BYTES exceeded");
+  };
   form.dispatchEvent(new window.Event("submit", { cancelable: true }));
   await setImmediate();
   assert.equal(input.value, "Research");
@@ -335,7 +483,13 @@ test("collection delete confirmation becomes read-only when its target disappear
   const { document, data, key } = useLibraryDom(t, bookmark());
   const collectionKey = "azkmark:collections";
   data[collectionKey] = [{ id: "reading", name: "Reading" }];
-  const manager = initializeCollections({ getBookmarks: () => [data[key]], getCollections: () => data[collectionKey], refresh: async () => {}, showFeedback: () => {}, clearFeedback: () => {} });
+  const manager = initializeCollections({
+    getBookmarks: () => [data[key]],
+    getCollections: () => data[collectionKey],
+    refresh: async () => {},
+    showFeedback: () => {},
+    clearFeedback: () => {}
+  });
   const open = document.querySelector("#manage-collections");
   open.disabled = false;
   open.click();
@@ -351,13 +505,22 @@ test("composer preserves failed drafts, blocks duplicates, and retries a stable 
   const record = bookmark();
   const { window, document, data, key, local } = useNotesDom(t, record);
   let saved;
-  const editor = initializeNoteEditor(record, async () => {}, (value) => { saved = value; });
+  const editor = initializeNoteEditor(
+    record,
+    async () => {},
+    (value) => {
+      saved = value;
+    }
+  );
   document.body.append(editor.root);
   const textarea = editor.root.querySelector("textarea");
   textarea.value = "**New note**";
   textarea.dispatchEvent(new window.Event("input"));
   const write = local.set;
-  local.set = async (items) => { await write(items); throw new Error("QUOTA_BYTES exceeded"); };
+  local.set = async (items) => {
+    await write(items);
+    throw new Error("QUOTA_BYTES exceeded");
+  };
   const form = editor.root.querySelector("form");
   form.dispatchEvent(new window.Event("submit", { cancelable: true }));
   assert.equal(editor.root.querySelector('[type="submit"]').disabled, true);
@@ -377,7 +540,11 @@ test("composer preserves failed drafts, blocks duplicates, and retries a stable 
 test("composer preserves conflicting drafts until the user explicitly rebases", async (t) => {
   const record = bookmark({ notes: [note()] });
   const { window, document, data, key } = useNotesDom(t, record);
-  const editor = initializeNoteEditor(record, async () => {}, () => {});
+  const editor = initializeNoteEditor(
+    record,
+    async () => {},
+    () => {}
+  );
   document.body.append(editor.root);
   await editor.edit(record.notes[0]);
   const textarea = editor.root.querySelector("textarea");
@@ -400,7 +567,11 @@ test("composer preserves conflicting drafts until the user explicitly rebases", 
 test("canceling dirty-draft replacement and note deletion leaves the draft intact", async (t) => {
   const record = bookmark({ notes: [note()] });
   const { window, document, data, key } = useNotesDom(t, record);
-  const editor = initializeNoteEditor(record, async () => {}, () => {});
+  const editor = initializeNoteEditor(
+    record,
+    async () => {},
+    () => {}
+  );
   document.body.append(editor.root);
   const textarea = editor.root.querySelector("textarea");
   textarea.value = "Keep this draft";
@@ -419,7 +590,11 @@ test("canceling dirty-draft replacement and note deletion leaves the draft intac
 test("confirmed deletion removes only its target and preserves a new-entry draft", async (t) => {
   const record = bookmark({ notes: [note(), note({ id: "second", body: "Keep saved" })] });
   const { window, document, data, key } = useNotesDom(t, record);
-  const editor = initializeNoteEditor(record, async () => {}, () => {});
+  const editor = initializeNoteEditor(
+    record,
+    async () => {},
+    () => {}
+  );
   document.body.append(editor.root);
   const textarea = editor.root.querySelector("textarea");
   textarea.value = "Keep unsaved";
@@ -436,7 +611,11 @@ test("composer explains count and aggregate limits while allowing existing-note 
   const entries = Array.from({ length: MAX_NOTES }, (_, index) => note({ id: `entry-${index}` }));
   const record = bookmark({ notes: entries });
   const { document, window } = useNotesDom(t, record);
-  const editor = initializeNoteEditor(record, async () => {}, () => {});
+  const editor = initializeNoteEditor(
+    record,
+    async () => {},
+    () => {}
+  );
   document.body.append(editor.root);
   const textarea = editor.root.querySelector("textarea");
   const submit = editor.root.querySelector('[type="submit"]');
@@ -446,7 +625,9 @@ test("composer explains count and aggregate limits while allowing existing-note 
   textarea.value += "edited";
   textarea.dispatchEvent(new window.Event("input"));
   assert.equal(submit.disabled, false);
-  const full = Array.from({ length: MAX_NOTES_LENGTH / MAX_NOTE_LENGTH }, (_, index) => note({ id: `full-${index}`, body: "x".repeat(MAX_NOTE_LENGTH) }));
+  const full = Array.from({ length: MAX_NOTES_LENGTH / MAX_NOTE_LENGTH }, (_, index) =>
+    note({ id: `full-${index}`, body: "x".repeat(MAX_NOTE_LENGTH) })
+  );
   full[0].body = full[0].body.slice(entries[0].body.length);
   editor.update(bookmark({ notes: [...full, entries[0]] }));
   assert.equal(submit.disabled, true);

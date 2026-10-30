@@ -22,7 +22,7 @@ function collectionButton(scope: string, label: string, count: number, selected:
 export function collectionButtons(
   collections: readonly Collection[],
   bookmarks: readonly Bookmark[],
-  selected: string,
+  selected: string
 ): DocumentFragment {
   const buttons = document.createDocumentFragment();
   const counts = countCollectionBookmarks(bookmarks);

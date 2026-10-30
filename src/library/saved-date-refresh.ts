@@ -33,10 +33,7 @@ export function initializeSavedDateRefresh(refresh: (now: number) => void): {
 
     const now = Date.now();
     const currentDay = savedDateRange("today", now);
-    if (currentDay && (
-      currentDay.start !== renderedDay.start
-      || currentDay.end !== renderedDay.end
-    )) {
+    if (currentDay && (currentDay.start !== renderedDay.start || currentDay.end !== renderedDay.end)) {
       refresh(now);
     }
     scheduleMidnight();

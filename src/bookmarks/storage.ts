@@ -3,7 +3,7 @@ import {
   deduplicateBookmarks,
   isBookmark,
   snapshotLibrary,
-  validateCollectionReferences,
+  validateCollectionReferences
 } from "./model.js";
 import type { Bookmark, LibraryData } from "./model.js";
 import {
@@ -11,7 +11,7 @@ import {
   isCollectionId,
   mergeCollections,
   normalizeCollectionName,
-  snapshotCollections,
+  snapshotCollections
 } from "./collections.js";
 import type { Collection } from "./collections.js";
 import { sameTags, snapshotTags } from "./tags.js";
@@ -31,9 +31,7 @@ export interface SaveBookmarkResult {
   bookmark: Bookmark;
 }
 
-export type UpdateBookmarkResult =
-  | { status: "updated" | "unchanged"; bookmark: Bookmark }
-  | { status: "not-found" };
+export type UpdateBookmarkResult = { status: "updated" | "unchanged"; bookmark: Bookmark } | { status: "not-found" };
 
 export interface BookmarkChanges {
   title?: string;
@@ -43,13 +41,9 @@ export interface BookmarkChanges {
   tags?: readonly string[];
 }
 
-export type UpdateBookmarkViewedResult =
-  | { status: "updated"; bookmark: Bookmark }
-  | { status: "not-found" };
+export type UpdateBookmarkViewedResult = { status: "updated"; bookmark: Bookmark } | { status: "not-found" };
 
-export type DeleteBookmarkResult =
-  | { status: "deleted" }
-  | { status: "not-found" };
+export type DeleteBookmarkResult = { status: "deleted" } | { status: "not-found" };
 
 export type NoteMutationResult =
   | { status: "updated" | "unchanged"; bookmark: Bookmark }
@@ -61,8 +55,7 @@ export type ImportBookmarksResult =
   | { status: "failed"; added: number; skipped: number; collectionsAdded: number; error: unknown };
 
 export type DeleteCollectionResult =
-  | { status: "deleted" | "not-found"; moved: number }
-  | { status: "failed"; moved: number; error: unknown };
+  { status: "deleted" | "not-found"; moved: number } | { status: "failed"; moved: number; error: unknown };
 
 export class MissingCollectionError extends Error {
   constructor() {
@@ -178,7 +171,7 @@ async function requireCollection(id: string | undefined): Promise<void> {
 
 export async function updateBookmark(
   url: string,
-  { title, collectionId, tags }: BookmarkChanges = {},
+  { title, collectionId, tags }: BookmarkChanges = {}
 ): Promise<UpdateBookmarkResult> {
   const key = bookmarkKey(url);
   if (title !== undefined && (typeof title !== "string" || !title.trim())) {
@@ -190,54 +183,55 @@ export async function updateBookmark(
 
   const submittedTitle = title?.trim();
   const submittedTags = tags === undefined ? undefined : snapshotTags(tags);
-  const edit = () => navigator.locks.request(key, async (): Promise<UpdateBookmarkResult> => {
-    const existing = await readStoredBookmark(key);
-    if (!existing) {
-      return { status: "not-found" };
-    }
+  const edit = () =>
+    navigator.locks.request(key, async (): Promise<UpdateBookmarkResult> => {
+      const existing = await readStoredBookmark(key);
+      if (!existing) {
+        return { status: "not-found" };
+      }
 
-    // Untouched fields come from the fresh locked record, never editor snapshots.
-    const nextTitle = submittedTitle ?? existing.title;
-    let nextCollectionId = existing.collectionId;
-    if (collectionId !== undefined) {
-      nextCollectionId = collectionId ?? undefined;
-    }
+      // Untouched fields come from the fresh locked record, never editor snapshots.
+      const nextTitle = submittedTitle ?? existing.title;
+      let nextCollectionId = existing.collectionId;
+      if (collectionId !== undefined) {
+        nextCollectionId = collectionId ?? undefined;
+      }
 
-    let nextTags = existing.tags;
-    if (submittedTags !== undefined) {
-      nextTags = submittedTags.length > 0 ? submittedTags : undefined;
-    }
+      let nextTags = existing.tags;
+      if (submittedTags !== undefined) {
+        nextTags = submittedTags.length > 0 ? submittedTags : undefined;
+      }
 
-    if (
-      nextTitle === existing.title
-      && nextCollectionId === existing.collectionId
-      && sameTags(nextTags, existing.tags)
-    ) {
-      return { status: "unchanged", bookmark: existing };
-    }
+      if (
+        nextTitle === existing.title &&
+        nextCollectionId === existing.collectionId &&
+        sameTags(nextTags, existing.tags)
+      ) {
+        return { status: "unchanged", bookmark: existing };
+      }
 
-    if (collectionId !== undefined) {
-      await requireCollection(nextCollectionId);
-    }
+      if (collectionId !== undefined) {
+        await requireCollection(nextCollectionId);
+      }
 
-    const updated = createBookmark({
-      ...existing,
-      title: nextTitle,
-      collectionId: nextCollectionId,
-      tags: nextTags,
-    }, existing.savedAt);
-    await writeStorage({ [key]: updated });
-    return { status: "updated", bookmark: updated };
-  });
+      const updated = createBookmark(
+        {
+          ...existing,
+          title: nextTitle,
+          collectionId: nextCollectionId,
+          tags: nextTags
+        },
+        existing.savedAt
+      );
+      await writeStorage({ [key]: updated });
+      return { status: "updated", bookmark: updated };
+    });
 
   // Membership writes always acquire the collection lock before the URL lock.
   return collectionId === undefined ? edit() : navigator.locks.request(COLLECTIONS_KEY, edit);
 }
 
-export async function updateBookmarkViewed(
-  url: string,
-  viewed: boolean,
-): Promise<UpdateBookmarkViewedResult> {
+export async function updateBookmarkViewed(url: string, viewed: boolean): Promise<UpdateBookmarkViewedResult> {
   const key = bookmarkKey(url);
   if (typeof viewed !== "boolean") {
     throw new TypeError("Invalid bookmark view status.");
@@ -261,7 +255,7 @@ export async function updateBookmarkViewed(
 
 async function mutateNotes(
   url: string,
-  change: (bookmark: Bookmark) => BookmarkNote[] | NoteMutationResult,
+  change: (bookmark: Bookmark) => BookmarkNote[] | NoteMutationResult
 ): Promise<NoteMutationResult> {
   const key = bookmarkKey(url);
   return navigator.locks.request(key, async () => {
@@ -279,14 +273,19 @@ export async function addBookmarkNote(url: string, note: BookmarkNote): Promise<
   const submitted = snapshotNotes([note])[0];
   return mutateNotes(url, (bookmark) => {
     const current = bookmark.notes?.find((entry) => entry.id === submitted.id);
-    if (current) return sameNote(current, submitted)
-      ? { status: "unchanged", bookmark }
-      : { status: "conflict", bookmark, note: current };
+    if (current)
+      return sameNote(current, submitted)
+        ? { status: "unchanged", bookmark }
+        : { status: "conflict", bookmark, note: current };
     return [...(bookmark.notes ?? []), submitted];
   });
 }
 
-export async function updateBookmarkNote(url: string, original: BookmarkNote, body: string): Promise<NoteMutationResult> {
+export async function updateBookmarkNote(
+  url: string,
+  original: BookmarkNote,
+  body: string
+): Promise<NoteMutationResult> {
   const baseline = snapshotNotes([original])[0];
   if (!isNoteBody(body)) throw new TypeError("Enter a note within the character limit.");
   return mutateNotes(url, (bookmark) => {
@@ -295,7 +294,7 @@ export async function updateBookmarkNote(url: string, original: BookmarkNote, bo
     if (!sameNote(current, baseline)) return { status: "conflict", bookmark, note: current };
     if (current.body === body) return { status: "unchanged", bookmark };
     const updatedAt = Math.max(Date.now(), (current.updatedAt ?? current.createdAt) + 1);
-    return bookmark.notes!.map((entry) => entry.id === baseline.id ? { ...entry, body, updatedAt } : entry);
+    return bookmark.notes!.map((entry) => (entry.id === baseline.id ? { ...entry, body, updatedAt } : entry));
   });
 }
 
@@ -353,7 +352,7 @@ function saveRecord(record: Bookmark, rememberCollection: boolean): Promise<Save
 
 export async function importBookmarkRecords(
   bookmarks: readonly Bookmark[],
-  collections: readonly Collection[] = [],
+  collections: readonly Collection[] = []
 ): Promise<ImportBookmarksResult> {
   // Validate and snapshot the complete file before any storage access, including
   // references on duplicate records that will lose and empty collections
@@ -451,7 +450,7 @@ export async function saveCollection(name: string, id?: string): Promise<Collect
     }
 
     const collection = { id: collectionId, name: normalized };
-    const next = collections.map((item) => item.id === collectionId ? collection : item);
+    const next = collections.map((item) => (item.id === collectionId ? collection : item));
     if (!current) {
       next.push(collection);
     }
